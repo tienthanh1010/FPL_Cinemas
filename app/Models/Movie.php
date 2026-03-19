@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Movie extends Model
@@ -39,6 +40,44 @@ class Movie extends Model
 
     public function versions(): HasMany
     {
-        return $this->hasMany(MovieVersion::class, 'movie_id');
+        return $this->hasMany(MovieVersion::class, 'movie_id')->orderBy('id');
+    }
+
+    public function genres(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'movie_genres', 'movie_id', 'genre_id')
+            ->orderBy('genres.name');
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->genres();
+    }
+
+    public function credits(): BelongsToMany
+    {
+        return $this->belongsToMany(Person::class, 'movie_people', 'movie_id', 'person_id')
+            ->withPivot(['role_type', 'character_name', 'sort_order'])
+            ->orderBy('movie_people.sort_order');
+    }
+
+    public function directorCredits(): BelongsToMany
+    {
+        return $this->credits()->wherePivot('role_type', 'DIRECTOR');
+    }
+
+    public function writerCredits(): BelongsToMany
+    {
+        return $this->credits()->wherePivot('role_type', 'WRITER');
+    }
+
+    public function castCredits(): BelongsToMany
+    {
+        return $this->credits()->wherePivot('role_type', 'CAST');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'ACTIVE');
     }
 }

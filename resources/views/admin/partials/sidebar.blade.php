@@ -1,97 +1,108 @@
 @php
     $isActive = fn(string $pattern) => request()->routeIs($pattern) ? 'active' : '';
+    $visibleItems = fn(array $items) => collect($items)->filter(fn($item) => \Illuminate\Support\Facades\Route::has($item['route']))->values()->all();
+
+    $navGroups = [
+        [
+            'title' => 'Điều hành',
+            'items' => [
+                ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Tổng quan', 'icon' => 'bi-grid-1x2-fill'],
+                ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Báo cáo', 'icon' => 'bi-bar-chart-line'],
+            ],
+        ],
+        [
+            'title' => 'Nội dung & lịch chiếu',
+            'items' => [
+                ['route' => 'admin.movies.index', 'pattern' => 'admin.movies.*', 'label' => 'Phim', 'icon' => 'bi-film'],
+                ['route' => 'admin.movie_versions.index', 'pattern' => 'admin.movie_versions.*', 'label' => 'Phiên bản phim', 'icon' => 'bi-collection-play'],
+                ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Thể loại', 'icon' => 'bi-tags'],
+                ['route' => 'admin.auditoriums.index', 'pattern' => 'admin.auditoriums.*', 'label' => 'Phòng chiếu', 'icon' => 'bi-badge-8k'],
+                ['route' => 'admin.shows.index', 'pattern' => 'admin.shows.*', 'label' => 'Suất chiếu', 'icon' => 'bi-calendar2-week'],
+                ['route' => 'admin.pricing_profiles.index', 'pattern' => 'admin.pricing_profiles.*', 'label' => 'Hồ sơ giá động', 'icon' => 'bi-cash-coin'],
+            ],
+        ],
+        [
+            'title' => 'Bán hàng & marketing',
+            'items' => [
+                ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Combo bắp nước', 'icon' => 'bi-cup-straw'],
+                ['route' => 'admin.inventory.index', 'pattern' => 'admin.inventory.*', 'label' => 'Tồn kho F&B', 'icon' => 'bi-box-seam'],
+                ['route' => 'admin.promotions.index', 'pattern' => 'admin.promotions.*', 'label' => 'Khuyến mãi', 'icon' => 'bi-megaphone'],
+                ['route' => 'admin.coupons.index', 'pattern' => 'admin.coupons.*', 'label' => 'Voucher', 'icon' => 'bi-ticket-perforated'],
+            ],
+        ],
+        [
+            'title' => 'Khách hàng & nhân sự',
+            'items' => [
+                ['route' => 'admin.customers.index', 'pattern' => 'admin.customers.*', 'label' => 'Khách hàng', 'icon' => 'bi-people'],
+                ['route' => 'admin.staff.index', 'pattern' => 'admin.staff.*', 'label' => 'Nhân sự', 'icon' => 'bi-person-badge'],
+                ['route' => 'admin.staff_shifts.index', 'pattern' => 'admin.staff_shifts.*', 'label' => 'Ca làm', 'icon' => 'bi-calendar3'],
+            ],
+        ],
+        [
+            'title' => 'Vận hành rạp',
+            'items' => [
+                ['route' => 'admin.cinemas.index', 'pattern' => 'admin.cinemas.*', 'label' => 'Rạp', 'icon' => 'bi-buildings'],
+                ['route' => 'admin.equipment.index', 'pattern' => 'admin.equipment.*', 'label' => 'Thiết bị', 'icon' => 'bi-tools'],
+                ['route' => 'admin.maintenance_requests.index', 'pattern' => 'admin.maintenance_requests.*', 'label' => 'Bảo trì', 'icon' => 'bi-wrench-adjustable-circle'],
+            ],
+        ],
+    ];
 @endphp
 
-<div class="sidebar d-none d-lg-flex flex-column p-3 bg-white border-end">
-    <a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark">
-        <span class="fs-5 fw-semibold">🎬 CINEMA</span>
+<aside class="admin-sidebar d-none d-xl-flex flex-column">
+    <a href="{{ route('admin.dashboard') }}" class="admin-brand">
+        <span class="admin-brand-badge"><i class="bi bi-camera-reels-fill"></i></span>
+        <span>
+            <small>FPL Cinemas</small>
+            <strong>Admin Studio</strong>
+        </span>
     </a>
-    <hr>
-    <ul class="nav nav-pills flex-column mb-auto gap-1">
-        <li class="nav-item">
-            <a href="{{ route('admin.dashboard') }}" class="nav-link {{ $isActive('admin.dashboard') }}">
-                Dashboard
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.movies.index') }}" class="nav-link {{ $isActive('admin.movies.*') }}">
-                Phim
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.movie_versions.index') }}" class="nav-link {{ $isActive('admin.movie_versions.*') }}">
-                Phiên bản phim
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.chains.index') }}" class="nav-link {{ $isActive('admin.chains.*') }}">
-                Chuỗi rạp
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.cinemas.index') }}" class="nav-link {{ $isActive('admin.cinemas.*') }}">
-                Rạp
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.auditoriums.index') }}" class="nav-link {{ $isActive('admin.auditoriums.*') }}">
-                Phòng chiếu
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.shows.index') }}" class="nav-link {{ $isActive('admin.shows.*') }}">
-                Suất chiếu
-            </a>
-        </li>
-    </ul>
-    <hr>
-    <div class="small text-muted">
-        Laravel 12 • PHP 8.2
-    </div>
-</div>
 
-<div class="offcanvas offcanvas-start" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="adminSidebarLabel">🎬 CINEMA</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <div class="sidebar-groups">
+        @foreach($navGroups as $group)
+            @php($items = $visibleItems($group['items']))
+            @continue(empty($items))
+            <div class="sidebar-group-card">
+                <div class="sidebar-section-title">{{ $group['title'] }}</div>
+                <ul class="nav flex-column">
+                    @foreach($items as $item)
+                        <li>
+                            <a href="{{ route($item['route']) }}" class="nav-link {{ $isActive($item['pattern']) }}">
+                                <span class="nav-icon-wrap"><i class="bi {{ $item['icon'] }}"></i></span>
+                                <span>{{ $item['label'] }}</span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endforeach
     </div>
-    <div class="offcanvas-body">
-        <ul class="nav nav-pills flex-column mb-auto gap-1">
-            <li class="nav-item">
-                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ $isActive('admin.dashboard') }}">
-                    Dashboard
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.movies.index') }}" class="nav-link {{ $isActive('admin.movies.*') }}">
-                    Phim
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.movie_versions.index') }}" class="nav-link {{ $isActive('admin.movie_versions.*') }}">
-                    Phiên bản phim
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.chains.index') }}" class="nav-link {{ $isActive('admin.chains.*') }}">
-                    Chuỗi rạp
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.cinemas.index') }}" class="nav-link {{ $isActive('admin.cinemas.*') }}">
-                    Rạp
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.auditoriums.index') }}" class="nav-link {{ $isActive('admin.auditoriums.*') }}">
-                    Phòng chiếu
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.shows.index') }}" class="nav-link {{ $isActive('admin.shows.*') }}">
-                    Suất chiếu
-                </a>
-            </li>
-        </ul>
+</aside>
+
+<div class="offcanvas offcanvas-start text-bg-dark border-0" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
+    <div class="offcanvas-header px-4 pt-4">
+        <h5 class="offcanvas-title" id="adminSidebarLabel">FPL Cinemas Admin</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body px-3 pb-4">
+        <div class="sidebar-groups">
+            @foreach($navGroups as $group)
+                @php($items = $visibleItems($group['items']))
+                @continue(empty($items))
+                <div class="sidebar-group-card">
+                    <div class="sidebar-section-title">{{ $group['title'] }}</div>
+                    <ul class="nav flex-column">
+                        @foreach($items as $item)
+                            <li>
+                                <a href="{{ route($item['route']) }}" class="nav-link {{ $isActive($item['pattern']) }}">
+                                    <span class="nav-icon-wrap"><i class="bi {{ $item['icon'] }}"></i></span>
+                                    <span>{{ $item['label'] }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div>
     </div>
 </div>

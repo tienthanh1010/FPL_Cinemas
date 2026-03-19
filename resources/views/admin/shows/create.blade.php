@@ -3,7 +3,16 @@
 @section('title', 'Thêm suất chiếu')
 
 @section('content')
-    <h2 class="h4 mb-3">Thêm suất chiếu</h2>
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Create Show</p>
+            <h2>Tạo suất chiếu</h2>
+            <p>Chọn đúng phòng và phiên bản phim để lên lịch chiếu hợp lệ.</p>
+        </div>
+        <div>
+            <a href="{{ route('admin.shows.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+        </div>
+    </section>
 
     <div class="card">
         <div class="card-body">

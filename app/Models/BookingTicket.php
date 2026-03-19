@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BookingTicket extends Model
 {
@@ -19,4 +20,14 @@ class BookingTicket extends Model
         'final_price_amount',
         'status',
     ];
+
+    public function seat(): BelongsTo
+    {
+        return $this->belongsTo(Seat::class, 'seat_id');
+    }
+
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class, 'booking_id');
+    }
 }
