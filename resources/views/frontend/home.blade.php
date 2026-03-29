@@ -91,14 +91,14 @@
                   <span>{{ $stats['movie_count'] }} tựa phim đã sẵn sàng</span>
                 </div>
               </a>
-              <a href="#experience" class="quick-action-card">
-                <i class="bi bi-camera-reels"></i>
+              <a href="#upcoming" class="quick-action-card">
+                <i class="bi bi-calendar-event"></i>
                 <div>
-                  <strong>Không gian trải nghiệm</strong>
-                  <span>Phòng chiếu, ghế ngồi và ưu đãi</span>
+                  <strong>Phim sắp chiếu</strong>
+                  <span>Danh sách phim mới chuẩn bị ra mắt</span>
                 </div>
               </a>
-              <a href="#offers" class="quick-action-card">
+              <a href="/uu-dai" class="quick-action-card">
                 <i class="bi bi-gift"></i>
                 <div>
                   <strong>Ưu đãi thành viên</strong>
@@ -160,22 +160,100 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="special-tab" data-bs-toggle="tab" data-bs-target="#special-pane" type="button" role="tab">Chọn lọc đặc biệt</button>
             </li>
+            <li class="nav-item ms-auto">
+              <a href="{{ route('movies.now_showing') }}" class="nav-link btn-see-all" role="button">
+                <i class="bi bi-arrow-right me-2"></i>Xem tất cả phim
+              </a>
+            </li>
           </ul>
 
           <div class="tab-content pt-4">
             <div class="tab-pane fade show active" id="now-showing-pane" role="tabpanel" tabindex="0">
-              <div class="row g-4">
-                @foreach($nowShowing as $movie)
-                  <div class="col-sm-6 col-xl-3">
-                    @include('frontend.partials.movie-card', ['movie' => $movie])
+              <!-- Now Showing Filters & Sort -->
+              <div class="now-showing-controls mb-4">
+                <form method="GET" action="#now-showing-pane" class="now-showing-filters">
+                  <div class="filters-row">
+                    <div class="filter-group">
+                      <label for="filterGenre" class="filter-label"><i class="bi bi-tag"></i> Thể loại</label>
+                      <select id="filterGenre" name="genre" class="filter-select" onchange="this.form.submit()">
+                        <option value="">Tất cả thể loại</option>
+                        @foreach($categories as $category)
+                          <option value="{{ $category->id }}" @selected($filterGenre == $category->id)>
+                            {{ $category->name }}
+                          </option>
+                        @endforeach
+                      </select>
+                    </div>
+                    
+                    @if($formats && count($formats) > 0)
+                      <div class="filter-group">
+                        <label for="filterFormat" class="filter-label"><i class="bi bi-projector"></i> Định dạng</label>
+                        <select id="filterFormat" name="format" class="filter-select" onchange="this.form.submit()">
+                          <option value="">Tất cả định dạng</option>
+                          @foreach($formats as $format)
+                            <option value="{{ $format['value'] }}" @selected($filterFormat == $format['value'])>
+                              {{ $format['label'] }}
+                            </option>
+                          @endforeach
+                        </select>
+                      </div>
+                    @endif
+                    
+                    @if($cinemas && count($cinemas) > 0)
+                      <div class="filter-group">
+                        <label for="filterCinema" class="filter-label"><i class="bi bi-building"></i> Rạp chiếu</label>
+                        <select id="filterCinema" name="cinema" class="filter-select" onchange="this.form.submit()">
+                          <option value="">Tất cả rạp</option>
+                          @foreach($cinemas as $cinema)
+                            <option value="{{ $cinema['id'] }}" @selected($filterCinema == $cinema['id'])>
+                              {{ $cinema['name'] }}
+                            </option>
+                          @endforeach
+                        </select>
+                      </div>
+                    @endif
+                    
+                    <div class="filter-group">
+                      <label for="sortBy" class="filter-label"><i class="bi bi-arrow-down-up"></i> Sắp xếp</label>
+                      <select id="sortBy" name="sort" class="filter-select" onchange="this.form.submit()">
+                        <option value="release_date" @selected($sortBy == 'release_date')>Mới nhất phát hành</option>
+                        <option value="title" @selected($sortBy == 'title')>Tên phim (A-Z)</option>
+                        <option value="popular" @selected($sortBy == 'popular')>Suất chiếu nhiều nhất</option>
+                      </select>
+                    </div>
+                    
+                    @if($filterGenre || $filterFormat || $filterCinema)
+                      <div class="filter-group">
+                        <a href="{{ route('home') }}" class="btn btn-sm btn-outline-secondary">
+                          <i class="bi bi-x"></i> Xoá bộ lọc
+                        </a>
+                      </div>
+                    @endif
                   </div>
-                @endforeach
+                </form>
+              </div>
+
+              <!-- Movies Grid -->
+              <div class="row g-4">
+                @forelse($nowShowing as $movie)
+                  <div class="col-sm-6 col-lg-4 col-xl-3">
+                    @include('frontend.partials.movie-card', ['movie' => $movie, 'showNextShowtime' => true])
+                  </div>
+                @empty
+                  <div class="col-12">
+                    <div class="glass-panel empty-panel">
+                      <i class="bi bi-search"></i>
+                      <p>Không có kết quả phù hợp. Hãy thử thay đổi bộ lọc.</p>
+                    </div>
+                  </div>
+                @endforelse
               </div>
             </div>
+            
             <div class="tab-pane fade" id="coming-soon-pane" role="tabpanel" tabindex="0">
               <div class="row g-4">
                 @forelse($comingSoon as $movie)
-                  <div class="col-sm-6 col-xl-3">
+                  <div class="col-sm-6 col-lg-4 col-xl-3">
                     @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Coming'])
                   </div>
                 @empty
@@ -185,10 +263,11 @@
                 @endforelse
               </div>
             </div>
+            
             <div class="tab-pane fade" id="special-pane" role="tabpanel" tabindex="0">
               <div class="row g-4">
                 @foreach($specialMovies as $movie)
-                  <div class="col-sm-6 col-xl-3">
+                  <div class="col-sm-6 col-lg-4 col-xl-3">
                     @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Spotlight'])
                   </div>
                 @endforeach
@@ -211,66 +290,97 @@
     </div>
   </section>
 
-  <section class="section-space section-alt" id="experience">
+  <section class="section-space section-alt" id="upcoming">
     <div class="container-fluid app-container">
-      <div class="row g-4 align-items-stretch">
-        <div class="col-lg-6">
-          <div class="glass-panel feature-panel h-100">
-            <span class="section-eyebrow">Thiết kế trang chủ</span>
-            <h2>Điểm khác biệt rõ so với giao diện tham chiếu</h2>
-            <div class="feature-list">
-              <div>
-                <i class="bi bi-layout-text-window"></i>
-                <div>
-                  <strong>Bố cục rộng, thoáng</strong>
-                  <p>Hero chia 2 cột rõ ràng, khu đặt vé nhanh nằm ngay đầu trang thay vì chỉ bám menu trên.</p>
-                </div>
-              </div>
-              <div>
-                <i class="bi bi-palette2"></i>
-                <div>
-                  <strong>Màu sắc khác biệt</strong>
-                  <p>Tông xanh đêm, tím than và cam đồng giúp giao diện giữ vibe điện ảnh nhưng không bị giống thương hiệu tham chiếu.</p>
-                </div>
-              </div>
-              <div>
-                <i class="bi bi-grid-1x2"></i>
-                <div>
-                  <strong>Card & glassmorphism</strong>
-                  <p>Sử dụng card bo tròn lớn, nền kính mờ và lớp bóng mềm để tạo cảm giác cao cấp hơn.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="row gy-4">
+        <div class="col-12 mb-3">
+          <h2 class="section-title">Phim sắp chiếu</h2>
+          <p class="text-muted">Các tựa phim chuẩn bị ra rạp trong thời gian tới.</p>
         </div>
-        <div class="col-lg-6">
-          <div class="experience-grid h-100">
-            @foreach($categories->take(6) as $category)
-              <a href="{{ route('category.show', $category) }}" class="experience-card">
-                <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
-                <strong>{{ $category->name }}</strong>
-                <small>{{ $category->movies_count }} phim phù hợp</small>
-              </a>
-            @endforeach
+
+        @forelse($comingSoon as $movie)
+          <div class="col-sm-6 col-lg-3">
+            @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Sắp chiếu'])
           </div>
-        </div>
+        @empty
+          <div class="col-12">
+            <div class="glass-panel empty-panel">Hiện chưa có dữ liệu phim sắp chiếu. Bạn có thể thêm dữ liệu release_date trong tương lai để phần này nổi bật hơn.</div>
+          </div>
+        @endforelse
       </div>
     </div>
   </section>
 
-  <section class="section-space" id="offers">
-    <div class="container-fluid app-container">
-      <div class="offers-banner">
-        <div>
-          <span class="section-eyebrow">Ưu đãi & thành viên</span>
-          <h2>Thiết kế sẵn chỗ cho combo, voucher và khuyến mãi</h2>
-          <p>Phần UI này hợp với các module bạn đang xây: combo bắp nước, giá động, voucher và quản lý thành viên.</p>
+
+      <div class="promotion-toolbar mb-4 d-flex flex-wrap align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="text-white fw-bold">Lọc ưu đãi:</span>
+          <select id="offer-kind-filter" class="form-select form-select-sm" style="width: 170px;">
+            <option value="all">Tất cả</option>
+            <option value="coupon">Thẻ</option>
+            <option value="combo">Combo</option>
+            <option value="price">Giá/tặng</option>
+          </select>
+
+          <select id="offer-type-filter" class="form-select form-select-sm" style="width: 170px;">
+            <option value="all">Tất cả loại</option>
+            @foreach($promotionTypes as $code => $label)
+              <option value="{{ $code }}">{{ $label }}</option>
+            @endforeach
+          </select>
         </div>
-        <div class="offers-actions">
-          <a href="#movie-sections" class="btn btn-cinema-primary">Xem phim nổi bật</a>
-          <a href="{{ route('admin.login') }}" class="btn btn-cinema-secondary">Vào trang quản trị</a>
+
+        <div>
+          <a href="{{ route('movies.now_showing') }}" class="btn btn-cinema-secondary me-2">Phim đang chiếu</a>
+          <a href="{{ route('movies.coming_soon') }}" class="btn btn-cinema-primary">Phim sắp chiếu</a>
         </div>
       </div>
+
+      <div class="offer-carousel d-flex gap-3 overflow-auto pb-2" id="offerCarousel">
+        @forelse($promotions as $promo)
+          <article class="offer-panel card flex-shrink-0" data-kind="{{ $promo->applies_to == 'ORDER' ? 'price' : (strtolower($promo->applies_to)=='ticket' ? 'ticket' : 'product') }}" data-type="{{ $promo->applies_to }}">
+            <div class="card-body">
+              <div class="offer-badge">{{ $promo->code }}</div>
+              <h5 class="card-title">{{ $promo->name }}</h5>
+              <p class="card-text text-truncate">{{ $promo->description ?: 'Ưu đãi hấp dẫn dành cho thành viên Aurora.' }}</p>
+              <div class="small text-muted mb-2">Giảm {{ $promo->promo_type == 'PERCENT' ? $promo->discount_value . '%' : number_format($promo->discount_value, 0, ',', '.') . 'đ' }} · Áp dụng: {{ $promotionTypes[$promo->applies_to] ?? $promo->applies_to }}</div>
+              <div class="d-flex gap-1 flex-wrap">
+                @if($promo->cinemas->isNotEmpty())
+                  <span class="badge text-bg-info">{{ $promo->cinemas->count() }} rạp</span>
+                @endif
+                @if($promo->movies->isNotEmpty())
+                  <span class="badge text-bg-warning">{{ $promo->movies->count() }} phim</span>
+                @endif
+              </div>
+              <a href="#" class="btn btn-cinema-primary btn-sm mt-2">Xem chi tiết</a>
+            </div>
+          </article>
+        @empty
+          <div class="glass-panel empty-panel w-100">Hiện không có ưu đãi nào đang hoạt động.</div>
+        @endforelse
+      </div>
+
+      <script>
+        document.getElementById('offer-kind-filter').addEventListener('change', function() {
+          updateOfferFilters();
+        });
+        document.getElementById('offer-type-filter').addEventListener('change', function() {
+          updateOfferFilters();
+        });
+
+        function updateOfferFilters() {
+          const kind = document.getElementById('offer-kind-filter').value;
+          const type = document.getElementById('offer-type-filter').value;
+
+          document.querySelectorAll('#offerCarousel .offer-panel').forEach(panel => {
+            const panelKind = panel.dataset.kind || 'price';
+            const panelType = panel.dataset.type || 'ORDER';
+            const matchKind = (kind === 'all') || (panelKind === kind);
+            const matchType = (type === 'all') || (panelType === type);
+            panel.style.display = (matchKind && matchType) ? '' : 'none';
+          });
+        }
+      </script>
     </div>
   </section>
 @endsection
