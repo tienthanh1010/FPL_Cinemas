@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        :root {
+        :root { 
             --admin-bg: #f4f7fb;
             --admin-surface: rgba(255, 255, 255, .92);
             --admin-surface-strong: #ffffff;

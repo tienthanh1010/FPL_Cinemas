@@ -5,7 +5,8 @@
 @section('content')
   <section class="section-space pt-4 pt-lg-5">
     <div class="container-fluid app-container">
-      <div class="showtime-hero glass-panel mb-4">
+      <!-- Hero Section -->
+      <div class="showtime-hero glass-panel mb-5">
         <div class="showtime-hero__poster">
           @if($movie->poster_url)
             <img src="{{ $movie->poster_url }}" alt="{{ $movie->title }}">
@@ -22,100 +23,169 @@
             <span><i class="bi bi-calendar-event me-2"></i>{{ optional($movie->release_date)->format('d.m.Y') ?: 'Đang cập nhật' }}</span>
             <span><i class="bi bi-tags me-2"></i>{{ $movie->genres->pluck('name')->implode(' · ') ?: 'Chưa gán thể loại' }}</span>
           </div>
-          <div class="d-flex flex-wrap gap-2 mt-4">
-            <a class="btn btn-cinema-primary" href="#booking-form"><i class="bi bi-ticket-detailed me-2"></i>Đặt vé ngay</a>
-            <a class="btn btn-cinema-secondary" href="{{ route('home') }}"><i class="bi bi-arrow-left me-2"></i>Trở lại trang chủ</a>
+        </div>
+      </div>
+
+      <!-- Booking Panel -->
+      <div class="booking-header glass-panel" id="booking-form">
+        <div class="panel-heading">
+          <span class="section-eyebrow">Chọn suất chiếu</span>
+          <h2>Đặt vé {{ $movie->title }}</h2>
+        </div>
+
+        <!-- Date Calendar -->
+        <div class="booking-section booking-dates">
+          <div class="section-label">Chọn ngày</div>
+          <div class="date-calendar">
+            @php
+              $startDate = now();
+              $dates = collect(range(0, 13))->map(fn ($i) => $startDate->clone()->addDays($i));
+            @endphp
+            @foreach($dates as $date)
+              <label class="date-item">
+                <input type="radio" name="show_date" value="{{ $date->format('Y-m-d') }}" {{ $loop->first ? 'checked' : '' }}>
+                <div class="date-box">
+                  <span class="date-month">{{ $date->format('m') }}</span>
+                  <span class="date-day">{{ $date->format('d') }}</span>
+                  <span class="date-weekday">{{ $date->translatedFormat('D') }}</span>
+                </div>
+              </label>
+            @endforeach
+          </div>
+        </div>
+
+        <!-- Cinema & Location Filter -->
+        <div class="booking-section booking-filters">
+          <div class="filter-trio">
+            <div class="filter-box">
+              <div class="section-label">Chọn rạp</div>
+              @php
+                $cinemas = $shows->pluck('auditorium.cinema')->unique('id')->values();
+              @endphp
+              <select id="cinema-select" class="form-select">
+                <option value="">Tất cả rạp</option>
+                @foreach($cinemas as $cinema)
+                  <option value="{{ $cinema->id }}">{{ $cinema->name }}</option>
+                @endforeach
+              </select>
+            </div>
+
+            <div class="filter-box">
+              <div class="section-label">Định dạng</div>
+              @php
+                $formats = $shows->flatMap(fn ($s) => collect([$s->movieVersion->format]))->unique()->values();
+              @endphp
+              <select id="format-select" class="form-select">
+                <option value="">Tất cả định dạng</option>
+                @foreach($formats as $format)
+                  <option value="{{ $format }}">{{ $format }}</option>
+                @endforeach
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="row g-4 align-items-start">
-        <div class="col-xl-7">
-          <div class="glass-panel h-100">
-            <div class="panel-heading">
-              <div>
-                <span class="section-eyebrow">Các ngày đang mở bán</span>
-                <h2>Suất chiếu khả dụng</h2>
-              </div>
-            </div>
+      <!-- Showtimes Grid -->
+      <div class="showtimes-container mt-5">
+        <div class="panel-heading mb-4">
+          <span class="section-eyebrow">Lịch chiếu</span>
+          <h2>Chọn suất phim bạn muốn</h2>
+        </div>
 
-            <div class="show-date-groups">
-              @forelse($showsByDate as $date => $dateShows)
-                <div class="show-date-card">
-                  <div class="show-date-card__header">
-                    <div>
-                      <strong>{{ \Carbon\Carbon::parse($date)->translatedFormat('l, d/m/Y') }}</strong>
-                      <span>{{ $dateShows->count() }} suất chiếu</span>
-                    </div>
-                    <span class="date-pill">{{ \Carbon\Carbon::parse($date)->format('d.m') }}</span>
+        <div class="showtimes-grid">
+          @php
+            $showsBycinema = $shows->groupBy(fn ($s) => $s->auditorium->cinema->name);
+          @endphp
+          
+          @forelse($showsBycinema as $cinema => $cinemaShows)
+            @php $cinemaId = $cinemaShows->first()->auditorium->cinema->id; @endphp
+            <div class="cinema-block" data-cinema-id="{{ $cinemaId }}">
+              <div class="cinema-header">
+                <h3>{{ $cinema }}</h3>
+              </div>
+              
+              @php
+                $showsByAuditorium = $cinemaShows->groupBy(fn ($s) => $s->auditorium->name);
+              @endphp
+              
+              @foreach($showsByAuditorium as $auditorium => $auditoriumShows)
+                <div class="auditorium-block">
+                  <div class="auditorium-header">
+                    <span class="auditorium-name">{{ $auditorium }}</span>
                   </div>
-                  <div class="showtime-grid">
-                    @foreach($dateShows as $show)
-                      <div class="showtime-card {{ $show->status === 'ON_SALE' ? 'is-on-sale' : '' }}">
-                        <div>
-                          <div class="showtime-card__time">{{ $show->start_time->format('H:i') }} <small>→ {{ $show->end_time->format('H:i') }}</small></div>
-                          <div class="showtime-card__meta">{{ $show->auditorium->name }} · {{ $show->movieVersion->format }} · {{ $show->auditorium->cinema->name }}</div>
-                        </div>
-                        <span class="status-badge">{{ $show->status === 'ON_SALE' ? 'Mở bán' : 'Sắp chiếu' }}</span>
-                      </div>
+                  <div class="showtime-list">
+                    @foreach($auditoriumShows->sortBy('start_time') as $show)
+                      <a href="{{ route('booking.store') }}" class="showtime-item {{ $show->status === 'ON_SALE' ? 'is-bookable' : '' }}" data-show="{{ $show->id }}">
+                        <span class="showtime-time">{{ $show->start_time->format('H:i') }}</span>
+                        <span class="showtime-format">{{ $show->movieVersion->format }}</span>
+                      </a>
                     @endforeach
                   </div>
                 </div>
-              @empty
-                <div class="empty-panel">Chưa có suất chiếu nào cho phim này.</div>
-              @endforelse
+              @endforeach
             </div>
-          </div>
+          @empty
+            <div class="empty-panel">Chưa có suất chiếu nào cho phim này.</div>
+          @endforelse
         </div>
+      </div>
 
-        <div class="col-xl-5" id="booking-form">
-          <div class="glass-panel booking-panel sticky-xl-top">
-            <div class="panel-heading">
-              <div>
-                <span class="section-eyebrow">Đặt vé demo</span>
-                <h2>Thông tin booking</h2>
-              </div>
-            </div>
+      <!-- Booking Form (Hidden Modal) -->
+      <form method="POST" action="{{ route('booking.store') }}" id="booking-form-modal" class="d-none">
+        @csrf
+        <input type="hidden" name="show_id" id="selected_show_id">
+        <input type="hidden" name="qty" value="1">
+      </form>
 
-            <form method="POST" action="{{ route('booking.store') }}" class="booking-form-grid">
-              @csrf
-              <div class="form-field full-width">
-                <label>Suất chiếu</label>
-                <select class="form-select cinema-select" name="show_id" required>
-                  @forelse(($bookableShows ?? $shows) as $show)
-                    <option value="{{ $show->id }}">{{ $show->start_time->format('d/m H:i') }} · {{ $show->auditorium->name }} · {{ $show->movieVersion->format }}</option>
-                  @endforeach
-                                  @empty
-                    <option value="">Chưa có suất đang mở bán</option>
-                  @endforelse
-                </select>
-              </div>
-
-              <div class="form-field">
-                <label>Số vé</label>
-                <input class="form-control cinema-input" type="number" min="1" max="10" name="qty" value="{{ old('qty', 2) }}" required>
-              </div>
-              <div class="form-field">
-                <label>Điện thoại</label>
-                <input class="form-control cinema-input" name="contact_phone" value="{{ old('contact_phone') }}" placeholder="0900 000 000" required>
-              </div>
-              <div class="form-field full-width">
-                <label>Họ và tên</label>
-                <input class="form-control cinema-input" name="contact_name" value="{{ old('contact_name') }}" placeholder="Nguyễn Văn A" required>
-              </div>
-              <div class="form-field full-width">
-                <label>Email</label>
-                <input class="form-control cinema-input" type="email" name="contact_email" value="{{ old('contact_email') }}" placeholder="name@example.com">
-              </div>
-
-              <button class="btn btn-cinema-primary w-100 full-width" type="submit" {{ (($bookableShows ?? collect())->isEmpty()) ? "disabled" : "" }}>
-                <i class="bi bi-ticket-detailed me-2"></i>Tạo booking
-              </button>
-              <p class="booking-note full-width mb-0">Hệ thống sẽ tự chọn các ghế trống đầu tiên và tạo booking trạng thái <strong>PENDING</strong>. Chỉ các suất đang mở bán mới có thể đặt.</p>
-            </form>
-          </div>
-        </div>
+      <div class="mt-5">
+        <a href="{{ route('home') }}" class="btn btn-cinema-secondary">
+          <i class="bi bi-arrow-left me-2"></i>Trở lại trang chủ
+        </a>
       </div>
     </div>
   </section>
+
+  @push('scripts')
+    <script>
+      // Handle showtime item clicks
+      document.querySelectorAll('.showtime-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+          const showId = this.dataset.show;
+          document.getElementById('selected_show_id').value = showId;
+          document.getElementById('booking-form-modal').submit();
+        });
+      });
+
+      // Handle format and cinema select filters
+      document.getElementById('format-select')?.addEventListener('change', filterShowtimes);
+      document.getElementById('cinema-select')?.addEventListener('change', filterShowtimes);
+
+      function filterShowtimes() {
+        const selectedCinema = document.getElementById('cinema-select')?.value;
+        const selectedFormat = document.getElementById('format-select')?.value;
+
+        document.querySelectorAll('.cinema-block').forEach(block => {
+          let hasVisibleShowtimes = false;
+          const cinemaId = block.dataset.cinemaId;
+
+          if (!selectedCinema || selectedCinema === cinemaId) {
+            block.querySelectorAll('.showtime-item').forEach(item => {
+              const format = item.querySelector('.showtime-format')?.textContent.trim();
+              if (!selectedFormat || format === selectedFormat) {
+                item.style.display = '';
+                hasVisibleShowtimes = true;
+              } else {
+                item.style.display = 'none';
+              }
+            });
+            block.style.display = hasVisibleShowtimes ? '' : 'none';
+          } else {
+            block.style.display = 'none';
+          }
+        });
+      }
+    </script>
+  @endpush
 @endsection
