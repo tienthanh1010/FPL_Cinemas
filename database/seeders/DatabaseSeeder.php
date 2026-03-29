@@ -17,7 +17,6 @@ public function run(): void
 {
     $this->call([
         CinemaDemoSeeder::class,
-        PromotionSeeder::class,
     ]);
 }
 }

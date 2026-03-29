@@ -22,7 +22,7 @@
         </div>
         <div class="d-flex align-items-center gap-3 small text-white-50">
           <a href="#movie-sections">Lịch chiếu</a>
-          <a href="/uu-dai">Ưu đãi</a>
+          <a href="#offers">Ưu đãi</a>
           <a href="{{ route('admin.login') }}">Quản trị</a>
         </div>
       </div>
@@ -46,9 +46,9 @@
           <div class="collapse navbar-collapse" id="siteNavbar">
             <ul class="navbar-nav mx-auto align-items-xl-center gap-xl-2">
               <li class="nav-item"><a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Trang chủ</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ route('movies.now_showing') }}">Phim đang chiếu</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ route('movies.coming_soon') }}">Phim sắp chiếu</a></li>
-              <li class="nav-item"><a class="nav-link" href="/uu-dai">Ưu đãi thành viên</a></li>
+              <li class="nav-item"><a class="nav-link" href="#movie-sections">Phim đang chiếu</a></li>
+              <li class="nav-item"><a class="nav-link" href="#experience">Trải nghiệm rạp</a></li>
+              <li class="nav-item"><a class="nav-link" href="#offers">Ưu đãi thành viên</a></li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle {{ request()->routeIs('category.show') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Thể loại</a>
                 <ul class="dropdown-menu dropdown-menu-dark glass-dropdown border-0 shadow-lg mt-2">
@@ -111,7 +111,7 @@
             <ul>
               <li><a href="#movie-sections">Lịch chiếu nổi bật</a></li>
               <li><a href="#experience">Không gian rạp</a></li>
-              <li><a href="/uu-dai">Ưu đãi thành viên</a></li>
+              <li><a href="#offers">Ưu đãi thành viên</a></li>
               <li><a href="{{ route('admin.login') }}">Khu quản trị</a></li>
             </ul>
           </div>

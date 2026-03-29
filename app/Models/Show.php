@@ -62,26 +62,4 @@ class Show extends Model
     {
         return $this->movieVersion?->movie;
     }
-
-    /**
-     * Get available seats count
-     */
-    public function getAvailableSeatsCount(): int
-    {
-        $totalSeats = $this->auditorium?->seats()->count() ?? 0;
-        $bookedSeats = $this->tickets()
-            ->whereHas('booking', fn ($q) => $q->whereIn('status', ['PENDING', 'CONFIRMED']))
-            ->count();
-        return max(0, $totalSeats - $bookedSeats);
-    }
-
-    /**
-     * Get minimum price for this show
-     */
-    public function getMinimumPrice(): ?float
-    {
-        return $this->prices()
-            ->selectRaw('MIN(price) as min_price')
-            ->first()?->min_price;
-    }
 }

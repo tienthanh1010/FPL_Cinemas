@@ -6,10 +6,6 @@ use App\Http\Controllers\Frontend\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/phim-dang-chieu', [HomeController::class, 'nowShowing'])->name('movies.now_showing');
-Route::get('/phim-sap-chieu', [HomeController::class, 'comingSoon'])->name('movies.coming_soon');
-Route::get('/uu-dai', [HomeController::class, 'offers'])->name('offers');
-Route::get('/api/promotions', [HomeController::class, 'apiPromotions'])->name('api.promotions');
 Route::get('/the-loai/{category}', [HomeController::class, 'category'])->name('category.show');
 Route::get('/phim/{movie}/suat-chieu', [HomeController::class, 'showtimes'])->name('movies.showtimes');
 Route::post('/phim/{movie}/reviews', [ReviewController::class, 'store'])->name('movies.reviews.store');
