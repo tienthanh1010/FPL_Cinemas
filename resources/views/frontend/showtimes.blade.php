@@ -1,6 +1,10 @@
 @extends('frontend.layout')
 
-@section('title', 'Lịch chiếu ' . $movie->title)
+@section('title', 'Đặt vé ' . $movie->title)
+
+@php
+  $defaultShowId = old('show_id', optional($bookableShows->first())->id);
+@endphp
 
 @section('content')
   <section class="section-space pt-4 pt-lg-5">
@@ -15,12 +19,12 @@
           @endif
         </div>
         <div class="showtime-hero__copy">
-          <span class="section-eyebrow">Lịch chiếu chi tiết</span>
+          <span class="section-eyebrow">Trang chi tiết phim & đặt vé</span>
           <h1>{{ $movie->title }}</h1>
-          <p>{{ $movie->synopsis ? \Illuminate\Support\Str::limit($movie->synopsis, 260) : 'Giao diện lịch chiếu được thiết kế lại theo dạng thẻ ngày và thẻ suất, trực quan hơn và tách biệt rõ với website tham chiếu.' }}</p>
+          <p>{{ $movie->synopsis ? \Illuminate\Support\Str::limit($movie->synopsis, 320) : 'Trang này đã được ghép đầy đủ phần trailer, lịch chiếu, sơ đồ ghế, thanh toán mô phỏng và đánh giá khách hàng.' }}</p>
           <div class="hero-meta hero-meta--compact">
             <span><i class="bi bi-clock me-2"></i>{{ $movie->duration_minutes }} phút</span>
-            <span><i class="bi bi-calendar-event me-2"></i>{{ optional($movie->release_date)->format('d.m.Y') ?: 'Đang cập nhật' }}</span>
+            <span><i class="bi bi-calendar-event me-2"></i>{{ optional($movie->release_date)->format('d/m/Y') ?: 'Đang cập nhật' }}</span>
             <span><i class="bi bi-tags me-2"></i>{{ $movie->genres->pluck('name')->implode(' · ') ?: 'Chưa gán thể loại' }}</span>
           </div>
         </div>
@@ -189,3 +193,120 @@
     </script>
   @endpush
 @endsection
+
+@push('styles')
+  <style>
+    .seatmap-panel{background:rgba(8,12,30,.55);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px}
+    .screen-label{width:min(280px,100%);margin:0 auto 18px;padding:8px 18px;border-radius:999px;background:linear-gradient(135deg, rgba(244,181,98,.25), rgba(255,255,255,.08));text-align:center;font-weight:700;letter-spacing:.18em;font-size:.8rem}
+    .seatmap-grid{display:grid;gap:10px}
+    .seat-row{display:grid;grid-template-columns:36px 1fr;align-items:center;gap:12px}
+    .seat-row__label{font-weight:700;color:rgba(255,255,255,.72)}
+    .seat-row__seats{display:flex;flex-wrap:wrap;gap:8px}
+    .seat-btn{min-width:42px;height:42px;border:none;border-radius:12px;font-size:.82rem;font-weight:700;color:#fff;background:rgba(99,115,255,.22);transition:.2s transform,.2s opacity,.2s background}
+    .seat-btn:hover:not(:disabled){transform:translateY(-2px)}
+    .seat-btn.is-selected{background:linear-gradient(135deg,#f4b562,#ff8a4d)}
+    .seat-btn.is-reserved,.seat-btn.is-blocked{background:rgba(255,255,255,.12);opacity:.45;cursor:not-allowed}
+    .seat-legend{display:flex;flex-wrap:wrap;gap:14px 18px;color:rgba(255,255,255,.72);font-size:.92rem}
+    .seat-dot{display:inline-flex;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px}
+    .seat-dot.available{background:rgba(99,115,255,.6)} .seat-dot.selected{background:#f4b562} .seat-dot.reserved,.seat-dot.blocked{background:rgba(255,255,255,.22)}
+    .review-list{display:grid;gap:16px}
+    .review-card{padding:18px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+    .review-card__head{display:flex;justify-content:space-between;gap:16px;margin-bottom:10px}
+    .js-choose-show{width:100%;text-align:left;border:none}
+  </style>
+@endpush
+
+@push('scripts')
+  <script>
+    const seatMaps = @json($seatMaps);
+    const showSelect = document.getElementById('showSelect');
+    const seatMapEl = document.getElementById('seatMap');
+    const seatInputsEl = document.getElementById('seatInputs');
+    const selectedSeatsTextEl = document.getElementById('selectedSeatsText');
+    const selectedSeatIdsByShow = {};
+
+    function renderSeatMap(showId) {
+      const map = seatMaps[showId];
+      seatMapEl.innerHTML = '';
+      seatInputsEl.innerHTML = '';
+      const selected = selectedSeatIdsByShow[showId] || [];
+
+      if (!map || !map.rows || !map.rows.length) {
+        seatMapEl.innerHTML = '<div class="empty-panel">Suất này chưa có dữ liệu ghế.</div>';
+        selectedSeatsTextEl.textContent = 'Chưa chọn ghế nào.';
+        return;
+      }
+
+      map.rows.forEach((row) => {
+        const firstSeat = row[0] || {};
+        const rowWrap = document.createElement('div');
+        rowWrap.className = 'seat-row';
+        rowWrap.innerHTML = `<div class="seat-row__label">${firstSeat.row || ''}</div><div class="seat-row__seats"></div>`;
+        const seatBox = rowWrap.querySelector('.seat-row__seats');
+
+        row.forEach((seat) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `seat-btn is-${seat.status}`;
+          btn.textContent = seat.code;
+          btn.dataset.seatId = seat.id;
+          btn.dataset.status = seat.status;
+          if (['reserved', 'blocked'].includes(seat.status)) {
+            btn.disabled = true;
+          }
+          if (selected.includes(seat.id)) {
+            btn.classList.add('is-selected');
+          }
+          btn.addEventListener('click', () => toggleSeat(showId, seat.id, seat.code));
+          seatBox.appendChild(btn);
+        });
+
+        seatMapEl.appendChild(rowWrap);
+      });
+
+      selected.forEach((seatId) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'seat_ids[]';
+        input.value = seatId;
+        seatInputsEl.appendChild(input);
+      });
+
+      selectedSeatsTextEl.textContent = selected.length
+        ? `Ghế đã chọn: ${selected.join(', ')} (${selected.length} ghế)`
+        : 'Chưa chọn ghế nào. Nếu không chọn, hệ thống sẽ tự xếp ghế trống.';
+    }
+
+    function toggleSeat(showId, seatId, seatCode) {
+      if (!selectedSeatIdsByShow[showId]) selectedSeatIdsByShow[showId] = [];
+      const arr = selectedSeatIdsByShow[showId];
+      const index = arr.indexOf(seatId);
+      if (index >= 0) {
+        arr.splice(index, 1);
+      } else {
+        arr.push(seatId);
+      }
+      renderSeatMap(showId);
+      const selectedCodes = [];
+      (seatMaps[showId]?.rows || []).flat().forEach(seat => {
+        if ((selectedSeatIdsByShow[showId] || []).includes(seat.id)) selectedCodes.push(seat.code);
+      });
+      selectedSeatsTextEl.textContent = selectedCodes.length
+        ? `Ghế đã chọn: ${selectedCodes.join(', ')} (${selectedCodes.length} ghế)`
+        : 'Chưa chọn ghế nào. Nếu không chọn, hệ thống sẽ tự xếp ghế trống.';
+    }
+
+    showSelect?.addEventListener('change', (e) => renderSeatMap(e.target.value));
+    document.querySelectorAll('.js-choose-show').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.showId) {
+          showSelect.value = btn.dataset.showId;
+          renderSeatMap(btn.dataset.showId);
+          document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    if (showSelect?.value) renderSeatMap(showSelect.value);
+  </script>
+@endpush

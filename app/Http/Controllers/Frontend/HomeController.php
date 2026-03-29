@@ -202,7 +202,107 @@ class HomeController extends Controller
             })
             ->values();
 
-        return view('frontend.showtimes', compact('movie', 'shows', 'showsByDate', 'bookableShows'));
+        $seatMaps = $bookableShows->mapWithKeys(function (Show $show) {
+            $seats = Seat::query()
+                ->where('auditorium_id', $show->auditorium_id)
+                ->where('is_active', 1)
+                ->orderBy('row_label')
+                ->orderBy('col_number')
+                ->get();
+
+            $reservedSeatIds = BookingTicket::query()
+                ->where('show_id', $show->id)
+                ->whereIn('status', ['RESERVED', 'ISSUED'])
+                ->pluck('seat_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $blockedSeatIds = SeatBlock::query()
+                ->where('auditorium_id', $show->auditorium_id)
+                ->where('start_at', '<', $show->end_time)
+                ->where('end_at', '>', $show->start_time)
+                ->pluck('seat_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            return [$show->id => [
+                'show_id' => $show->id,
+                'auditorium' => $show->auditorium->name,
+                'cinema' => $show->auditorium->cinema->name,
+                'rows' => $seats->groupBy('row_label')->map(function (Collection $rowSeats) use ($reservedSeatIds, $blockedSeatIds) {
+                    return $rowSeats->map(function (Seat $seat) use ($reservedSeatIds, $blockedSeatIds) {
+                        $status = 'available';
+                        if (in_array((int) $seat->id, $blockedSeatIds, true)) {
+                            $status = 'blocked';
+                        } elseif (in_array((int) $seat->id, $reservedSeatIds, true)) {
+                            $status = 'reserved';
+                        }
+
+                        return [
+                            'id' => $seat->id,
+                            'code' => $seat->seat_code ?: ($seat->row_label . $seat->col_number),
+                            'row' => $seat->row_label,
+                            'col' => $seat->col_number,
+                            'status' => $status,
+                            'seat_type_id' => $seat->seat_type_id,
+                        ];
+                    })->values();
+                })->values(),
+            ]];
+        });
+
+        $reviews = Review::query()
+            ->where('movie_id', $movie->id)
+            ->where('is_approved', 1)
+            ->latest('id')
+            ->limit(12)
+            ->get();
+
+        $reviewStats = [
+            'count' => $reviews->count(),
+            'average' => round((float) $reviews->avg('rating'), 1),
+        ];
+
+        $paymentMethods = [
+            'COUNTER' => 'Giữ chỗ - thanh toán tại quầy',
+            'BANK_TRANSFER' => 'Chuyển khoản mô phỏng',
+            'CARD' => 'Thẻ / ví điện tử mô phỏng',
+            'CASH' => 'Thanh toán tiền mặt khi nhận vé',
+        ];
+
+        $trailerEmbedUrl = $this->buildTrailerEmbedUrl($movie->trailer_url);
+
+        return view('frontend.showtimes', compact(
+            'movie', 'shows', 'showsByDate', 'bookableShows', 'seatMaps', 'reviews', 'reviewStats', 'paymentMethods', 'trailerEmbedUrl'
+        ));
+    }
+
+    private function buildTrailerEmbedUrl(?string $url): ?string
+    {
+        if (! $url) {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        $host = strtolower($parts['host'] ?? '');
+        parse_str($parts['query'] ?? '', $query);
+
+        if (str_contains($host, 'youtube.com')) {
+            $id = $query['v'] ?? null;
+            return $id ? 'https://www.youtube.com/embed/' . $id : null;
+        }
+
+        if (str_contains($host, 'youtu.be')) {
+            $path = trim($parts['path'] ?? '', '/');
+            return $path ? 'https://www.youtube.com/embed/' . $path : null;
+        }
+
+        if (str_contains($host, 'vimeo.com')) {
+            $path = trim($parts['path'] ?? '', '/');
+            return $path ? 'https://player.vimeo.com/video/' . $path : null;
+        }
+
+        return null;
     }
 
     public function nowShowing(Request $request): View

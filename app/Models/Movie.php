@@ -76,6 +76,11 @@ class Movie extends Model
         return $this->credits()->wherePivot('role_type', 'CAST');
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'movie_id')->latest('id');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'ACTIVE');
