@@ -36,9 +36,4 @@ class Auditorium extends Model
     {
         return $this->hasMany(Show::class, 'auditorium_id');
     }
-
-    public function seats(): HasMany
-    {
-        return $this->hasMany(Seat::class, 'auditorium_id');
-    }
 }

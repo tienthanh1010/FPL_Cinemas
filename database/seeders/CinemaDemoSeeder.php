@@ -56,12 +56,8 @@ class CinemaDemoSeeder extends Seeder
         // 2) cinemas
         $cinemas = [];
         $cinemaSeeds = [
-            ['code' => 'HCM01', 'name' => 'CineVN - Quận 1',       'province' => 'TP. Hồ Chí Minh', 'district' => 'Quận 1',       'ward' => 'Bến Nghé'],
-            ['code' => 'HCM02', 'name' => 'CineVN - Quận 7',       'province' => 'TP. Hồ Chí Minh', 'district' => 'Quận 7',       'ward' => 'Tân Phú'],
-            ['code' => 'HN01',  'name' => 'CineVN - Hoàn Kiếm',    'province' => 'Hà Nội',           'district' => 'Hoàn Kiếm',    'ward' => 'Hàng Trống'],
-            ['code' => 'HN02',  'name' => 'CineVN - Cầu Giấy',    'province' => 'Hà Nội',           'district' => 'Cầu Giấy',     'ward' => 'Dịch Vọng'],
-            ['code' => 'DN01',  'name' => 'CineVN - Sơn Trà',     'province' => 'Đà Nẵng',         'district' => 'Sơn Trà',      'ward' => 'Phước Mỹ'],
-            ['code' => 'HP01',  'name' => 'CineVN - Ngô Quyền',   'province' => 'Hải Phòng',       'district' => 'Ngô Quyền',    'ward' => 'Máy Tơ'],
+            ['code' => 'HCM01', 'name' => 'CineVN - Quận 1', 'province' => 'TP. Hồ Chí Minh', 'district' => 'Quận 1', 'ward' => 'Bến Nghé'],
+            ['code' => 'HN01',  'name' => 'CineVN - Hoàn Kiếm', 'province' => 'Hà Nội', 'district' => 'Hoàn Kiếm', 'ward' => 'Hàng Trống'],
         ];
 
         foreach ($cinemaSeeds as $c) {
