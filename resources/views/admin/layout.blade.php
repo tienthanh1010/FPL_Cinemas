@@ -223,8 +223,12 @@
             flex-wrap: wrap;
         }
 
+<<<<<<< HEAD
         .admin-user-chip,
         .admin-cinema-chip {
+=======
+        .admin-user-chip {
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -235,8 +239,12 @@
             box-shadow: var(--admin-shadow-soft);
         }
 
+<<<<<<< HEAD
         .admin-user-chip .avatar,
         .admin-cinema-chip .avatar {
+=======
+        .admin-user-chip .avatar {
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             width: 38px;
             height: 38px;
             border-radius: 14px;
@@ -248,10 +256,13 @@
             font-weight: 700;
         }
 
+<<<<<<< HEAD
         .admin-cinema-chip .avatar {
             background: linear-gradient(135deg, #0f766e, #14b8a6);
         }
 
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         .page-body {
             padding: 28px;
         }
@@ -666,6 +677,7 @@
             </div>
 
             <div class="topbar-meta">
+<<<<<<< HEAD
                 @if(($singleCinemaMode ?? false) === true)
                     <div class="admin-cinema-chip">
                         <span class="avatar"><i class="bi bi-buildings-fill"></i></span>
@@ -675,11 +687,17 @@
                         </div>
                     </div>
                 @endif
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                 <div class="admin-user-chip">
                     <span class="avatar">{{ strtoupper(mb_substr($adminUser->name ?? 'A', 0, 1, 'UTF-8')) }}</span>
                     <div>
                         <div class="fw-semibold">{{ $adminUser->name ?? 'Admin' }}</div>
+<<<<<<< HEAD
                         <div class="small text-secondary">{{ $adminUser->roles->pluck('name')->implode(', ') ?: now()->format('d/m/Y H:i') }}</div>
+=======
+                        <div class="small text-secondary">{{ now()->format('d/m/Y H:i') }}</div>
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                     </div>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">

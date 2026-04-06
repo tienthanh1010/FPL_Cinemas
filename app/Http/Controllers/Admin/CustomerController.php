@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+<<<<<<< HEAD
 use App\Models\Booking;
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Refund;
@@ -20,6 +23,7 @@ class CustomerController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
         $customers = Customer::query()
+<<<<<<< HEAD
             ->with(['user', 'loyaltyAccount.tier'])
             ->withCount('bookings')
             ->addSelect([
@@ -29,12 +33,19 @@ class CustomerController extends Controller
                     ->latest('id')
                     ->limit(1),
             ])
+=======
+            ->with(['loyaltyAccount'])
+            ->withCount('bookings')
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('full_name', 'like', "%{$q}%")
                         ->orWhere('phone', 'like', "%{$q}%")
                         ->orWhere('email', 'like', "%{$q}%")
+<<<<<<< HEAD
                         ->orWhereHas('user', fn ($userQuery) => $userQuery->where('email', 'like', "%{$q}%"))
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                         ->orWhereHas('bookings', fn ($booking) => $booking->where('booking_code', 'like', "%{$q}%"));
                 });
             })
@@ -60,13 +71,17 @@ class CustomerController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $customer = Customer::create($this->validateCustomer($request) + ['public_id' => (string) Str::ulid()]);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         return redirect()->route('admin.customers.show', $customer)->with('success', 'Đã tạo khách hàng.');
     }
 
     public function show(Customer $customer): View
     {
         $customer->load([
+<<<<<<< HEAD
             'user',
             'loyaltyAccount.tier',
             'loyaltyAccount.transactions',
@@ -89,6 +104,17 @@ class CustomerController extends Controller
         $refundAmount = (int) $payments->flatMap->refunds->where('status', 'SUCCESS')->sum('amount');
         $paidAmount = (int) $payments->sum('amount');
 
+=======
+            'loyaltyAccount',
+            'bookings.show.movieVersion.movie',
+            'bookings.tickets.seat',
+            'bookings.bookingProducts.product',
+            'bookings.discounts',
+        ]);
+        $payments = Payment::query()->whereIn('booking_id', $customer->bookings->pluck('id'))->with('refunds')->latest('id')->get();
+        $refundAmount = (int) $payments->flatMap->refunds->sum('amount');
+        $paidAmount = (int) $payments->sum('amount');
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         return view('admin.customers.show', compact('customer', 'payments', 'refundAmount', 'paidAmount'));
     }
 
@@ -100,14 +126,20 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer): RedirectResponse
     {
         $customer->update($this->validateCustomer($request, $customer));
+<<<<<<< HEAD
 
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         return redirect()->route('admin.customers.show', $customer)->with('success', 'Đã cập nhật khách hàng.');
     }
 
     public function destroy(Customer $customer): RedirectResponse
     {
         $customer->delete();
+<<<<<<< HEAD
 
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         return redirect()->route('admin.customers.index')->with('success', 'Đã xoá khách hàng.');
     }
 

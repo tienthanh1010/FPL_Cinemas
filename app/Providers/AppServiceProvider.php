@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+<<<<<<< HEAD
 use App\Models\Category;
 use App\Models\ContentPost;
 use App\Services\CinemaContextService;
@@ -11,6 +12,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
+=======
+use Illuminate\Pagination\Paginator;
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(CinemaContextService $cinemaContextService, CustomerAccountService $customerAccountService): void
     {
         Paginator::useBootstrapFive();
+<<<<<<< HEAD
 
         app()->setLocale(config('app.locale', 'vi'));
         Carbon::setLocale(app()->getLocale());
@@ -78,5 +83,7 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with($shared);
         });
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 }

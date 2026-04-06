@@ -2,6 +2,10 @@
 
 @section('title', 'Chi tiết phòng chiếu')
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 @push('styles')
 <style>
     .seatmap-shell {
@@ -208,6 +212,12 @@
         ];
     })->groupBy('section');
 @endphp
+<<<<<<< HEAD
+=======
+=======
+@section('content')
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 <section class="page-header">
     <div>
         <p class="eyebrow">Auditorium detail</p>
@@ -220,6 +230,10 @@
     </div>
 </section>
 <div class="row g-3 mb-4">
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     <div class="col-md-3"><div class="card"><div class="card-body"><div class="fw-semibold">Tổng ghế</div><div class="display-6">{{ $seatStats['total'] ?? $seats->count() }}</div></div></div></div>
     <div class="col-md-3"><div class="card"><div class="card-body"><div class="fw-semibold">Ghế hoạt động</div><div class="display-6">{{ $seatStats['active'] ?? $seats->where('is_active', 1)->count() }}</div></div></div></div>
     <div class="col-md-3"><div class="card"><div class="card-body"><div class="fw-semibold">Ghế bảo trì</div><div class="display-6">{{ $seatStats['maintenance'] ?? $seats->where('is_active', 0)->count() }}</div></div></div></div>
@@ -286,6 +300,21 @@
                         </div>
                     @endforeach
                 </div>
+<<<<<<< HEAD
+=======
+=======
+    <div class="col-md-4"><div class="card"><div class="card-body"><div class="fw-semibold">Tổng ghế</div><div class="display-6">{{ $seats->count() }}</div></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><div class="fw-semibold">Seat map version</div><div class="display-6">{{ $auditorium->seat_map_version }}</div></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><div class="fw-semibold">Hoạt động</div><div class="display-6">{{ $auditorium->is_active ? 'Có' : 'Không' }}</div></div></div></div>
+</div>
+<div class="card mb-4">
+    <div class="card-header fw-semibold">Sơ đồ ghế</div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+            @foreach($seats as $seat)
+                <span class="badge badge-soft-primary">{{ $seat->seat_code }} · {{ $seat->seat_type_name }}</span>
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             @endforeach
         </div>
     </div>

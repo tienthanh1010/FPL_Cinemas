@@ -155,7 +155,15 @@ class MovieController extends Controller
         $creditNames = [
             'DIRECTOR' => $this->implodeRoleNames($movie, 'DIRECTOR'),
             'WRITER' => $this->implodeRoleNames($movie, 'WRITER'),
+<<<<<<< HEAD
             'CAST' => $this->implodeRoleNames($movie, 'ACTOR'),
+=======
+<<<<<<< HEAD
+            'CAST' => $this->implodeRoleNames($movie, 'ACTOR'),
+=======
+            'CAST' => $this->implodeRoleNames($movie, 'CAST'),
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         ];
 
         $versionRows = $movie->versions
@@ -305,7 +313,15 @@ class MovieController extends Controller
             'credits' => [
                 'DIRECTOR' => $this->parsePeopleNames($movieData['credit_director_names'] ?? ''),
                 'WRITER' => $this->parsePeopleNames($movieData['credit_writer_names'] ?? ''),
+<<<<<<< HEAD
                 'ACTOR' => $this->parsePeopleNames($movieData['credit_cast_names'] ?? ''),
+=======
+<<<<<<< HEAD
+                'ACTOR' => $this->parsePeopleNames($movieData['credit_cast_names'] ?? ''),
+=======
+                'CAST' => $this->parsePeopleNames($movieData['credit_cast_names'] ?? ''),
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ],
             'versions' => $versions,
         ];
@@ -331,7 +347,15 @@ class MovieController extends Controller
                 $rows[] = [
                     'movie_id' => $movie->id,
                     'person_id' => $person->id,
+<<<<<<< HEAD
                     'role_type' => $this->normalizeCreditRole($role),
+=======
+<<<<<<< HEAD
+                    'role_type' => $this->normalizeCreditRole($role),
+=======
+                    'role_type' => $role,
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                     'character_name' => null,
                     'sort_order' => $index + 1,
                 ];
@@ -414,6 +438,10 @@ class MovieController extends Controller
 
     private function implodeRoleNames(Movie $movie, string $role): string
     {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         $acceptedRoles = [$this->normalizeCreditRole($role)];
 
         if ($role === 'ACTOR' || $role === 'CAST') {
@@ -422,15 +450,31 @@ class MovieController extends Controller
 
         return $movie->credits
             ->filter(fn ($person) => in_array(($person->pivot->role_type ?? null), $acceptedRoles, true))
+<<<<<<< HEAD
+=======
+=======
+        return $movie->credits
+            ->filter(fn ($person) => ($person->pivot->role_type ?? null) === $role)
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ->pluck('full_name')
             ->implode(', ');
     }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     private function normalizeCreditRole(string $role): string
     {
         return strtoupper(trim($role)) === 'CAST' ? 'ACTOR' : strtoupper(trim($role));
     }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     private function nullableString(mixed $value): ?string
     {
         $value = is_string($value) ? trim($value) : $value;

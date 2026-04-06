@@ -113,7 +113,11 @@
         <div class="login-badge"><i class="bi bi-camera-reels-fill"></i> FPL Cinemas Admin</div>
         <div class="login-title">Quản trị hệ thống rạp phim gọn gàng, đẹp mắt và có logic hơn.</div>
         <p class="login-copy">
+<<<<<<< HEAD
             Khu vực này dùng để quản lý phim, phòng chiếu, suất chiếu, đơn vé, nội dung tin tức và toàn bộ vận hành của rạp hiện tại.
+=======
+            Khu vực này dùng để quản lý phim, phiên bản phim, thể loại, chuỗi rạp, rạp, phòng chiếu và suất chiếu.
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         </p>
 
         <div class="feature-list">

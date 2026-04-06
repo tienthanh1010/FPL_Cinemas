@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @php
   $badgeLabel = $badge ?? 'Hot';
   $showtimeData = $showtimesByMovie[$movie->id] ?? ['count' => 0, 'groups' => [], 'first_show_at' => null];
@@ -8,6 +9,10 @@
   $ctaLabel = $hasUpcomingShows ? 'Mua vé' : ($isComingSoon ? 'Sắp mở bán' : 'Xem lịch chiếu');
 @endphp
 <div class="movie-card movie-card--interactive h-100">
+=======
+@php($badgeLabel = $badge ?? 'Hot')
+<div class="movie-card h-100">
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
   <div class="movie-poster-wrap">
     <span class="movie-badge">{{ $badgeLabel }}</span>
     @if($movie->poster_url)
@@ -18,6 +23,7 @@
       </div>
     @endif
   </div>
+<<<<<<< HEAD
 
   <div class="movie-card__body">
     <div class="movie-title-row">
@@ -60,5 +66,20 @@
         </a>
       @endif
     </div>
+=======
+  <div class="movie-card__body">
+    <div class="movie-title-row">
+      <h3>{{ $movie->title }}</h3>
+      <span class="age-badge">{{ $movie->contentRating?->code ?? 'P' }}</span>
+    </div>
+    <p class="movie-meta">{{ $movie->genres->pluck('name')->take(3)->implode(' · ') ?: 'Đang cập nhật thể loại' }}</p>
+    <div class="movie-specs">
+      <span><i class="bi bi-clock"></i>{{ $movie->duration_minutes }} phút</span>
+      <span><i class="bi bi-calendar3"></i>{{ optional($movie->release_date)->format('d.m.Y') ?: 'N/A' }}</span>
+    </div>
+    <a href="{{ route('movies.showtimes', $movie) }}" class="btn btn-card-action">
+      <i class="bi bi-ticket-detailed me-2"></i>Mua vé
+    </a>
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
   </div>
 </div>

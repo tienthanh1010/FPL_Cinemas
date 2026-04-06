@@ -8,6 +8,13 @@ use App\Models\BookingProduct;
 use App\Models\BookingTicket;
 use App\Models\Customer;
 use App\Models\InventoryBalance;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+use App\Models\Payment;
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 use App\Models\Product;
 use App\Models\Seat;
 use App\Models\SeatBlock;
@@ -15,9 +22,12 @@ use App\Models\Show;
 use App\Models\ShowPrice;
 use App\Models\StockLocation;
 use App\Models\StockMovement;
+<<<<<<< HEAD
 use App\Models\TicketType;
 use Illuminate\View\View;
 use App\Services\CustomerAccountService;
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 use App\Services\ProductPricingService;
 use App\Services\PromotionService;
 use Illuminate\Http\RedirectResponse;
@@ -30,6 +40,7 @@ class BookingController extends Controller
     public function __construct(
         private readonly ProductPricingService $productPricingService,
         private readonly PromotionService $promotionService,
+<<<<<<< HEAD
         private readonly CustomerAccountService $customerAccountService,
     ) {
     }
@@ -183,13 +194,22 @@ class BookingController extends Controller
         ];
     }
 
+=======
+    ) {
+    }
+
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'show_id' => ['required', 'integer'],
             'qty' => ['nullable', 'integer', 'min:1', 'max:10'],
             'seat_ids' => ['nullable', 'array'],
+<<<<<<< HEAD
             'seat_ids.*' => ['integer', 'exists:seats,id'],
+=======
+            'seat_ids.*' => ['integer'],
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             'ticket_type_id' => ['required', 'integer', 'exists:ticket_types,id'],
             'contact_name' => ['required', 'string', 'max:255'],
             'contact_phone' => ['required', 'string', 'max:32'],
@@ -197,6 +217,14 @@ class BookingController extends Controller
             'product_qty' => ['nullable', 'array'],
             'product_qty.*' => ['nullable', 'integer', 'min:0', 'max:20'],
             'coupon_code' => ['nullable', 'string', 'max:64'],
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+            'payment_method' => ['required', 'string', 'in:COUNTER,BANK_TRANSFER,CARD,CASH'],
+            'payment_note' => ['nullable', 'string', 'max:255'],
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         ]);
 
         $bookingCode = null;
@@ -213,6 +241,7 @@ class BookingController extends Controller
                     ->lockForUpdate()
                     ->findOrFail($data['show_id']);
 
+<<<<<<< HEAD
                 $currentCinemaId = current_cinema_id();
                 if ($currentCinemaId && (int) $show->auditorium->cinema_id !== (int) $currentCinemaId) {
                     abort(404);
@@ -220,6 +249,13 @@ class BookingController extends Controller
 
                 if (! $show->isOnSaleNow()) {
                     abort(422, 'Suất chiếu hiện chưa mở bán hoặc đã đóng bán.');
+=======
+                if ($show->status !== 'ON_SALE') {
+                    abort(422, 'Suất chiếu hiện không mở bán.');
+                }
+                if (($show->on_sale_from && now()->lt($show->on_sale_from)) || ($show->on_sale_until && now()->gt($show->on_sale_until))) {
+                    abort(422, 'Suất chiếu chưa tới thời gian mở bán hoặc đã đóng bán.');
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                 }
                 if ($show->start_time && now()->gte($show->start_time)) {
                     abort(422, 'Suất chiếu đã bắt đầu hoặc đã kết thúc.');
@@ -231,6 +267,7 @@ class BookingController extends Controller
                 $requestedSeatIds = collect($data['seat_ids'] ?? [])->filter()->map(fn ($value) => (int) $value)->unique()->values();
                 $requestedQty = $requestedSeatIds->isEmpty() ? max(1, (int) ($data['qty'] ?? 1)) : $requestedSeatIds->count();
 
+<<<<<<< HEAD
                 if ($requestedQty > 10) {
                     abort(422, 'Bạn chỉ có thể chọn tối đa 10 ghế trong một lần đặt vé.');
                 }
@@ -239,6 +276,12 @@ class BookingController extends Controller
                 $heldSeatIds = DB::table('seat_holds')->where('show_id', $show->id)->whereIn('status', ['HELD', 'CONFIRMED'])->where('expires_at', '>', now())->pluck('seat_id');
                 $blockedSeatIds = SeatBlock::query()->where('auditorium_id', $auditoriumId)->where('start_at', '<', $show->end_time)->where('end_at', '>', $show->start_time)->pluck('seat_id');
 
+=======
+                $reservedSeatIds = BookingTicket::query()->where('show_id', $show->id)->whereIn('status', ['RESERVED', 'ISSUED'])->pluck('seat_id');
+                $heldSeatIds = DB::table('seat_holds')->where('show_id', $show->id)->whereIn('status', ['HELD', 'CONFIRMED'])->where('expires_at', '>', now())->pluck('seat_id');
+                $blockedSeatIds = SeatBlock::query()->where('auditorium_id', $auditoriumId)->where('start_at', '<', $show->end_time)->where('end_at', '>', $show->start_time)->pluck('seat_id');
+
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                 if ($requestedSeatIds->isEmpty()) {
                     $requestedSeatIds = Seat::query()
                         ->where('auditorium_id', $auditoriumId)
@@ -307,6 +350,7 @@ class BookingController extends Controller
                 $bookingCode = 'BK' . now()->format('Ymd') . strtoupper(Str::random(6));
                 $subtotal = $ticketSubtotal + $productSubtotal;
 
+<<<<<<< HEAD
                 if ($memberUser) {
                     $customer = $this->customerAccountService->syncCustomerForUser($memberUser, [
                         'full_name' => $data['contact_name'],
@@ -339,6 +383,32 @@ class BookingController extends Controller
                             'account_status' => 'ACTIVE',
                         ]);
                     }
+=======
+                $customer = Customer::query()
+                    ->when(! empty($data['contact_email']), function ($query) use ($data) {
+                        $query->where('email', $data['contact_email'])
+                            ->orWhere('phone', $data['contact_phone']);
+                    }, function ($query) use ($data) {
+                        $query->where('phone', $data['contact_phone']);
+                    })
+                    ->first();
+
+                if ($customer) {
+                    $customer->update([
+                        'full_name' => $data['contact_name'],
+                        'email' => $data['contact_email'] ?? $customer->email,
+                        'phone' => $data['contact_phone'],
+                        'account_status' => $customer->account_status ?: 'ACTIVE',
+                    ]);
+                } else {
+                    $customer = Customer::create([
+                        'public_id' => (string) Str::ulid(),
+                        'full_name' => $data['contact_name'],
+                        'phone' => $data['contact_phone'],
+                        'email' => $data['contact_email'] ?? null,
+                        'account_status' => 'ACTIVE',
+                    ]);
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                 }
 
                 $booking = Booking::create([
@@ -421,6 +491,42 @@ class BookingController extends Controller
                     'total_amount' => max(0, $subtotal - $discountTotal),
                 ]);
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+                $paymentStatus = in_array($data['payment_method'], ['BANK_TRANSFER', 'CARD', 'CASH'], true) ? 'CAPTURED' : 'INITIATED';
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'provider' => in_array($data['payment_method'], ['BANK_TRANSFER', 'CARD'], true) ? 'SANDBOX_GATEWAY' : 'BOX_OFFICE',
+                    'method' => $data['payment_method'],
+                    'status' => $paymentStatus,
+                    'amount' => (int) $booking->total_amount,
+                    'currency' => 'VND',
+                    'external_txn_ref' => 'PAY' . now()->format('YmdHis') . strtoupper(Str::random(4)),
+                    'request_payload' => [
+                        'booking_code' => $booking->booking_code,
+                        'payment_note' => $data['payment_note'] ?? null,
+                    ],
+                    'response_payload' => [
+                        'message' => $paymentStatus === 'CAPTURED' ? 'Thanh toán mô phỏng thành công' : 'Booking giữ chỗ, chờ thanh toán tại quầy',
+                    ],
+                    'paid_at' => $paymentStatus === 'CAPTURED' ? now() : null,
+                ]);
+
+                if ($paymentStatus === 'CAPTURED') {
+                    $booking->update([
+                        'status' => 'CONFIRMED',
+                        'paid_amount' => (int) $booking->total_amount,
+                    ]);
+
+                    BookingTicket::query()
+                        ->where('booking_id', $booking->id)
+                        ->update(['status' => 'ISSUED']);
+                }
+
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                 $totalSeats = Seat::query()->where('auditorium_id', $show->auditorium_id)->where('is_active', 1)->count();
                 $sold = BookingTicket::query()->where('show_id', $show->id)->whereIn('status', ['RESERVED', 'ISSUED'])->count();
                 if ($totalSeats > 0 && $sold >= $totalSeats) {
@@ -439,7 +545,15 @@ class BookingController extends Controller
     {
         $booking = Booking::query()
             ->where('booking_code', $booking_code)
+<<<<<<< HEAD
             ->with(['customer.loyaltyAccount.tier', 'tickets.seat', 'tickets.ticket', 'tickets.ticketType', 'tickets.seatType', 'show.movieVersion.movie', 'show.auditorium.cinema', 'bookingProducts.product.category', 'discounts.promotion', 'discounts.coupon', 'payments.refunds'])
+=======
+<<<<<<< HEAD
+            ->with(['tickets.seat', 'show.movieVersion.movie', 'show.auditorium', 'bookingProducts.product', 'discounts.promotion'])
+=======
+            ->with(['tickets.seat', 'show.movieVersion.movie', 'show.auditorium', 'bookingProducts.product', 'discounts.promotion', 'payments'])
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ->firstOrFail();
 
         $currentCinemaId = current_cinema_id();
@@ -452,6 +566,35 @@ class BookingController extends Controller
             : 0;
 
         return view('frontend.booking_success', compact('booking', 'earnedPoints'));
+    }
+
+    private function decreaseInventory(int $cinemaId, int $productId, int $qty, int $bookingId, string $productName): void
+    {
+        $location = StockLocation::query()->firstOrCreate(
+            ['cinema_id' => $cinemaId, 'code' => 'KIOSK1'],
+            ['name' => 'Quầy F&B chính', 'location_type' => 'KIOSK', 'is_active' => 1]
+        );
+
+        $balance = InventoryBalance::query()->lockForUpdate()->firstOrCreate(
+            ['stock_location_id' => $location->id, 'product_id' => $productId],
+            ['qty_on_hand' => 0, 'reorder_level' => 5]
+        );
+
+        if ($balance->qty_on_hand < $qty) {
+            abort(422, 'Sản phẩm F&B "' . $productName . '" không đủ tồn kho.');
+        }
+
+        $balance->update(['qty_on_hand' => $balance->qty_on_hand - $qty]);
+        StockMovement::create([
+            'stock_location_id' => $location->id,
+            'product_id' => $productId,
+            'movement_type' => 'OUT',
+            'qty_delta' => -$qty,
+            'reference_type' => 'BOOKING',
+            'reference_id' => $bookingId,
+            'note' => 'Bán kèm theo booking',
+            'created_at' => now(),
+        ]);
     }
 
     private function decreaseInventory(int $cinemaId, int $productId, int $qty, int $bookingId, string $productName): void

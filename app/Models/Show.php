@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+<<<<<<< HEAD
 use Illuminate\Support\Carbon;
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 
 class Show extends Model
 {
@@ -64,6 +67,7 @@ class Show extends Model
     {
         return $this->movieVersion?->movie;
     }
+<<<<<<< HEAD
 
     public function cinemaTimezone(): string
     {
@@ -125,4 +129,6 @@ class Show extends Model
         };
     }
 
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 }

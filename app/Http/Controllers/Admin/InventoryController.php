@@ -9,12 +9,16 @@ use App\Models\StockLocation;
 use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+<<<<<<< HEAD
 use Illuminate\Support\Collection;
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class InventoryController extends Controller
 {
+<<<<<<< HEAD
     public function index(Request $request): View
     {
         $q = trim((string) $request->get('q', ''));
@@ -46,11 +50,22 @@ class InventoryController extends Controller
         $cinemas = DB::table('cinemas')->orderBy('name')->get(['id', 'name']);
         $products = Product::query()->orderBy('name')->get(['id', 'name', 'sku']);
 
+=======
+    public function index(): View
+    {
+        $balances = InventoryBalance::query()
+            ->with(['product.category', 'stockLocation'])
+            ->orderByDesc('updated_at')
+            ->paginate(20);
+
+        $locations = StockLocation::query()->withCount('balances')->orderBy('name')->get();
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         $summary = [
             'total_sku' => Product::query()->count(),
             'locations' => $locations->count(),
             'low_stock' => InventoryBalance::query()->whereColumn('qty_on_hand', '<=', 'reorder_level')->count(),
             'total_qty' => (int) DB::table('inventory_balances')->sum(DB::raw('greatest(qty_on_hand,0)')),
+<<<<<<< HEAD
             'stock_value' => $this->estimatePageStockValue($balances->getCollection()),
         ];
 
@@ -120,6 +135,11 @@ class InventoryController extends Controller
             'movementType',
             'referenceType'
         ));
+=======
+        ];
+
+        return view('admin.inventory.index', compact('balances', 'locations', 'summary'));
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     public function adjust(Request $request): RedirectResponse
@@ -129,7 +149,10 @@ class InventoryController extends Controller
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'movement_type' => ['required', 'in:IN,OUT,ADJUST'],
             'qty_delta' => ['required', 'integer', 'not_in:0'],
+<<<<<<< HEAD
             'unit_cost_amount' => ['nullable', 'integer', 'min:0'],
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             'note' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -148,8 +171,12 @@ class InventoryController extends Controller
                 ['qty_on_hand' => 0, 'reorder_level' => 5]
             );
 
+<<<<<<< HEAD
             $oldQty = (int) $balance->qty_on_hand;
             $newQty = $movementType === 'ADJUST' ? $qtyDelta : ($oldQty + $qtyDelta);
+=======
+            $newQty = $movementType === 'ADJUST' ? $qtyDelta : ($balance->qty_on_hand + $qtyDelta);
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             if ($newQty < 0) {
                 abort(422, 'Tồn kho không đủ để xuất.');
             }
@@ -159,8 +186,12 @@ class InventoryController extends Controller
                 'stock_location_id' => $data['stock_location_id'],
                 'product_id' => $data['product_id'],
                 'movement_type' => $movementType,
+<<<<<<< HEAD
                 'qty_delta' => $movementType === 'ADJUST' ? ($newQty - $oldQty) : $qtyDelta,
                 'unit_cost_amount' => $data['unit_cost_amount'] ?? null,
+=======
+                'qty_delta' => $movementType === 'ADJUST' ? ($newQty - $balance->getOriginal('qty_on_hand')) : $qtyDelta,
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                 'reference_type' => 'ADJUSTMENT',
                 'reference_id' => null,
                 'note' => $data['note'] ?? null,
@@ -170,6 +201,7 @@ class InventoryController extends Controller
 
         return back()->with('success', 'Đã cập nhật tồn kho.');
     }
+<<<<<<< HEAD
 
     private function hydrateBalanceCostMetrics(Collection $balances): void
     {
@@ -207,4 +239,6 @@ class InventoryController extends Controller
     {
         return (int) $balances->sum(fn ($balance) => (int) ($balance->stock_value_amount ?? 0));
     }
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 }

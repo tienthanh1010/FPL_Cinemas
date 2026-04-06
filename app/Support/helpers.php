@@ -101,6 +101,7 @@ if (! function_exists('admin_movie_role_labels')) {
         ];
     }
 }
+<<<<<<< HEAD
 
 
 if (! function_exists('single_cinema_mode')) {
@@ -139,3 +140,5 @@ if (! function_exists('loyalty_preview_points')) {
         return app(\App\Services\LoyaltyPointService::class)->previewPoints($amount);
     }
 }
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561

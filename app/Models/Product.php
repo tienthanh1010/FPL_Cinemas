@@ -39,9 +39,12 @@ class Product extends Model
     {
         return $this->hasMany(InventoryBalance::class, 'product_id');
     }
+<<<<<<< HEAD
 
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class, 'product_id');
     }
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 }

@@ -58,10 +58,21 @@ class AuditoriumController extends Controller
         $seats = DB::table('seats as s')
             ->leftJoin('seat_types as st', 'st.id', '=', 's.seat_type_id')
             ->where('s.auditorium_id', $auditorium->id)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+            ->where('s.is_active', 1)
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ->orderBy('s.row_label')
             ->orderBy('s.col_number')
             ->get(['s.*', 'st.name as seat_type_name']);
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         $seatStats = [
             'total' => $seats->count(),
             'active' => $seats->where('is_active', 1)->count(),
@@ -69,6 +80,12 @@ class AuditoriumController extends Controller
         ];
 
         return view('admin.auditoriums.show', compact('auditorium', 'seats', 'seatStats'));
+<<<<<<< HEAD
+=======
+=======
+        return view('admin.auditoriums.show', compact('auditorium', 'seats'));
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     public function edit(Auditorium $auditorium): View

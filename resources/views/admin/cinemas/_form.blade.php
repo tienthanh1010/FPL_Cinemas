@@ -32,8 +32,12 @@
 
         <div class="col-lg-6">
             <label class="form-label">Tên rạp *</label>
+<<<<<<< HEAD
             <input name="name" value="{{ old('name', $cinema->name ?: 'FPL Cinema') }}" class="form-control" readonly required>
             <div class="form-text">Tên rạp được cố định là FPL Cinema trong chế độ một rạp tuyệt đối.</div>
+=======
+            <input name="name" value="{{ old('name', $cinema->name) }}" class="form-control" placeholder="Ví dụ: Rạp FPL Cinemas" required>
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         </div>
 
         <div class="col-lg-3">

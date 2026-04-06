@@ -1,5 +1,6 @@
 @php
     $isActive = fn(string $pattern) => request()->routeIs($pattern) ? 'active' : '';
+<<<<<<< HEAD
     $canViewItem = function (array $item) use ($adminUser) {
         if (!empty($item['permission']) && !$adminUser->hasPermission($item['permission'])) {
             return false;
@@ -9,29 +10,47 @@
     };
 
     $visibleItems = fn(array $items) => collect($items)->filter(fn($item) => $canViewItem($item))->values()->all();
+=======
+    $visibleItems = fn(array $items) => collect($items)->filter(fn($item) => \Illuminate\Support\Facades\Route::has($item['route']))->values()->all();
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 
     $navGroups = [
         [
             'title' => 'Điều hành',
             'items' => [
+<<<<<<< HEAD
                 ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Tổng quan', 'icon' => 'bi-grid-1x2-fill', 'permission' => 'dashboard.view'],
                 ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Báo cáo', 'icon' => 'bi-bar-chart-line', 'permission' => 'reports.view'],
+=======
+                ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Tổng quan', 'icon' => 'bi-grid-1x2-fill'],
+                ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Báo cáo', 'icon' => 'bi-bar-chart-line'],
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ],
         ],
         [
             'title' => 'Nội dung & lịch chiếu',
             'items' => [
+<<<<<<< HEAD
                 ['route' => 'admin.movies.index', 'pattern' => 'admin.movies.*', 'label' => 'Phim', 'icon' => 'bi-film', 'permission' => 'catalog.manage'],
                 ['route' => 'admin.movie_versions.index', 'pattern' => 'admin.movie_versions.*', 'label' => 'Phiên bản phim', 'icon' => 'bi-collection-play', 'permission' => 'catalog.manage'],
                 ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Thể loại', 'icon' => 'bi-tags', 'permission' => 'catalog.manage'],
                 ['route' => 'admin.auditoriums.index', 'pattern' => 'admin.auditoriums.*', 'label' => 'Phòng chiếu', 'icon' => 'bi-badge-8k', 'permission' => 'showtimes.manage'],
                 ['route' => 'admin.shows.index', 'pattern' => 'admin.shows.*', 'label' => 'Suất chiếu', 'icon' => 'bi-calendar2-week', 'permission' => 'showtimes.manage'],
                 ['route' => 'admin.pricing_profiles.index', 'pattern' => 'admin.pricing_profiles.*', 'label' => 'Hồ sơ giá động', 'icon' => 'bi-cash-coin', 'permission' => 'showtimes.manage'],
+=======
+                ['route' => 'admin.movies.index', 'pattern' => 'admin.movies.*', 'label' => 'Phim', 'icon' => 'bi-film'],
+                ['route' => 'admin.movie_versions.index', 'pattern' => 'admin.movie_versions.*', 'label' => 'Phiên bản phim', 'icon' => 'bi-collection-play'],
+                ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Thể loại', 'icon' => 'bi-tags'],
+                ['route' => 'admin.auditoriums.index', 'pattern' => 'admin.auditoriums.*', 'label' => 'Phòng chiếu', 'icon' => 'bi-badge-8k'],
+                ['route' => 'admin.shows.index', 'pattern' => 'admin.shows.*', 'label' => 'Suất chiếu', 'icon' => 'bi-calendar2-week'],
+                ['route' => 'admin.pricing_profiles.index', 'pattern' => 'admin.pricing_profiles.*', 'label' => 'Hồ sơ giá động', 'icon' => 'bi-cash-coin'],
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ],
         ],
         [
             'title' => 'Bán hàng & marketing',
             'items' => [
+<<<<<<< HEAD
                 ['route' => 'admin.bookings.index', 'pattern' => 'admin.bookings.*', 'label' => 'Booking / đơn vé', 'icon' => 'bi-receipt-cutoff', 'permission' => 'bookings.manage'],
                 ['route' => 'admin.tickets.index', 'pattern' => 'admin.tickets.*', 'label' => 'Soát vé / check-in', 'icon' => 'bi-qr-code-scan', 'permission' => 'tickets.checkin'],
                 ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Combo bắp nước', 'icon' => 'bi-cup-straw', 'permission' => 'fnb.manage'],
@@ -44,23 +63,48 @@
                 ['route' => 'admin.promotions.index', 'pattern' => 'admin.promotions.*', 'label' => 'Khuyến mãi', 'icon' => 'bi-megaphone', 'permission' => 'marketing.manage'],
                 ['route' => 'admin.coupons.index', 'pattern' => 'admin.coupons.*', 'label' => 'Voucher', 'icon' => 'bi-ticket-perforated', 'permission' => 'marketing.manage'],
                 ['route' => 'admin.content_posts.index', 'pattern' => 'admin.content_posts.*', 'label' => 'Tin tức & ưu đãi', 'icon' => 'bi-newspaper', 'permission' => 'marketing.manage'],
+=======
+<<<<<<< HEAD
+                ['route' => 'admin.bookings.index', 'pattern' => 'admin.bookings.*', 'label' => 'Booking / đơn vé', 'icon' => 'bi-receipt-cutoff'],
+                ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Combo bắp nước', 'icon' => 'bi-cup-straw'],
+                ['route' => 'admin.payments.index', 'pattern' => 'admin.payments.*', 'label' => 'Thanh toán', 'icon' => 'bi-credit-card-2-front'],
+                ['route' => 'admin.refunds.index', 'pattern' => 'admin.refunds.*', 'label' => 'Hoàn tiền', 'icon' => 'bi-arrow-counterclockwise'],
+=======
+                ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Combo bắp nước', 'icon' => 'bi-cup-straw'],
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
+                ['route' => 'admin.inventory.index', 'pattern' => 'admin.inventory.*', 'label' => 'Tồn kho F&B', 'icon' => 'bi-box-seam'],
+                ['route' => 'admin.promotions.index', 'pattern' => 'admin.promotions.*', 'label' => 'Khuyến mãi', 'icon' => 'bi-megaphone'],
+                ['route' => 'admin.coupons.index', 'pattern' => 'admin.coupons.*', 'label' => 'Voucher', 'icon' => 'bi-ticket-perforated'],
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ],
         ],
         [
             'title' => 'Khách hàng & nhân sự',
             'items' => [
+<<<<<<< HEAD
                 ['route' => 'admin.customers.index', 'pattern' => 'admin.customers.*', 'label' => 'Khách hàng', 'icon' => 'bi-people', 'permission' => 'customers.manage'],
                 ['route' => 'admin.staff.index', 'pattern' => 'admin.staff.*', 'label' => 'Nhân sự', 'icon' => 'bi-person-badge', 'permission' => 'staff.manage'],
                 ['route' => 'admin.staff_shifts.index', 'pattern' => 'admin.staff_shifts.*', 'label' => 'Ca làm', 'icon' => 'bi-calendar3', 'permission' => 'staff.manage'],
                 ['route' => 'admin.admin_users.index', 'pattern' => 'admin.admin_users.*', 'label' => 'Tài khoản admin', 'icon' => 'bi-shield-lock', 'permission' => 'admin_users.manage'],
+=======
+                ['route' => 'admin.customers.index', 'pattern' => 'admin.customers.*', 'label' => 'Khách hàng', 'icon' => 'bi-people'],
+                ['route' => 'admin.staff.index', 'pattern' => 'admin.staff.*', 'label' => 'Nhân sự', 'icon' => 'bi-person-badge'],
+                ['route' => 'admin.staff_shifts.index', 'pattern' => 'admin.staff_shifts.*', 'label' => 'Ca làm', 'icon' => 'bi-calendar3'],
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ],
         ],
         [
             'title' => 'Vận hành rạp',
             'items' => [
+<<<<<<< HEAD
                 ['route' => 'admin.cinemas.index', 'pattern' => 'admin.cinemas.*', 'label' => (($singleCinemaMode ?? false) ? 'Thông tin rạp' : 'Rạp'), 'icon' => 'bi-buildings', 'permission' => 'showtimes.manage'],
                 ['route' => 'admin.equipment.index', 'pattern' => 'admin.equipment.*', 'label' => 'Thiết bị', 'icon' => 'bi-tools', 'permission' => 'operations.manage'],
                 ['route' => 'admin.maintenance_requests.index', 'pattern' => 'admin.maintenance_requests.*', 'label' => 'Bảo trì', 'icon' => 'bi-wrench-adjustable-circle', 'permission' => 'operations.manage'],
+=======
+                ['route' => 'admin.cinemas.index', 'pattern' => 'admin.cinemas.*', 'label' => 'Rạp', 'icon' => 'bi-buildings'],
+                ['route' => 'admin.equipment.index', 'pattern' => 'admin.equipment.*', 'label' => 'Thiết bị', 'icon' => 'bi-tools'],
+                ['route' => 'admin.maintenance_requests.index', 'pattern' => 'admin.maintenance_requests.*', 'label' => 'Bảo trì', 'icon' => 'bi-wrench-adjustable-circle'],
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ],
         ],
     ];

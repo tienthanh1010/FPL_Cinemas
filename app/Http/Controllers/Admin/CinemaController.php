@@ -41,6 +41,7 @@ class CinemaController extends Controller
 
     public function create(): View|RedirectResponse
     {
+<<<<<<< HEAD
         if (single_cinema_mode() && ($primaryCinema = $this->primaryCinema())) {
             return redirect()
                 ->route('admin.cinemas.edit', $primaryCinema)
@@ -54,30 +55,53 @@ class CinemaController extends Controller
             'country_code' => 'VN',
         ]);
 
+=======
+        $cinema = new Cinema();
+
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         return view('admin.cinemas.create', $this->formData($cinema));
     }
 
     public function store(Request $request): RedirectResponse
     {
+<<<<<<< HEAD
         if (single_cinema_mode() && ($primaryCinema = $this->primaryCinema())) {
             return redirect()->route('admin.cinemas.edit', $primaryCinema)->with('error', 'Chỉ được phép quản lý thông tin của FPL Cinema trong chế độ một rạp duy nhất.');
+=======
+        if (Cinema::query()->count() >= 1) {
+            return redirect()->route('admin.cinemas.index')->with('error', 'Hệ thống này chỉ quản lý 1 rạp duy nhất. Hãy chỉnh sửa rạp hiện có.');
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         }
 
         $data = $this->validateData($request);
         $data['public_id'] = (string) Str::ulid();
         $data['chain_id'] = $this->resolveDefaultChainId();
+<<<<<<< HEAD
         $data['name'] = 'FPL Cinema';
         if (single_cinema_mode()) {
             $data['status'] = 'ACTIVE';
         }
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 
         $cinema = Cinema::create($data);
 
         return redirect()->route('admin.cinemas.show', $cinema)->with('success', 'Đã tạo rạp.');
+<<<<<<< HEAD
+=======
+    }
+
+    public function show(Cinema $cinema): View
+    {
+        $cinema->load('auditoriums');
+
+        return view('admin.cinemas.show', compact('cinema'));
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     public function show(Cinema $cinema): View|RedirectResponse
     {
+<<<<<<< HEAD
         if ($redirect = $this->redirectToPrimaryCinema($cinema)) {
             return $redirect;
         }
@@ -93,6 +117,8 @@ class CinemaController extends Controller
             return $redirect;
         }
 
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         return view('admin.cinemas.edit', $this->formData($cinema));
     }
 
@@ -104,11 +130,14 @@ class CinemaController extends Controller
 
         $data = $this->validateData($request, $cinema);
         $data['chain_id'] = $cinema->chain_id ?: $this->resolveDefaultChainId();
+<<<<<<< HEAD
 
         if (single_cinema_mode()) {
             $data['name'] = 'FPL Cinema';
             $data['status'] = 'ACTIVE';
         }
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 
         $cinema->update($data);
 
@@ -242,8 +271,13 @@ class CinemaController extends Controller
         if (! $chain) {
             $chain = CinemaChain::query()->create([
                 'public_id' => (string) Str::ulid(),
+<<<<<<< HEAD
                 'chain_code' => 'fpl',
                 'name' => 'FPL Cinema',
+=======
+                'chain_code' => 'single-cinema',
+                'name' => 'Rạp duy nhất',
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                 'status' => 'ACTIVE',
             ]);
         }
@@ -251,6 +285,7 @@ class CinemaController extends Controller
         return (int) $chain->id;
     }
 
+<<<<<<< HEAD
     private function primaryCinema(): ?Cinema
     {
         return current_cinema() ?: Cinema::query()->orderBy('id')->first();
@@ -275,6 +310,8 @@ class CinemaController extends Controller
         return null;
     }
 
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     private function nullableString(mixed $value): ?string
     {
         $value = is_string($value) ? trim($value) : $value;

@@ -8,8 +8,11 @@ use App\Models\Movie;
 use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\Show;
+<<<<<<< HEAD
 use App\Services\TicketLifecycleService;
 use App\Services\LoyaltyPointService;
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -28,12 +31,16 @@ class PaymentController extends Controller
         'REFUNDED' => 'Đã hoàn tiền',
     ];
 
+<<<<<<< HEAD
     private const BOOKING_TERMINAL_STATUSES = ['CANCELLED', 'EXPIRED'];
 
     public function __construct(private readonly TicketLifecycleService $ticketLifecycleService,
         private readonly LoyaltyPointService $loyaltyPointService)
     {
     }
+=======
+    private const BOOKING_TERMINAL_STATUSES = ['CANCELLED', 'EXPIRED', 'COMPLETED', 'CONFIRMED'];
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 
     public function index(Request $request): View
     {
@@ -234,6 +241,7 @@ class PaymentController extends Controller
         $paidAmount = (int) $booking->payments->sum(fn (Payment $payment) => $this->netCapturedAmount($payment));
         $paidAmount = max(0, min((int) $booking->total_amount, $paidAmount));
 
+<<<<<<< HEAD
         $successfulRefundAmount = (int) $booking->payments
             ->flatMap(fn (Payment $payment) => $payment->refunds)
             ->where('status', 'SUCCESS')
@@ -250,10 +258,17 @@ class PaymentController extends Controller
             } else {
                 $payload['status'] = $paidAmount > 0 ? 'PAID' : 'PENDING';
             }
+=======
+        $payload = ['paid_amount' => $paidAmount];
+
+        if (! in_array((string) $booking->status, self::BOOKING_TERMINAL_STATUSES, true)) {
+            $payload['status'] = $paidAmount > 0 ? 'PAID' : 'PENDING';
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         }
 
         $booking->update($payload);
 
+<<<<<<< HEAD
         $nextBookingStatus = (string) ($payload['status'] ?? $currentStatus);
 
         if ($nextBookingStatus === 'CANCELLED') {
@@ -265,14 +280,20 @@ class PaymentController extends Controller
                 ->whereIn('status', ['RESERVED', 'ISSUED'])
                 ->update(['status' => 'EXPIRED']);
         } else {
+=======
+        if (! in_array((string) $booking->status, self::BOOKING_TERMINAL_STATUSES, true)) {
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             $booking->tickets()
                 ->whereIn('status', ['RESERVED', 'ISSUED'])
                 ->update(['status' => $paidAmount > 0 ? 'ISSUED' : 'RESERVED']);
         }
+<<<<<<< HEAD
 
         $freshBooking = $booking->fresh(['customer.loyaltyAccount', 'tickets.ticket', 'payments.refunds']);
         $this->ticketLifecycleService->syncForBooking($freshBooking);
         $this->loyaltyPointService->syncForBooking($freshBooking);
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     private function netCapturedAmount(Payment $payment): int

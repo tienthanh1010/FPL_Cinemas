@@ -9,7 +9,10 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductPrice;
 use App\Models\StockLocation;
+<<<<<<< HEAD
 use App\Models\StockMovement;
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 use App\Services\ProductPricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,6 +77,7 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
+<<<<<<< HEAD
         $product->load([
             'category',
             'prices.cinema',
@@ -82,10 +86,14 @@ class ProductController extends Controller
             'stockMovements' => fn ($query) => $query->with('stockLocation.cinema')->latest('id')->limit(15),
         ]);
 
+=======
+        $product->load(['category', 'prices.cinema', 'bookingProducts.booking', 'inventoryBalances.stockLocation']);
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         $currentPrice = $this->pricingService->currentPrice($product, (int) (Cinema::query()->value('id') ?? 0));
         $soldQty = (int) $product->bookingProducts()->sum('qty');
         $revenue = (int) $product->bookingProducts()->sum('final_amount');
 
+<<<<<<< HEAD
         $purchaseStats = [
             'latest_cost' => StockMovement::query()
                 ->where('product_id', $product->id)
@@ -102,6 +110,9 @@ class ProductController extends Controller
         ];
 
         return view('admin.products.show', compact('product', 'currentPrice', 'soldQty', 'revenue', 'purchaseStats'));
+=======
+        return view('admin.products.show', compact('product', 'currentPrice', 'soldQty', 'revenue'));
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     public function edit(Product $product): View
@@ -203,6 +214,7 @@ class ProductController extends Controller
             );
         }
     }
+<<<<<<< HEAD
 
     private function averageInboundCost(int $productId): ?int
     {
@@ -221,4 +233,6 @@ class ProductController extends Controller
 
         return (int) round($weightedCost / $weightedQty);
     }
+=======
+>>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 }
