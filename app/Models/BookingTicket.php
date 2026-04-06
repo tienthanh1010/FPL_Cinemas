@@ -30,6 +30,7 @@ class BookingTicket extends Model
     {
         return $this->belongsTo(Booking::class, 'booking_id');
     }
+<<<<<<< HEAD
 
     public function ticketType(): BelongsTo
     {
@@ -40,4 +41,6 @@ class BookingTicket extends Model
     {
         return $this->belongsTo(SeatType::class, 'seat_type_id');
     }
+=======
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
 }

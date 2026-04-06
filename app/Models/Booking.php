@@ -49,11 +49,14 @@ class Booking extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
+<<<<<<< HEAD
     public function cinema(): BelongsTo
     {
         return $this->belongsTo(Cinema::class, 'cinema_id');
     }
 
+=======
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
     public function bookingProducts(): HasMany
     {
         return $this->hasMany(BookingProduct::class, 'booking_id');

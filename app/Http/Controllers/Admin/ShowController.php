@@ -291,6 +291,69 @@ class ShowController extends Controller
             'statusOptions' => self::STATUSES,
             'selectedMovieId' => old('movie_id', $show->movieVersion?->movie_id),
         ];
+<<<<<<< HEAD
+=======
+    }
+
+    private function validateData(Request $request, ?Show $show = null): array
+    {
+        $data = $request->validate([
+            'auditorium_id' => ['required', 'integer', 'exists:auditoriums,id'],
+            'movie_id' => ['required', 'integer', 'exists:movies,id'],
+            'pricing_profile_id' => ['required', 'integer', 'exists:pricing_profiles,id'],
+            'show_date' => ['required', 'date'],
+            'start_clock' => ['required', 'date_format:H:i'],
+            'status' => ['required', Rule::in(array_keys(self::STATUSES))],
+        ]);
+
+        $auditorium = Auditorium::query()->with('cinema')->findOrFail($data['auditorium_id']);
+        $movieVersion = MovieVersion::query()->where('movie_id', $data['movie_id'])->orderBy('id')->first();
+        if (! $movieVersion) {
+            throw ValidationException::withMessages([
+                'movie_id' => 'Phim này chưa có phiên bản chiếu. Hãy vào phần Phim để thêm ít nhất 1 phiên bản.',
+            ]);
+        }
+
+        $pricingProfile = PricingProfile::query()->findOrFail($data['pricing_profile_id']);
+        if ((int) $pricingProfile->is_active !== 1) {
+            throw ValidationException::withMessages([
+                'pricing_profile_id' => 'Hồ sơ giá đang tạm ngưng hoạt động.',
+            ]);
+        }
+        if ($pricingProfile->cinema_id && (int) $pricingProfile->cinema_id !== (int) $auditorium->cinema_id) {
+            throw ValidationException::withMessages([
+                'pricing_profile_id' => 'Hồ sơ giá này thuộc rạp khác, không thể áp cho phòng đã chọn.',
+            ]);
+        }
+
+        $startAt = Carbon::parse($data['show_date'] . ' ' . $data['start_clock'], $auditorium->cinema->timezone ?? config('app.timezone'));
+        $endAt = $startAt->copy()->addMinutes((int) $movieVersion->movie->duration_minutes);
+
+        if ($data['status'] !== 'CANCELLED') {
+            $hasOverlap = Show::query()
+                ->where('auditorium_id', $data['auditorium_id'])
+                ->where('status', '!=', 'CANCELLED')
+                ->when($show, fn ($query) => $query->where('id', '!=', $show->id))
+                ->where('start_time', '<', $endAt)
+                ->where('end_time', '>', $startAt)
+                ->exists();
+
+            if ($hasOverlap) {
+                throw ValidationException::withMessages([
+                    'start_clock' => 'Không được để 2 phim chiếu cùng 1 phòng cùng giờ.',
+                ]);
+            }
+        }
+
+        return [
+            'auditorium_id' => (int) $data['auditorium_id'],
+            'movie_version_id' => (int) $movieVersion->id,
+            'pricing_profile_id' => (int) $pricingProfile->id,
+            'start_time' => $startAt,
+            'end_time' => $endAt,
+            'status' => $data['status'],
+        ];
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
     }
 
     private function validateData(Request $request, ?Show $show = null): array

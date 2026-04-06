@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Admin\AuditoriumController;
 use App\Http\Controllers\Admin\AuthController;
+<<<<<<< HEAD
 use App\Http\Controllers\Admin\BookingController;
+=======
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\CouponController;
@@ -11,11 +14,17 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\MaintenanceRequestController;
+<<<<<<< HEAD
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\MovieController;
 use App\Http\Controllers\Admin\MovieVersionController;
 use App\Http\Controllers\Admin\PricingProfileController;
 use App\Http\Controllers\Admin\RefundController;
+=======
+use App\Http\Controllers\Admin\MovieController;
+use App\Http\Controllers\Admin\MovieVersionController;
+use App\Http\Controllers\Admin\PricingProfileController;
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PromotionController;
@@ -51,11 +60,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('shows/{show}/seats/{seatBlock}/unblock', [ShowController::class, 'unblockSeat'])->name('shows.seats.unblock');
         Route::resource('pricing-profiles', PricingProfileController::class)->parameters(['pricing-profiles' => 'pricingProfile'])->names('pricing_profiles');
         Route::resource('products', ProductController::class);
+<<<<<<< HEAD
         Route::resource('bookings', BookingController::class)->only(['index', 'show', 'update']);
         Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
         Route::resource('payments', PaymentController::class)->only(['index', 'show', 'update']);
         Route::post('payments/{payment}/refunds', [RefundController::class, 'store'])->name('payments.refunds.store');
         Route::resource('refunds', RefundController::class)->only(['index', 'show', 'update']);
+=======
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::post('inventory/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust');
         Route::resource('promotions', PromotionController::class);

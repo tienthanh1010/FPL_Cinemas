@@ -8,6 +8,10 @@ use App\Models\BookingProduct;
 use App\Models\BookingTicket;
 use App\Models\Customer;
 use App\Models\InventoryBalance;
+<<<<<<< HEAD
+=======
+use App\Models\Payment;
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
 use App\Models\Product;
 use App\Models\Seat;
 use App\Models\SeatBlock;
@@ -44,6 +48,11 @@ class BookingController extends Controller
             'product_qty' => ['nullable', 'array'],
             'product_qty.*' => ['nullable', 'integer', 'min:0', 'max:20'],
             'coupon_code' => ['nullable', 'string', 'max:64'],
+<<<<<<< HEAD
+=======
+            'payment_method' => ['required', 'string', 'in:COUNTER,BANK_TRANSFER,CARD,CASH'],
+            'payment_note' => ['nullable', 'string', 'max:255'],
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
         ]);
 
         $bookingCode = null;
@@ -249,6 +258,39 @@ class BookingController extends Controller
                     'total_amount' => max(0, $subtotal - $discountTotal),
                 ]);
 
+<<<<<<< HEAD
+=======
+                $paymentStatus = in_array($data['payment_method'], ['BANK_TRANSFER', 'CARD', 'CASH'], true) ? 'CAPTURED' : 'INITIATED';
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'provider' => in_array($data['payment_method'], ['BANK_TRANSFER', 'CARD'], true) ? 'SANDBOX_GATEWAY' : 'BOX_OFFICE',
+                    'method' => $data['payment_method'],
+                    'status' => $paymentStatus,
+                    'amount' => (int) $booking->total_amount,
+                    'currency' => 'VND',
+                    'external_txn_ref' => 'PAY' . now()->format('YmdHis') . strtoupper(Str::random(4)),
+                    'request_payload' => [
+                        'booking_code' => $booking->booking_code,
+                        'payment_note' => $data['payment_note'] ?? null,
+                    ],
+                    'response_payload' => [
+                        'message' => $paymentStatus === 'CAPTURED' ? 'Thanh toán mô phỏng thành công' : 'Booking giữ chỗ, chờ thanh toán tại quầy',
+                    ],
+                    'paid_at' => $paymentStatus === 'CAPTURED' ? now() : null,
+                ]);
+
+                if ($paymentStatus === 'CAPTURED') {
+                    $booking->update([
+                        'status' => 'CONFIRMED',
+                        'paid_amount' => (int) $booking->total_amount,
+                    ]);
+
+                    BookingTicket::query()
+                        ->where('booking_id', $booking->id)
+                        ->update(['status' => 'ISSUED']);
+                }
+
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
                 $totalSeats = Seat::query()->where('auditorium_id', $show->auditorium_id)->where('is_active', 1)->count();
                 $sold = BookingTicket::query()->where('show_id', $show->id)->whereIn('status', ['RESERVED', 'ISSUED'])->count();
                 if ($totalSeats > 0 && $sold >= $totalSeats) {
@@ -266,7 +308,11 @@ class BookingController extends Controller
     {
         $booking = Booking::query()
             ->where('booking_code', $booking_code)
+<<<<<<< HEAD
             ->with(['tickets.seat', 'show.movieVersion.movie', 'show.auditorium', 'bookingProducts.product', 'discounts.promotion'])
+=======
+            ->with(['tickets.seat', 'show.movieVersion.movie', 'show.auditorium', 'bookingProducts.product', 'discounts.promotion', 'payments'])
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
             ->firstOrFail();
 
         return view('frontend.booking_success', compact('booking'));

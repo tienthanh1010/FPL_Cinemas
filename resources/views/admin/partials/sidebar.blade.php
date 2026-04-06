@@ -24,10 +24,14 @@
         [
             'title' => 'Bán hàng & marketing',
             'items' => [
+<<<<<<< HEAD
                 ['route' => 'admin.bookings.index', 'pattern' => 'admin.bookings.*', 'label' => 'Booking / đơn vé', 'icon' => 'bi-receipt-cutoff'],
                 ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Combo bắp nước', 'icon' => 'bi-cup-straw'],
                 ['route' => 'admin.payments.index', 'pattern' => 'admin.payments.*', 'label' => 'Thanh toán', 'icon' => 'bi-credit-card-2-front'],
                 ['route' => 'admin.refunds.index', 'pattern' => 'admin.refunds.*', 'label' => 'Hoàn tiền', 'icon' => 'bi-arrow-counterclockwise'],
+=======
+                ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Combo bắp nước', 'icon' => 'bi-cup-straw'],
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
                 ['route' => 'admin.inventory.index', 'pattern' => 'admin.inventory.*', 'label' => 'Tồn kho F&B', 'icon' => 'bi-box-seam'],
                 ['route' => 'admin.promotions.index', 'pattern' => 'admin.promotions.*', 'label' => 'Khuyến mãi', 'icon' => 'bi-megaphone'],
                 ['route' => 'admin.coupons.index', 'pattern' => 'admin.coupons.*', 'label' => 'Voucher', 'icon' => 'bi-ticket-perforated'],

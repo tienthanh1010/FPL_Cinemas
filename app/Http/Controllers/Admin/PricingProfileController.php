@@ -229,12 +229,28 @@ class PricingProfileController extends Controller
             return $row;
         });
 
+<<<<<<< HEAD
         $rows = $this->appendMissingBaseRules($rows, $baseSeen, $seatTypeIds, $ticketTypeIds);
+=======
+        $missingBase = [];
+        foreach ($seatTypeIds as $seatTypeId) {
+            foreach ($ticketTypeIds as $ticketTypeId) {
+                $key = $seatTypeId . ':' . $ticketTypeId;
+                if (! isset($baseSeen[$key])) {
+                    $missingBase[] = "ghế {$seatTypeId} / vé {$ticketTypeId}";
+                }
+            }
+        }
+        if ($missingBase !== []) {
+            $errors['rules'] = 'Thiếu rule BASE cho: ' . implode(', ', $missingBase) . '.';
+        }
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
 
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
 
+<<<<<<< HEAD
         return [$profileData, $rows->values()->all()];
     }
 
@@ -281,6 +297,9 @@ class PricingProfileController extends Controller
             [2, 3] => 75000,
             default => 150000,
         };
+=======
+        return [$profileData, $rows->all()];
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
     }
 
     private function replaceRules(PricingProfile $profile, array $rows): void

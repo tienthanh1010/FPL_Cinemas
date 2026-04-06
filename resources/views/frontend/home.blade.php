@@ -216,8 +216,13 @@
       <div class="row g-4 align-items-stretch">
         <div class="col-lg-6">
           <div class="glass-panel feature-panel h-100">
+<<<<<<< HEAD
             {{-- <span class="section-eyebrow">Thiết kế trang chủ</span> --}}
             {{-- <h2>Điểm khác biệt rõ so với giao diện tham chiếu</h2>
+=======
+            <span class="section-eyebrow">Thiết kế trang chủ</span>
+            <h2>Điểm khác biệt rõ so với giao diện tham chiếu</h2>
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
             <div class="feature-list">
               <div>
                 <i class="bi bi-layout-text-window"></i>
@@ -240,7 +245,11 @@
                   <p>Sử dụng card bo tròn lớn, nền kính mờ và lớp bóng mềm để tạo cảm giác cao cấp hơn.</p>
                 </div>
               </div>
+<<<<<<< HEAD
             </div> --}}
+=======
+            </div>
+>>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
           </div>
         </div>
         <div class="col-lg-6">
