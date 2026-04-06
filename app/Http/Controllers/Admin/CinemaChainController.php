@@ -87,7 +87,7 @@ class CinemaChainController extends Controller
             'tax_code' => ['nullable', 'string', 'max:32'],
             'hotline' => ['nullable', 'string', 'max:32'],
             'email' => ['nullable', 'email', 'max:255'],
-            'website' => ['nullable', 'string', 'max:255'],
+            'website' => ['nullable', 'url', 'max:255'],
             'status' => ['required', 'in:ACTIVE,INACTIVE'],
         ]);
     }
