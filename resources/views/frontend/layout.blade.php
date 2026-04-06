@@ -1,5 +1,20 @@
+@php
+  $brand = $appBrand ?? config('app.name', 'FPL Cinemas');
+  $cinemaName = $primaryCinema?->name ?: $brand;
+  $cinemaHotline = $primaryCinema?->phone ?: '1900 6868';
+  $cinemaEmail = $primaryCinema?->email ?: 'support@fplcinemas.local';
+  $cinemaAddress = collect([
+      $primaryCinema?->address_line,
+      $primaryCinema?->ward,
+      $primaryCinema?->district,
+      $primaryCinema?->province,
+  ])->filter()->implode(', ');
+  $cinemaAddress = $cinemaAddress !== '' ? $cinemaAddress : 'Hà Nội, Việt Nam';
+  $memberPoints = (int) ($authCustomer?->loyaltyAccount?->points_balance ?? 0);
+  $navCategories = ($globalCategories ?? collect())->take(8);
+@endphp
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

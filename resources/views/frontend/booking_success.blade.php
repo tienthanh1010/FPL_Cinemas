@@ -1,6 +1,6 @@
 @extends('frontend.layout')
 
-@section('title', 'Booking thành công')
+@section('title', 'Chi tiết booking ' . $booking->booking_code)
 
 @section('content')
   <section class="section-space pt-4 pt-lg-5">
@@ -62,5 +62,6 @@
         </div>
       </div>
     </div>
+  </section>
   </section>
 @endsection

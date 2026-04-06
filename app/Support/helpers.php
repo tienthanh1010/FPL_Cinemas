@@ -26,6 +26,7 @@ if (! function_exists('admin_url')) {
     {
         $path = ltrim($path, '/');
 
+
         return url('admin' . ($path ? '/' . $path : ''));
     }
 }

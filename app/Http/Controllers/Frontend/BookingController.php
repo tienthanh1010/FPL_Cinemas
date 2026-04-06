@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BookingProduct;
+use App\Models\BookingProduct;
 use App\Models\BookingTicket;
 use App\Models\Customer;
 use App\Models\InventoryBalance;
 use App\Models\Product;
 use App\Models\Seat;
+use App\Models\SeatBlock;
 use App\Models\SeatBlock;
 use App\Models\Show;
 use App\Models\ShowPrice;
@@ -47,9 +49,14 @@ class BookingController extends Controller
         ]);
 
         $bookingCode = null;
+        $memberUser = auth()->user();
+
+        if ($memberUser && empty($data['contact_email'])) {
+            $data['contact_email'] = $memberUser->email;
+        }
 
         try {
-            DB::transaction(function () use ($data, &$bookingCode) {
+            DB::transaction(function () use ($data, $memberUser, &$bookingCode) {
                 $show = Show::query()
                     ->with(['auditorium.cinema', 'movieVersion.movie'])
                     ->lockForUpdate()
@@ -97,11 +104,20 @@ class BookingController extends Controller
                     ->where('auditorium_id', $auditoriumId)
                     ->where('is_active', 1)
                     ->whereIn('id', $requestedSeatIds)
+                    ->whereIn('id', $requestedSeatIds)
                     ->lockForUpdate()
                     ->get();
 
                 if ($seats->count() !== $requestedSeatIds->count()) {
                     abort(422, 'Có ghế không thuộc phòng chiếu của suất này hoặc đang bảo trì.');
+                if ($seats->count() !== $requestedSeatIds->count()) {
+                    abort(422, 'Có ghế không thuộc phòng chiếu của suất này hoặc đang bảo trì.');
+                }
+                if ($blockedSeatIds->intersect($requestedSeatIds)->isNotEmpty()) {
+                    abort(422, 'Một hoặc nhiều ghế đang bị khoá thủ công / bảo trì.');
+                }
+                if ($reservedSeatIds->merge($heldSeatIds)->intersect($requestedSeatIds)->isNotEmpty()) {
+                    abort(422, 'Một hoặc nhiều ghế đã được giữ/đặt, vui lòng chọn ghế khác.');
                 }
                 if ($blockedSeatIds->intersect($requestedSeatIds)->isNotEmpty()) {
                     abort(422, 'Một hoặc nhiều ghế đang bị khoá thủ công / bảo trì.');
@@ -113,12 +129,33 @@ class BookingController extends Controller
                 $priceBySeatType = ShowPrice::query()
                     ->where('show_id', $show->id)
                     ->where('ticket_type_id', $ticketTypeId)
+                    ->where('ticket_type_id', $ticketTypeId)
                     ->where('is_active', 1)
                     ->get()
                     ->keyBy('seat_type_id');
 
                 $ticketSubtotal = 0;
+                $ticketSubtotal = 0;
                 foreach ($seats as $seat) {
+                    $ticketSubtotal += (int) (($priceBySeatType[$seat->seat_type_id]->price_amount ?? null) ?? 120000);
+                }
+
+                $productRows = [];
+                $productSubtotal = 0;
+                foreach (collect($data['product_qty'] ?? [])->filter(fn ($qty) => (int) $qty > 0) as $productId => $qty) {
+                    $product = Product::query()->where('is_active', 1)->find($productId);
+                    if (! $product) {
+                        continue;
+                    }
+                    $price = $this->productPricingService->currentPrice($product, $cinemaId);
+                    if (! $price) {
+                        continue;
+                    }
+
+                    $qty = (int) $qty;
+                    $lineAmount = $qty * (int) $price->price_amount;
+                    $productRows[] = compact('product', 'qty', 'lineAmount') + ['unitPrice' => (int) $price->price_amount];
+                    $productSubtotal += $lineAmount;
                     $ticketSubtotal += (int) (($priceBySeatType[$seat->seat_type_id]->price_amount ?? null) ?? 120000);
                 }
 
@@ -175,6 +212,7 @@ class BookingController extends Controller
                     'show_id' => $show->id,
                     'cinema_id' => $cinemaId,
                     'customer_id' => $customer->id,
+                    'customer_id' => $customer->id,
                     'sales_channel_id' => 1,
                     'status' => 'PENDING',
                     'contact_name' => $data['contact_name'],
@@ -190,10 +228,12 @@ class BookingController extends Controller
 
                 foreach ($seats as $seat) {
                     $unitPrice = (int) (($priceBySeatType[$seat->seat_type_id]->price_amount ?? null) ?? 120000);
+                    $unitPrice = (int) (($priceBySeatType[$seat->seat_type_id]->price_amount ?? null) ?? 120000);
                     BookingTicket::create([
                         'booking_id' => $booking->id,
                         'show_id' => $show->id,
                         'seat_id' => $seat->id,
+                        'ticket_type_id' => $ticketTypeId,
                         'ticket_type_id' => $ticketTypeId,
                         'seat_type_id' => $seat->seat_type_id,
                         'unit_price_amount' => $unitPrice,
@@ -259,7 +299,8 @@ class BookingController extends Controller
             return back()->with('error', $e->getMessage())->withInput();
         }
 
-        return redirect()->route('booking.success', ['booking_code' => $bookingCode]);
+        return redirect()->route('booking.payment', ['booking_code' => $bookingCode])
+            ->with('success', 'Đặt vé thành công. Vui lòng hoàn tất thanh toán trong 15 phút để giữ chỗ.');
     }
 
     public function success(string $booking_code)

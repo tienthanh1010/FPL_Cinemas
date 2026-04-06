@@ -3,8 +3,15 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\BookingTicket;
 use App\Models\Category;
+<<<<<<< HEAD
+use App\Models\InventoryBalance;
 use App\Models\Movie;
+use App\Models\Product;
+use App\Models\Seat;
+use App\Models\SeatBlock;
+use App\Models\SeatType;
 use App\Models\Show;
 use Illuminate\View\View;
 
@@ -14,11 +21,13 @@ class HomeController extends Controller
     {
         $categories = Category::query()
             ->withCount('movies')
+            ->withCount('movies')
             ->orderBy('name')
             ->get();
 
         $movies = Movie::query()
             ->active()
+            ->with(['genres', 'contentRating', 'versions'])
             ->with(['genres', 'contentRating', 'versions'])
             ->orderByDesc('release_date')
             ->limit(18)
@@ -68,6 +77,7 @@ class HomeController extends Controller
         $movies = $category->movies()
             ->where('movies.status', 'ACTIVE')
             ->with(['genres', 'contentRating'])
+            ->with(['genres', 'contentRating'])
             ->orderByDesc('release_date')
             ->paginate(12);
 
@@ -79,6 +89,7 @@ class HomeController extends Controller
         abort_if($movie->status !== 'ACTIVE', 404);
 
         $shows = Show::query()
+            ->whereHas('movieVersion', fn ($query) => $query->where('movie_id', $movie->id))
             ->whereHas('movieVersion', fn ($query) => $query->where('movie_id', $movie->id))
             ->whereIn('status', ['SCHEDULED', 'ON_SALE'])
             ->where('start_time', '>', now())

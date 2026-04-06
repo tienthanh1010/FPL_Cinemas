@@ -39,6 +39,7 @@ class AuditoriumController extends Controller
         $screenTypes = self::SCREEN_TYPES;
 
         return view('admin.auditoriums.create', compact('auditorium', 'screenTypes'));
+        return view('admin.auditoriums.create', compact('auditorium', 'screenTypes'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -46,7 +47,9 @@ class AuditoriumController extends Controller
         $data = $this->validateData($request);
         $data['public_id'] = (string) Str::ulid();
         $data['cinema_id'] = $this->resolveCinemaId();
+        $data['cinema_id'] = $this->resolveCinemaId();
 
+        $auditorium = Auditorium::create($data);
         $auditorium = Auditorium::create($data);
 
         return redirect()->route('admin.auditoriums.show', $auditorium)->with('success', 'Đã tạo phòng chiếu.');
@@ -76,15 +79,18 @@ class AuditoriumController extends Controller
         $screenTypes = self::SCREEN_TYPES;
 
         return view('admin.auditoriums.edit', compact('auditorium', 'screenTypes'));
+        return view('admin.auditoriums.edit', compact('auditorium', 'screenTypes'));
     }
 
     public function update(Request $request, Auditorium $auditorium): RedirectResponse
     {
         $data = $this->validateData($request, $auditorium);
         $data['cinema_id'] = $auditorium->cinema_id ?: $this->resolveCinemaId();
+        $data['cinema_id'] = $auditorium->cinema_id ?: $this->resolveCinemaId();
 
         $auditorium->update($data);
 
+        return redirect()->route('admin.auditoriums.show', $auditorium)->with('success', 'Đã cập nhật phòng chiếu.');
         return redirect()->route('admin.auditoriums.show', $auditorium)->with('success', 'Đã cập nhật phòng chiếu.');
     }
 
@@ -104,7 +110,9 @@ class AuditoriumController extends Controller
     private function validateData(Request $request, ?Auditorium $auditorium = null): array
     {
         $cinemaId = $auditorium?->cinema_id ?: $this->resolveCinemaId();
+        $cinemaId = $auditorium?->cinema_id ?: $this->resolveCinemaId();
         $uniquePerCinema = Rule::unique('auditoriums', 'auditorium_code')
+            ->where(fn ($q) => $q->where('cinema_id', $cinemaId));
             ->where(fn ($q) => $q->where('cinema_id', $cinemaId));
 
         if ($auditorium) {
@@ -118,6 +126,17 @@ class AuditoriumController extends Controller
             'seat_map_version' => ['required', 'integer', 'min:1'],
             'is_active' => ['required', 'boolean'],
         ]);
+    }
+
+    private function resolveCinemaId(): int
+    {
+        $cinema = Cinema::query()->first();
+
+        if (! $cinema) {
+            abort(422, 'Bạn cần tạo rạp trước khi tạo phòng chiếu.');
+        }
+
+        return (int) $cinema->id;
     }
 
     private function resolveCinemaId(): int

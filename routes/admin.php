@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AuditoriumController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BookingController;
@@ -38,7 +39,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         ->name('logout');
 
     Route::middleware([AdminAuth::class])->group(function () {
-        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/', [DashboardController::class, 'index'])
+            ->middleware('admin.can:dashboard.view')
+            ->name('dashboard');
 
         Route::resource('movies', MovieController::class);
         Route::resource('movie-versions', MovieVersionController::class)

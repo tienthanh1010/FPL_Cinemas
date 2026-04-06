@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin') · FPL Cinemas</title>
+    <title>@yield('title', 'Admin') · FPL Cinemas</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
@@ -642,7 +645,10 @@
         }
     </style>
     @stack('styles')
+    @stack('styles')
 </head>
+<body class="admin-body">
+<div class="admin-shell">
 <body class="admin-body">
 <div class="admin-shell">
     @include('admin.partials.sidebar')
@@ -652,7 +658,15 @@
             <div class="d-flex align-items-start gap-3">
                 <button class="btn btn-light-soft d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar">
                     <i class="bi bi-list"></i>
+    <div class="admin-content">
+        <header class="topbar">
+            <div class="d-flex align-items-start gap-3">
+                <button class="btn btn-light-soft d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar">
+                    <i class="bi bi-list"></i>
                 </button>
+                <div>
+                    <p class="topbar-subtitle">Bảng điều khiển quản trị rạp phim</p>
+                    <h1 class="topbar-title">@yield('title', 'Admin')</h1>
                 <div>
                     <p class="topbar-subtitle">Bảng điều khiển quản trị rạp phim</p>
                     <h1 class="topbar-title">@yield('title', 'Admin')</h1>
@@ -684,6 +698,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@stack('scripts')
 @stack('scripts')
 </body>
 </html>

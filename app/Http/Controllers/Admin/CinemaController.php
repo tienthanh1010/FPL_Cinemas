@@ -8,19 +8,26 @@ use App\Models\CinemaChain;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CinemaController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        if (single_cinema_mode() && ($primaryCinema = $this->primaryCinema())) {
+            return redirect()->route('admin.cinemas.show', $primaryCinema);
+        }
+
         $q = trim((string) $request->get('q', ''));
 
         $cinemas = Cinema::query()
+            ->with('auditoriums')
             ->with('auditoriums')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where('name', 'like', "%{$q}%")
@@ -35,8 +42,23 @@ class CinemaController extends Controller
         return view('admin.cinemas.index', compact('cinemas', 'q'));
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+<<<<<<< HEAD
+        if (single_cinema_mode() && ($primaryCinema = $this->primaryCinema())) {
+            return redirect()
+                ->route('admin.cinemas.edit', $primaryCinema)
+                ->with('success', 'Hệ thống đang vận hành theo mô hình một rạp tuyệt đối. Bạn hãy cập nhật trực tiếp thông tin FPL Cinema.');
+        }
+
+        $cinema = new Cinema([
+            'name' => 'FPL Cinema',
+            'status' => 'ACTIVE',
+            'timezone' => 'Asia/Ho_Chi_Minh',
+            'country_code' => 'VN',
+        ]);
+
+=======
         $cinema = new Cinema();
 
         return view('admin.cinemas.create', $this->formData($cinema));
@@ -64,23 +86,32 @@ class CinemaController extends Controller
         return view('admin.cinemas.show', compact('cinema'));
     }
 
-    public function edit(Cinema $cinema): View
+    public function show(Cinema $cinema): View
     {
         return view('admin.cinemas.edit', $this->formData($cinema));
     }
 
     public function update(Request $request, Cinema $cinema): RedirectResponse
     {
+        if ($redirect = $this->redirectToPrimaryCinema($cinema)) {
+            return $redirect;
+        }
+
         $data = $this->validateData($request, $cinema);
         $data['chain_id'] = $cinema->chain_id ?: $this->resolveDefaultChainId();
 
         $cinema->update($data);
 
         return redirect()->route('admin.cinemas.show', $cinema)->with('success', 'Đã cập nhật rạp.');
+        return redirect()->route('admin.cinemas.show', $cinema)->with('success', 'Đã cập nhật rạp.');
     }
 
     public function destroy(Cinema $cinema): RedirectResponse
     {
+        if (single_cinema_mode()) {
+            return back()->with('error', 'Chế độ một rạp tuyệt đối không cho phép xoá FPL Cinema khỏi hệ thống.');
+        }
+
         try {
             DB::transaction(function () use ($cinema) {
                 $cinema->delete();
@@ -101,18 +132,30 @@ class CinemaController extends Controller
         ];
     }
 
+    private function formData(Cinema $cinema): array
+    {
+        return [
+            'cinema' => $cinema,
+            'timezones' => admin_timezone_options(),
+            'openingHourRows' => $this->resolveOpeningHourRows($cinema),
+        ];
+    }
+
     private function validateData(Request $request, ?Cinema $cinema = null): array
     {
+        $data = $request->validate([
         $data = $request->validate([
             'cinema_code' => [
                 'required',
                 'string',
                 'max:32',
                 $cinema ? Rule::unique('cinemas', 'cinema_code')->ignore($cinema->id) : Rule::unique('cinemas', 'cinema_code'),
+                $cinema ? Rule::unique('cinemas', 'cinema_code')->ignore($cinema->id) : Rule::unique('cinemas', 'cinema_code'),
             ],
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:32'],
             'email' => ['nullable', 'email', 'max:255'],
+            'timezone' => ['required', Rule::in(array_keys(admin_timezone_options()))],
             'timezone' => ['required', Rule::in(array_keys(admin_timezone_options()))],
             'address_line' => ['nullable', 'string', 'max:255'],
             'ward' => ['nullable', 'string', 'max:128'],
@@ -126,7 +169,54 @@ class CinemaController extends Controller
             'opening_hours_days.*.enabled' => ['nullable', 'boolean'],
             'opening_hours_days.*.open' => ['nullable', 'date_format:H:i'],
             'opening_hours_days.*.close' => ['nullable', 'date_format:H:i'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'status' => ['required', Rule::in(['ACTIVE', 'INACTIVE'])],
+            'opening_hours_days' => ['nullable', 'array'],
+            'opening_hours_days.*.enabled' => ['nullable', 'boolean'],
+            'opening_hours_days.*.open' => ['nullable', 'date_format:H:i'],
+            'opening_hours_days.*.close' => ['nullable', 'date_format:H:i'],
         ]);
+
+        $openingHours = [];
+        $days = admin_opening_hour_day_labels();
+
+        foreach ($days as $dayKey => $dayLabel) {
+            $dayData = Arr::get($data, "opening_hours_days.{$dayKey}", []);
+            $enabled = filter_var($dayData['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $open = trim((string) ($dayData['open'] ?? ''));
+            $close = trim((string) ($dayData['close'] ?? ''));
+
+            if (! $enabled && $open === '' && $close === '') {
+                continue;
+            }
+
+            if ($enabled && ($open === '' || $close === '')) {
+                throw ValidationException::withMessages([
+                    "opening_hours_days.{$dayKey}.open" => "Hãy nhập đầy đủ giờ mở và đóng cho {$dayLabel}.",
+                ]);
+            }
+
+            if ($enabled && $open >= $close) {
+                throw ValidationException::withMessages([
+                    "opening_hours_days.{$dayKey}.close" => "Giờ đóng của {$dayLabel} phải lớn hơn giờ mở.",
+                ]);
+            }
+
+            if ($enabled) {
+                $openingHours[$dayKey] = "{$open}-{$close}";
+            }
+        }
+
+        unset($data['opening_hours_days']);
+
+        $data['opening_hours'] = empty($openingHours) ? null : $openingHours;
+        $data['phone'] = $this->nullableString($data['phone'] ?? null);
+        $data['address_line'] = $this->nullableString($data['address_line'] ?? null);
+        $data['ward'] = $this->nullableString($data['ward'] ?? null);
+        $data['district'] = $this->nullableString($data['district'] ?? null);
+        $data['province'] = $this->nullableString($data['province'] ?? null);
+        $data['country_code'] = strtoupper(trim((string) $data['country_code']));
 
         $openingHours = [];
         $days = admin_opening_hour_day_labels();
