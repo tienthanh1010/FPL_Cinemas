@@ -3,7 +3,16 @@
 @section('title', 'Thêm phòng chiếu')
 
 @section('content')
-    <h2 class="h4 mb-3">Thêm phòng chiếu</h2>
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Create Auditorium</p>
+            <h2>Tạo phòng chiếu</h2>
+            <p>Khai báo phòng chiếu mới cho từng rạp đang hoạt động.</p>
+        </div>
+        <div>
+            <a href="{{ route('admin.auditoriums.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+        </div>
+    </section>
 
     <div class="card">
         <div class="card-body">

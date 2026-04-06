@@ -1,31 +1,41 @@
 @extends('admin.layout')
 
-@section('title', 'New Category')
+@section('title', 'Thêm thể loại phim')
 
 @section('content')
-  <h1 class="h4 mb-3">New Category</h1>
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Create Category</p>
+            <h2>Tạo thể loại phim</h2>
+            <p>Tạo danh mục dùng chung để chọn trong form phim.</p>
+        </div>
+        <div>
+            <a class="btn btn-light-soft" href="{{ route('admin.categories.index') }}"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+        </div>
+    </section>
 
-  <form method="POST" action="{{ route('admin.categories.store') }}" class="card p-3">
-    @csrf
-    <div class="mb-3">
-      <label class="form-label">Code</label>
-      <input class="form-control" name="code" value="{{ old('code') }}" placeholder="ACTION" required>
-      <div class="form-text">Gợi ý: chữ in hoa, không dấu, không khoảng trắng.</div>
-    </div>
+    <form method="POST" action="{{ route('admin.categories.store') }}" class="card">
+        @csrf
+        <div class="card-body">
+            <div class="section-card mb-0">
+                <h3>Thông tin thể loại</h3>
+                <p class="section-description">Mã thể loại nên ngắn gọn và dễ tái sử dụng trong dữ liệu phim.</p>
 
-    <div class="mb-3">
-      <label class="form-label">Name</label>
-      <input class="form-control" name="name" value="{{ old('name') }}" required>
-    </div>
-
-    <div class="form-check mb-3">
-      <input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active" {{ old('is_active') ? 'checked' : '' }}>
-      <label class="form-check-label" for="is_active">Active</label>
-    </div>
-
-    <div class="d-flex gap-2">
-      <button class="btn btn-primary" type="submit">Save</button>
-      <a class="btn btn-secondary" href="{{ route('admin.categories.index') }}">Back</a>
-    </div>
-  </form>
+                <div class="row g-3">
+                    <div class="col-lg-4">
+                        <label class="form-label">Mã thể loại *</label>
+                        <input class="form-control" name="code" value="{{ old('code') }}" placeholder="ACTION" required>
+                        <div class="form-text">Gợi ý: viết liền, không dấu, dễ nhớ.</div>
+                    </div>
+                    <div class="col-lg-8">
+                        <label class="form-label">Tên thể loại *</label>
+                        <input class="form-control" name="name" value="{{ old('name') }}" placeholder="Ví dụ: Hành động" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body border-top pt-0">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-check2-circle me-1"></i> Lưu thể loại</button>
+        </div>
+    </form>
 @endsection

@@ -3,7 +3,16 @@
 @section('title', 'Thêm chuỗi rạp')
 
 @section('content')
-    <h2 class="h4 mb-3">Thêm chuỗi rạp</h2>
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Create Chain</p>
+            <h2>Tạo chuỗi rạp</h2>
+            <p>Khai báo thương hiệu / hệ thống rạp trước khi tạo từng rạp thành viên.</p>
+        </div>
+        <div>
+            <a href="{{ route('admin.chains.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+        </div>
+    </section>
 
     <div class="card">
         <div class="card-body">

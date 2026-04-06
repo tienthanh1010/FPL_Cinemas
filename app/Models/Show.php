@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Show extends Model
 {
@@ -16,6 +17,7 @@ class Show extends Model
         'public_id',
         'auditorium_id',
         'movie_version_id',
+        'pricing_profile_id',
         'start_time',
         'end_time',
         'on_sale_from',
@@ -39,5 +41,25 @@ class Show extends Model
     public function movieVersion(): BelongsTo
     {
         return $this->belongsTo(MovieVersion::class, 'movie_version_id');
+    }
+
+    public function pricingProfile(): BelongsTo
+    {
+        return $this->belongsTo(PricingProfile::class, 'pricing_profile_id');
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(BookingTicket::class, 'show_id');
+    }
+
+    public function prices(): HasMany
+    {
+        return $this->hasMany(ShowPrice::class, 'show_id');
+    }
+
+    public function getMovieAttribute(): ?Movie
+    {
+        return $this->movieVersion?->movie;
     }
 }

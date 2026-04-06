@@ -3,7 +3,16 @@
 @section('title', 'Sửa suất chiếu')
 
 @section('content')
-    <h2 class="h4 mb-3">Sửa suất chiếu #{{ $show->id }}</h2>
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Edit Show</p>
+            <h2>Chỉnh sửa suất chiếu #{{ $show->id }}</h2>
+            <p>Cập nhật lịch chiếu nhưng vẫn giữ an toàn logic thời gian cho từng phòng.</p>
+        </div>
+        <div>
+            <a href="{{ route('admin.shows.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+        </div>
+    </section>
 
     <div class="card">
         <div class="card-body">
