@@ -1,0 +1,7 @@
+@extends('admin.layout')
+@section('title', 'Chi tiết thiết bị')
+@section('content')
+<section class="page-header"><div><p class="eyebrow">Equipment detail</p><h2>{{ $equipment->name }}</h2><p>{{ $equipment->code }} · {{ $equipment->equipment_type }}</p></div><div class="d-flex gap-2"><a href="{{ route('admin.equipment.edit',$equipment) }}" class="btn btn-primary">Sửa</a><a href="{{ route('admin.equipment.index') }}" class="btn btn-light-soft">Quay lại</a></div></section>
+<div class="row g-3"><div class="col-lg-4"><div class="card h-100"><div class="card-body"><div class="fw-semibold mb-2">Thông tin nhanh</div><div><strong>Rạp:</strong> {{ $equipment->cinema?->name }}</div><div><strong>Phòng:</strong> {{ $equipment->auditorium?->name ?: 'Thiết bị chung' }}</div><div><strong>Trạng thái:</strong> {{ $equipment->status }}</div><div><strong>Ngày lắp:</strong> {{ optional($equipment->installed_at)->format('d/m/Y') ?: 'Chưa có' }}</div></div></div></div>
+<div class="col-lg-8"><div class="card h-100"><div class="card-body"><div class="fw-semibold mb-2">Lịch sử yêu cầu bảo trì</div>@forelse($equipment->maintenanceRequests as $request)<div class="border-bottom py-2"><div>{{ $request->title }}</div><div class="list-secondary">{{ $request->priority }} · {{ $request->status }} · {{ $request->requester?->full_name ?: 'Không rõ người tạo' }}</div></div>@empty<div class="text-muted">Chưa có yêu cầu bảo trì.</div>@endforelse</div></div></div></div>
+@endsection

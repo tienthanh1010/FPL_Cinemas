@@ -1,0 +1,33 @@
+Patch added:
+- Trang chi tiết/đặt vé phim có trailer, lịch chiếu, sơ đồ ghế, chọn ghế trực tiếp.
+- Form booking gửi seat_ids, payment_method, payment_note về backend.
+- Backend tạo booking + payment mô phỏng; nếu chọn phương thức online/demo sẽ tự confirm và issue vé.
+- Thêm hệ thống đánh giá phim (model, migration, controller, form, danh sách đánh giá).
+- Trang booking success hiển thị vé, ghế, thanh toán, combo, khuyến mãi.
+
+Files added:
+- app/Models/Review.php
+- app/Http/Controllers/Frontend/ReviewController.php
+- database/migrations/2026_03_29_000001_create_reviews_table.php
+
+Files updated:
+- app/Models/Movie.php
+- app/Models/Booking.php
+- app/Http/Controllers/Frontend/HomeController.php
+- app/Http/Controllers/Frontend/BookingController.php
+- resources/views/frontend/showtimes.blade.php
+- resources/views/frontend/booking_success.blade.php
+- routes/web.php
+
+Run after pull/update:
+1) php artisan optimize:clear
+2) php artisan migrate
+3) configure DB in .env
+4) php artisan serve
+
+If your MySQL is failing locally, you can temporarily switch to sqlite:
+DB_CONNECTION=sqlite
+DB_DATABASE=/absolute/path/to/database/database.sqlite
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync

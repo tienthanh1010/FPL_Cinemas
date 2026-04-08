@@ -130,11 +130,17 @@ class CinemaDemoSeeder extends Seeder
 
                 foreach ($rows as $rIdx => $row) {
                     foreach ($cols as $col) {
+<<<<<<< HEAD
                         $seatTypeId = match (true) {
                             in_array($row, ['I', 'J'], true) => $seatTypeCoupleId,
                             in_array($row, ['F', 'G', 'H'], true) => $seatTypeVipId,
                             default => $seatTypeStandardId,
                         };
+=======
+                        $seatTypeId = $seatTypeStandardId;
+                        if (in_array($row, ['E','F'])) $seatTypeId = $seatTypeVipId;
+                        if ($row === 'J' && $col <= 4) $seatTypeId = $seatTypeCoupleId;
+>>>>>>> aa2ddec40aeea48971cd74436136c4837cf52fb7
 
                         $seatCode = sprintf("%s%02d", $row, $col); // A01, A02...
 

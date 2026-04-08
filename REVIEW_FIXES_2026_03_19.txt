@@ -1,0 +1,29 @@
+Các chỉnh sửa trong bản review này:
+
+1) Booking / logic đặt vé
+- Không cho đặt nếu suất không ở trạng thái ON_SALE.
+- Kiểm tra thời gian mở bán on_sale_from / on_sale_until trước khi tạo booking.
+- Không cho đặt nếu suất đã bắt đầu.
+- Khi tự chọn ghế theo số lượng (qty), bắt buộc phải đủ số ghế trống; nếu không đủ sẽ báo lỗi thay vì âm thầm tạo thiếu ghế.
+- Tự tìm / tạo customer theo số điện thoại hoặc email và gắn customer_id vào booking.
+
+2) Suất chiếu / khoá ghế
+- Chặn khoá trùng một ghế nhiều lần trong cùng khoảng thời gian của suất.
+- Không cho khoá ghế nếu ghế đó đã được giữ/đặt.
+
+3) Frontend showtimes
+- Chỉ hiển thị các suất còn mở bán và chưa bắt đầu.
+- Lọc thêm theo khoảng thời gian on_sale_from / on_sale_until.
+
+4) Sidebar
+- Chia sidebar thành các nhóm quản lý rõ ràng:
+  - Điều hành
+  - Nội dung & lịch chiếu
+  - Bán hàng & marketing
+  - Khách hàng & nhân sự
+  - Vận hành rạp
+- Cập nhật giao diện sidebar theo dạng nhóm/card để dễ nhìn hơn.
+
+5) Routes
+- Đã kiểm tra route:list, các route admin/sidebar đang dùng hiện khớp.
+- Lưu ý: code vẫn còn module cũ CinemaChainController + view chains nhưng hiện không được mount trong routes/admin.php (đây là dữ liệu/logic cũ nhiều chuỗi rạp).
