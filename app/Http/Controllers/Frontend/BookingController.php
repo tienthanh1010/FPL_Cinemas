@@ -19,6 +19,7 @@ use App\Services\PromotionService;
 use App\Services\SeatHoldService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -162,22 +163,21 @@ class BookingController extends Controller
                     abort(422, 'Suất chiếu này hiện chưa cấu hình loại vé hợp lệ.');
                 }
 
-                $customer = $this->resolveCustomer($memberUser, $data);
-                $cinemaId = (int) $show->auditorium?->cinema_id;
                 $auditoriumId = (int) $show->auditorium_id;
+                $cinemaId = (int) $show->auditorium?->cinema_id;
                 $requestedSeatIds = collect($data['seat_ids'] ?? [])->filter()->map(fn ($value) => (int) $value)->unique()->values();
-                if ($requestedSeatIds->isEmpty()) {
-                    abort(422, 'Bạn cần chọn ít nhất một ghế.');
-                }
 
-                $maxSeats = max(1, (int) config('cinema_booking.max_seats_per_booking', 10));
-                if ($requestedSeatIds->count() > $maxSeats) {
-                    abort(422, 'Bạn chỉ có thể chọn tối đa ' . $maxSeats . ' ghế trong một booking.');
+                if ($requestedSeatIds->isEmpty()) {
+                    abort(422, 'Bạn cần chọn ít nhất 1 ghế để tiếp tục.');
                 }
 
                 $defaultTicketTypeId = (int) ($data['ticket_type_id'] ?? $availableTicketTypes->keys()->first());
+                if (! $availableTicketTypes->has($defaultTicketTypeId)) {
+                    $defaultTicketTypeId = (int) $availableTicketTypes->keys()->first();
+                }
+
                 $seatTicketTypes = collect($data['seat_ticket_types'] ?? [])
-                    ->mapWithKeys(fn ($ticketTypeId, $seatId) => [(int) $seatId => (int) $ticketTypeId]);
+                    ->mapWithKeys(fn ($ticketTypeId, $seatId) => [(int) $seatId => (int) ($ticketTypeId ?: $defaultTicketTypeId)]);
 
                 foreach ($requestedSeatIds as $seatId) {
                     if (! $seatTicketTypes->has($seatId)) {
@@ -192,6 +192,48 @@ class BookingController extends Controller
                 if ($seatTicketTypes->count() !== $requestedSeatIds->count()) {
                     abort(422, 'Bạn cần chọn loại vé cho từng ghế.');
                 }
+
+                $customer = null;
+                if ($memberUser) {
+                    $customer = $this->customerAccountService->syncCustomerForUser($memberUser, [
+                        'full_name' => $data['contact_name'],
+                        'phone' => $data['contact_phone'],
+                        'email' => $data['contact_email'] ?? null,
+                    ]);
+                } else {
+                    $customer = Customer::query()
+                        ->where(function ($query) use ($data) {
+                            $query->where('phone', $data['contact_phone']);
+                            if (! empty($data['contact_email'])) {
+                                $query->orWhereRaw('LOWER(email) = ?', [mb_strtolower((string) $data['contact_email'])]);
+                            }
+                        })
+                        ->orderByDesc('id')
+                        ->first();
+
+                    if ($customer) {
+                        $customer->update([
+                            'full_name' => $data['contact_name'],
+                            'phone' => $data['contact_phone'],
+                            'email' => $data['contact_email'] ?? $customer->email,
+                            'account_status' => $customer->account_status ?: 'ACTIVE',
+                        ]);
+                    } else {
+                        $customer = Customer::create([
+                            'public_id' => (string) Str::ulid(),
+                            'full_name' => $data['contact_name'],
+                            'phone' => $data['contact_phone'],
+                            'email' => $data['contact_email'] ?? null,
+                            'account_status' => 'ACTIVE',
+                        ]);
+                    }
+                }
+
+                $this->bookingGuardService->assertCanCreateBooking($request, $show, [
+                    'customer_id' => $customer?->id,
+                    'contact_phone' => $data['contact_phone'],
+                    'contact_email' => $data['contact_email'] ?? null,
+                ]);
 
                 $seats = Seat::query()
                     ->with('seatType:id,code,name')
@@ -251,7 +293,7 @@ class BookingController extends Controller
                     }
 
                     if (movie_blocks_child_tickets($movie) && strtoupper((string) $ticketType->code) === 'CHILD') {
-                        abort(422, 'Phim T18 không cho phép áp dụng vé trẻ em.');
+                        abort(422, 'Vé trẻ em chỉ áp dụng cho phim có nhãn P / không giới hạn độ tuổi.');
                     }
 
                     $selectedTicketTypeIds[] = $ticketTypeId;
@@ -281,55 +323,29 @@ class BookingController extends Controller
                     $ticketSubtotal += $unitPrice;
                 }
 
-                $editableBooking = $this->lockEditablePendingBooking($show);
-                $expiresAt = $editableBooking?->expires_at;
-                if (! $expiresAt || now()->gte($expiresAt)) {
-                    $expiresAt = $this->seatHoldService->currentHoldDeadline($show, $holdOwnerToken)
-                        ?? now()->addMinutes(booking_hold_minutes());
-                }
+                $productSubtotal = 0;
 
-                if ($editableBooking) {
-                    $editableBooking->tickets()->delete();
-                    $editableBooking->discounts()->delete();
-                    $editableBooking->update([
-                        'show_id' => $show->id,
-                        'cinema_id' => $cinemaId,
-                        'customer_id' => $customer->id,
-                        'sales_channel_id' => 1,
-                        'status' => 'PENDING',
-                        'contact_name' => $data['contact_name'],
-                        'contact_phone' => $data['contact_phone'],
-                        'contact_email' => $data['contact_email'] ?? null,
-                        'subtotal_amount' => $ticketSubtotal,
-                        'discount_amount' => 0,
-                        'total_amount' => $ticketSubtotal,
-                        'paid_amount' => 0,
-                        'currency' => 'VND',
-                        'expires_at' => $expiresAt,
-                    ]);
-                    $booking = $editableBooking;
-                    $bookingCode = $booking->booking_code;
-                } else {
-                    $bookingCode = 'BK' . now()->format('Ymd') . strtoupper(Str::random(6));
-                    $booking = Booking::create([
-                        'public_id' => (string) Str::ulid(),
-                        'booking_code' => $bookingCode,
-                        'show_id' => $show->id,
-                        'cinema_id' => $cinemaId,
-                        'customer_id' => $customer->id,
-                        'sales_channel_id' => 1,
-                        'status' => 'PENDING',
-                        'contact_name' => $data['contact_name'],
-                        'contact_phone' => $data['contact_phone'],
-                        'contact_email' => $data['contact_email'] ?? null,
-                        'subtotal_amount' => $ticketSubtotal,
-                        'discount_amount' => 0,
-                        'total_amount' => $ticketSubtotal,
-                        'paid_amount' => 0,
-                        'currency' => 'VND',
-                        'expires_at' => $expiresAt,
-                    ]);
-                }
+                $bookingCode = 'BK' . now()->format('Ymd') . strtoupper(Str::random(6));
+                $subtotal = $ticketSubtotal;
+
+                $booking = Booking::create([
+                    'public_id' => (string) Str::ulid(),
+                    'booking_code' => $bookingCode,
+                    'show_id' => $show->id,
+                    'cinema_id' => $cinemaId,
+                    'customer_id' => $customer->id,
+                    'sales_channel_id' => 1,
+                    'status' => 'PENDING',
+                    'contact_name' => $data['contact_name'],
+                    'contact_phone' => $data['contact_phone'],
+                    'contact_email' => $data['contact_email'] ?? null,
+                    'subtotal_amount' => $subtotal,
+                    'discount_amount' => 0,
+                    'total_amount' => $subtotal,
+                    'paid_amount' => 0,
+                    'currency' => 'VND',
+                    'expires_at' => $this->seatHoldService->currentHoldDeadline($show, $holdOwnerToken) ?? now()->addMinutes(booking_hold_minutes()),
+                ]);
 
                 foreach ($ticketRows as $row) {
                     BookingTicket::create([
