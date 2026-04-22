@@ -887,28 +887,11 @@
     gap: 1.3rem;
     flex-wrap: nowrap;
   }
-  .seat-row--pair {
-    align-items: start;
-  }
-  .seat-row__banks--pair {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(232px, max-content));
-    justify-content: center;
-    gap: .6rem .9rem;
-    width: 100%;
-    max-width: 100%;
-  }
   .seat-bank {
     display: flex;
     gap: .35rem;
     justify-content: center;
     flex-wrap: nowrap;
-  }
-  .seat-bank--pair {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(72px, 84px));
-    gap: .4rem;
-    justify-content: center;
   }
   .seat-tile {
     min-width: 38px;
@@ -934,10 +917,7 @@
     opacity: .96;
   }
   .seat-tile--pair {
-    min-width: 72px;
-    height: 34px;
-    padding: 0 .25rem;
-    border-radius: 999px 999px 14px 14px;
+    min-width: 78px;
   }
   .seat-tile__code {
     font-size: .72rem;
@@ -1224,7 +1204,7 @@
     border-radius: 999px;
     padding: .35rem;
     border: 1px solid var(--line);
-    background: var(--panel-light);
+    background: var(--panel-light);D
   }
   .product-qty-button {
     width: 34px;
@@ -1309,26 +1289,71 @@
   .booking-alert-inline {
     display: none;
     margin-bottom: .9rem;
-    padding: .85rem 1rem;
+    padding: .9rem 1rem;
     border-radius: 18px;
-    font-size: .9rem;
     border: 1px solid transparent;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .10);
   }
-  .booking-alert-inline.is-visible { display: block; }
-  .booking-alert-inline[data-level="error"] {
-    background: rgba(239, 68, 68, .08);
-    border-color: rgba(239, 68, 68, .22);
+  .booking-alert-inline.is-visible {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: .85rem;
+    align-items: start;
+  }
+  .booking-alert-inline__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1rem;
+    box-shadow: inset 0 -3px 0 rgba(15, 23, 42, .08);
+  }
+  .booking-alert-inline__body strong {
+    display: block;
+    margin-bottom: .2rem;
+    font-size: .95rem;
+  }
+  .booking-alert-inline__body span {
+    display: block;
+    line-height: 1.55;
+    font-size: .9rem;
+  }
+  .booking-alert-inline__close {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: .15rem;
+    opacity: .72;
+  }
+  .booking-alert-inline__close:hover { opacity: 1; }
+  .booking-alert-inline.is-visible[data-level="error"] {
+    background: rgba(239, 68, 68, .10);
+    border-color: rgba(239, 68, 68, .26);
     color: #dc2626;
   }
-  .booking-alert-inline[data-level="info"] {
-    background: rgba(59, 130, 246, .08);
-    border-color: rgba(59, 130, 246, .22);
+  .booking-alert-inline.is-visible[data-level="error"] .booking-alert-inline__icon {
+    background: rgba(239, 68, 68, .14);
+  }
+  .booking-alert-inline.is-visible[data-level="info"] {
+    background: rgba(59, 130, 246, .10);
+    border-color: rgba(59, 130, 246, .24);
     color: #2563eb;
   }
-  .booking-alert-inline[data-level="success"] {
-    background: rgba(34, 197, 94, .08);
-    border-color: rgba(34, 197, 94, .22);
+  .booking-alert-inline.is-visible[data-level="info"] .booking-alert-inline__icon {
+    background: rgba(59, 130, 246, .14);
+  }
+  .booking-alert-inline.is-visible[data-level="success"] {
+    background: rgba(34, 197, 94, .10);
+    border-color: rgba(34, 197, 94, .24);
     color: #16a34a;
+  }
+  .booking-alert-inline.is-visible[data-level="success"] .booking-alert-inline__icon {
+    background: rgba(34, 197, 94, .14);
   }
   @media (max-width: 1199.98px) {
     .booking-layout {
@@ -1361,9 +1386,6 @@
     .seat-row__banks {
       gap: 1rem;
     }
-    .seat-row__banks--pair {
-      grid-template-columns: repeat(2, minmax(210px, max-content));
-    }
   }
   @media (max-width: 767.98px) {
     .booking-meta-grid {
@@ -1380,20 +1402,6 @@
       justify-content: flex-start;
       padding-bottom: .25rem;
     }
-    .seat-row__banks--pair {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(150px, 1fr));
-      gap: .5rem;
-      overflow: visible;
-      justify-content: stretch;
-      padding-bottom: 0;
-    }
-    .seat-bank--pair {
-      grid-template-columns: repeat(2, minmax(68px, 1fr));
-    }
-    .seat-tile--pair {
-      min-width: 100%;
-    }
     .seat-board-footer {
       grid-template-columns: 1fr;
     }
@@ -1402,7 +1410,6 @@
       border-top: 1px solid rgba(15, 23, 42, .08);
     }
   }
-
 </style>
 @endpush
 
@@ -1620,6 +1627,7 @@
                 <label>Họ và tên</label>
                 <input class="form-control cinema-input" name="contact_name" value="{{ old('contact_name', $authCustomer?->full_name ?: auth()->user()?->name) }}" placeholder="Nguyễn Văn A" required>
 
+
               </div>
               <div class="form-field mb-3">
                 <label>Điện thoại</label>
@@ -1632,51 +1640,6 @@
               <div class="form-field mb-0">
                 <label>Mã giảm giá / voucher</label>
                 <input class="form-control cinema-input text-uppercase" name="coupon_code" id="couponInput" value="{{ old('coupon_code') }}" placeholder="Ví dụ: CINEMA20">
-                <label>Mã giảm giá / voucher</label>
-                <input class="form-control cinema-input text-uppercase" name="coupon_code" id="couponInput" value="{{ old('coupon_code') }}" placeholder="Ví dụ: CINEMA20">
-              </div>
-            </div>
-
-            <div class="booking-card">
-              <h3 class="mb-3">Loại vé đang hỗ trợ</h3>
-              <div class="ticket-type-pill-list">
-                @foreach($ticketTypes as $ticketType)
-                  <span class="ticket-type-pill">
-                    {{ $ticketType->name }}
-                    @if($ticketType->description)
-                      <small>{{ $ticketType->description }}</small>
-                    @endif
-                  </span>
-                @endforeach
-              </div>
-              @if($bookingConfig['child_ticket_blocked'])
-                <div class="booking-note-box mt-3">
-                  <p>Phim này thuộc diện hạn chế độ tuổi, hệ thống đã tự ẩn lựa chọn vé trẻ em ở bước gán loại vé.</p>
-                </div>
-              @endif
-            </div>
-
-            <div class="booking-card">
-              <div class="booking-card__header">
-                <div>
-                  <h3>Tóm tắt đơn hàng</h3>
-                  <p>Tổng tiền sẽ tự tính theo loại ghế, loại vé và combo bạn chọn.</p>
-                </div>
-              </div>
-              <div class="summary-breakdown" id="summaryBreakdown"></div>
-              <div class="summary-separator"></div>
-              <div class="booking-note">Tạm tính toàn bộ đơn hàng</div>
-              <div class="summary-total" id="bookingTotalValue">0đ</div>
-              <div class="booking-submit-note" id="loyaltyPreview"></div>
-            </div>
-
-            <button class="btn btn-cinema-primary w-100 mt-3" type="submit" id="bookingSubmitButton">
-              <i class="bi bi-ticket-detailed me-2"></i>Tạo booking và sang bước thanh toán
-            </button>
-            <p class="booking-submit-note mb-0">
-              Sau khi xác nhận, ghế sẽ được chuyển sang bước thanh toán và chỉ giữ tối đa {{ $bookingConfig['hold_minutes'] }} phút.
-              Nếu quá thời gian mà chưa thanh toán, booking sẽ tự động hết hạn và ghế được mở lại cho khách khác.
-            </p>
               </div>
             </div>
 
@@ -1803,6 +1766,7 @@
     holdDeadlineAt: null,
     holdCountdownTimer: null,
     serverTimeOffsetMs: 0,
+    alertTimer: null,
   };
 
   const initialSeatIds = new Set([
@@ -1814,23 +1778,47 @@
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
   const ticketTypeMap = Object.fromEntries(ticketTypes.map((ticketType) => [String(ticketType.id), ticketType]));
   const productMap = {};
-  const showAlert = (message, level = 'info', key = null) => {
-    if (key && state.lastAlertKey === key) {
+  const showAlert = (message, level = 'info', key = null, title = null) => {
+    if (key && state.lastAlertKey === key && inlineAlert.classList.contains('is-visible')) {
       return;
     }
+
+    if (state.alertTimer) {
+      window.clearTimeout(state.alertTimer);
+      state.alertTimer = null;
+    }
+
     state.lastAlertKey = key || null;
-    inlineAlert.textContent = message;
+    const iconMap = { error: '!', info: 'i', success: '✓' };
+    const titleMap = { error: 'Chưa thể chọn ghế này', info: 'Thông báo', success: 'Đã cập nhật' };
     inlineAlert.dataset.level = level;
+    inlineAlert.innerHTML = `
+      <div class="booking-alert-inline__icon">${iconMap[level] || 'i'}</div>
+      <div class="booking-alert-inline__body">
+        <strong>${title || titleMap[level] || 'Thông báo'}</strong>
+        <span>${message}</span>
+      </div>
+      <button type="button" class="booking-alert-inline__close" aria-label="Đóng">×</button>
+    `;
     inlineAlert.classList.add('is-visible');
+    inlineAlert.querySelector('.booking-alert-inline__close')?.addEventListener('click', () => clearAlert(key));
+
+    if (level !== 'error') {
+      state.alertTimer = window.setTimeout(() => clearAlert(key), 4500);
+    }
   };
 
   const clearAlert = (key = null) => {
     if (key && state.lastAlertKey && state.lastAlertKey !== key) {
       return;
     }
+    if (state.alertTimer) {
+      window.clearTimeout(state.alertTimer);
+      state.alertTimer = null;
+    }
     state.lastAlertKey = null;
     inlineAlert.classList.remove('is-visible');
-    inlineAlert.textContent = '';
+    inlineAlert.innerHTML = '';
   };
 
   const seatMapById = () => Object.fromEntries(state.seats.map((seat) => [String(seat.id), seat]));
@@ -1903,6 +1891,37 @@
       rowLabel,
       seats: seats.sort((left, right) => Number(left.col_number) - Number(right.col_number)),
     }));
+  };
+
+  const buildProductCard = (product, qty) => {
+    const safeQty = Math.max(0, Number(qty || 0));
+    const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
+    const imageHtml = product.image_url
+      ? `<img src="${product.image_url}" alt="${product.name}">`
+      : `<span>${product.is_combo ? 'Combo bắp nước' : 'F&B tại quầy'}</span>`;
+
+    return `
+      <div class="product-card ${product.available ? '' : 'is-disabled'}">
+        <div class="product-card__media">${imageHtml}</div>
+        <div class="product-card__body">
+          <div class="product-card__badges">
+            <span class="product-badge ${product.is_combo ? 'product-badge--combo' : ''}">${product.is_combo ? 'Combo' : product.category}</span>
+            <span class="product-badge">${product.unit || 'ITEM'}</span>
+          </div>
+          <div>
+            <div class="product-card__title">${product.name}</div>
+            <div class="product-card__description">${product.description || 'Sản phẩm được phục vụ tại quầy F&B của rạp.'}</div>
+          </div>
+          <div class="product-card__footer">
+            <div>
+              <div class="product-price">${formatCurrency(product.price_amount)}</div>
+              <div class="product-stock">${product.available ? `Còn ${product.qty_on_hand} ${product.unit || 'món'}` : 'Tạm hết hàng'}</div>
+            </div>
+            <div class="product-qty-control">
+              <button type="button" class="product-qty-button" data-product-action="decrease" data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>−</button>
+              <input class="product-qty-input" type="number" min="0" max="${maxQty}" step="1" name="product_qty[${product.id}]" value="${safeQty}" data-product-input data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>
+              <button type="button" class="product-qty-button" data-product-action="increase" data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>+</button>
+            </div>
 
   const renderSeatMap = () => {
     if (!state.seats.length) {
@@ -1969,6 +1988,8 @@
 
   const nowFromServerClock = () => Date.now() + Number(state.serverTimeOffsetMs || 0);
 
+  const humanizeRowList = (rows) => rows.length === 1 ? `dãy ${rows[0]}` : `các dãy ${rows.join(', ')}`;
+
   const formatCountdown = (totalSeconds) => {
     const safeSeconds = Math.max(0, Number(totalSeconds || 0));
     const minutes = Math.floor(safeSeconds / 60).toString().padStart(2, '0');
@@ -1981,14 +2002,13 @@
       window.clearInterval(state.holdCountdownTimer);
       state.holdCountdownTimer = null;
     }
-    state.holdDeadlineAt = null;
     if (holdCountdownValue) {
       holdCountdownValue.textContent = '00:00';
     }
   };
 
   const startHoldCountdown = () => {
-    if (!state.selectedSeatIds.length || !state.holdDeadlineAt) {
+    if (!state.holdDeadlineAt) {
       stopHoldCountdown();
       return;
     }
@@ -1996,6 +2016,7 @@
     if (state.holdCountdownTimer) {
       window.clearInterval(state.holdCountdownTimer);
     }
+  };
 
     const tick = () => {
       const secondsLeft = Math.max(0, Math.ceil((state.holdDeadlineAt - nowFromServerClock()) / 1000));
@@ -2005,6 +2026,7 @@
       if (secondsLeft <= 0) {
         window.clearInterval(state.holdCountdownTimer);
         state.holdCountdownTimer = null;
+        state.holdDeadlineAt = null;
         setLiveMessage('Phiên giữ ghế đã hết hạn, đang làm mới trạng thái...');
         fetchSeatStatus();
       }
@@ -2049,37 +2071,6 @@
               <span>${seat.seat_type_name} · ${seat.state_label}</span>
             </div>
             <button type="button" class="btn btn-sm btn-cinema-secondary" data-remove-seat="${seat.id}">Bỏ</button>
-  };
-
-  const buildProductCard = (product, qty) => {
-    const safeQty = Math.max(0, Number(qty || 0));
-    const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
-    const imageHtml = product.image_url
-      ? `<img src="${product.image_url}" alt="${product.name}">`
-      : `<span>${product.is_combo ? 'Combo bắp nước' : 'F&B tại quầy'}</span>`;
-
-    return `
-      <div class="product-card ${product.available ? '' : 'is-disabled'}">
-        <div class="product-card__media">${imageHtml}</div>
-        <div class="product-card__body">
-          <div class="product-card__badges">
-            <span class="product-badge ${product.is_combo ? 'product-badge--combo' : ''}">${product.is_combo ? 'Combo' : product.category}</span>
-            <span class="product-badge">${product.unit || 'ITEM'}</span>
-          </div>
-          <div>
-            <div class="product-card__title">${product.name}</div>
-            <div class="product-card__description">${product.description || 'Sản phẩm được phục vụ tại quầy F&B của rạp.'}</div>
-          </div>
-          <div class="product-card__footer">
-            <div>
-              <div class="product-price">${formatCurrency(product.price_amount)}</div>
-              <div class="product-stock">${product.available ? `Còn ${product.qty_on_hand} ${product.unit || 'món'}` : 'Tạm hết hàng'}</div>
-            </div>
-            <div class="product-qty-control">
-              <button type="button" class="product-qty-button" data-product-action="decrease" data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>−</button>
-              <input class="product-qty-input" type="number" min="0" max="${maxQty}" step="1" name="product_qty[${product.id}]" value="${safeQty}" data-product-input data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>
-              <button type="button" class="product-qty-button" data-product-action="increase" data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>+</button>
-            </div>
 
           </div>
           <label class="form-label small text-muted mb-2">Loại vé cho ghế này</label>
@@ -2108,30 +2099,6 @@
   const findPairSeat = (seat) => {
     if (!seat || !pairSeatCodes.includes(String(seat.seat_type_code).toUpperCase())) {
       return null;
-  const sanitizeSelectedProducts = () => {
-    state.selectedProductQty = Object.fromEntries(
-      Object.entries(state.selectedProductQty)
-        .map(([productId, qty]) => {
-          const product = productMap[String(productId)];
-          if (!product || !product.available) {
-            return null;
-          }
-          const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
-          return [String(productId), Math.max(0, Math.min(maxQty, Number(qty || 0)))];
-        })
-        .filter(Boolean)
-    );
-  };
-
-  const renderProducts = () => {
-    const products = Array.isArray(bookingConfig.products) ? bookingConfig.products : [];
-    sanitizeSelectedProducts();
-
-    if (!products.length) {
-      productCatalog.innerHTML = '<div class="booking-empty">Hiện chưa có sản phẩm F&B hoạt động cho rạp này.</div>';
-      selectedProductCount.textContent = '0 món';
-      return;
-
     }
     const sameRowSeats = state.seats
       .filter((item) => String(item.row_label) === String(seat.row_label) && String(item.seat_type_code).toUpperCase() === String(seat.seat_type_code).toUpperCase())
@@ -2204,12 +2171,44 @@
   };
 
   const updateHoldBox = () => {
-    if (!state.selectedSeatIds.length) {
-      holdStatusBox.innerHTML = 'Bạn chưa chọn ghế nào.';
+    if (!state.holdDeadlineAt) {
+      holdStatusBox.innerHTML = 'Bộ đếm sẽ bắt đầu ngay khi bạn chọn ghế đầu tiên.';
       stopHoldCountdown();
       return;
     }
-    holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Sau <strong>${holdMinutes} phút</strong> không thanh toán, ghế sẽ tự nhả cho khách khác.`;
+
+    if (!state.selectedSeatIds.length) {
+      holdStatusBox.innerHTML = 'Phiên giữ ghế vẫn đang chạy. Bạn có thể chọn lại ghế khác mà đồng hồ sẽ không bị đặt lại từ đầu.';
+      startHoldCountdown();
+      return;
+    }
+
+    holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Đồng hồ sẽ tiếp tục chạy đến khi bạn thanh toán hoặc hết thời gian giữ ghế.`;
+  const sanitizeSelectedProducts = () => {
+    state.selectedProductQty = Object.fromEntries(
+      Object.entries(state.selectedProductQty)
+        .map(([productId, qty]) => {
+          const product = productMap[String(productId)];
+          if (!product || !product.available) {
+            return null;
+          }
+          const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
+          return [String(productId), Math.max(0, Math.min(maxQty, Number(qty || 0)))];
+        })
+        .filter(Boolean)
+    );
+  };
+
+  const renderProducts = () => {
+    const products = Array.isArray(bookingConfig.products) ? bookingConfig.products : [];
+    sanitizeSelectedProducts();
+
+    if (!products.length) {
+      productCatalog.innerHTML = '<div class="booking-empty">Hiện chưa có sản phẩm F&B hoạt động cho rạp này.</div>';
+      selectedProductCount.textContent = '0 món';
+      return;
+    }
+
     productCatalog.innerHTML = products.map((product) => buildProductCard(product, state.selectedProductQty[String(product.id)] || 0)).join('');
     const totalProducts = Object.values(state.selectedProductQty).reduce((sum, qty) => sum + Number(qty || 0), 0);
     selectedProductCount.textContent = `${totalProducts} món`;
@@ -2263,7 +2262,7 @@
 
     const invalidRows = findSingleGapRows(state.selectedSeatIds);
     if (invalidRows.length) {
-      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`, 'error', 'seat-gap');
+      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
     } else {
       clearAlert('seat-gap');
     }
@@ -2317,10 +2316,11 @@
       applyHoldExpiry(payload.owner_hold_expires_at);
       applySeatPayload(payload.seats || [], payload.selected_seat_ids || []);
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
-      if (state.selectedSeatIds.length) {
+      if (state.holdDeadlineAt) {
         startHoldCountdown();
       } else {
         stopHoldCountdown();
+        state.holdDeadlineAt = null;
       }
       if (!silent) {
         clearAlert('seat-sync');
@@ -2358,16 +2358,17 @@
       applyServerClock(payload.server_time);
       applyHoldExpiry(payload.owner_hold_expires_at);
       applySeatPayload(payload.seats || []);
-      if (state.selectedSeatIds.length) {
+      if (state.holdDeadlineAt) {
         startHoldCountdown();
       } else {
         stopHoldCountdown();
+        state.holdDeadlineAt = null;
       }
       const removedSeats = Array.from(previousSelection).filter((seatId) => !state.selectedSeatIds.includes(Number(seatId)));
       if (removedSeats.length) {
-        showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`);
+        showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`, 'Sơ đồ ghế vừa được cập nhật');
       } else {
-        clearAlert();
+        clearAlert('seat-sync');
       }
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
     } catch (error) {
@@ -2387,7 +2388,7 @@
       candidateSeatIds = candidateSeatIds.filter((value) => value !== seatId);
     } else {
       if (candidateSeatIds.length >= maxSeats) {
-        window.alert(`Bạn chỉ có thể chọn tối đa ${maxSeats} ghế trong một booking.`);
+        showAlert(`Bạn chỉ có thể chọn tối đa ${maxSeats} ghế trong một booking.`, 'info', 'max-seats', 'Đã đạt giới hạn ghế');
         return;
       }
 
@@ -2398,7 +2399,7 @@
 
     const invalidRows = findSingleGapRows(candidateSeatIds);
     if (!alreadySelected && invalidRows.length) {
-      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`, 'error', 'seat-gap');
+      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
       return;
     }
 
@@ -2412,14 +2413,6 @@
     } else {
       scheduleSeatSync();
     }
-  };
-
-  const releaseSeatsOnLeave = () => {
-    if (!state.selectedSeatIds.length || !navigator.sendBeacon || !csrfToken) {
-      return;
-    }
-    const blob = new Blob([JSON.stringify({ _token: csrfToken, seat_ids: [] })], { type: 'application/json' });
-    navigator.sendBeacon(seatSyncUrl, blob);
   };
 
           ? Math.min(maxQty, currentQty + 1)
@@ -2443,295 +2436,12 @@
   };
 
 
-  const findPairSeat = (seat) => {
-    if (!seat || !pairSeatCodes.includes(String(seat.seat_type_code).toUpperCase())) {
-      return null;
-    }
-    const sameRowSeats = state.seats
-      .filter((item) => String(item.row_label) === String(seat.row_label) && String(item.seat_type_code).toUpperCase() === String(seat.seat_type_code).toUpperCase())
-      .sort((left, right) => Number(left.col_number) - Number(right.col_number));
-    const seatIndex = sameRowSeats.findIndex((item) => Number(item.id) === Number(seat.id));
-    if (seatIndex === -1) {
-      return null;
-    }
-    if (seatIndex % 2 === 0) {
-      return sameRowSeats[seatIndex + 1] || null;
-    }
-    return sameRowSeats[seatIndex - 1] || null;
-  };
-
-  const findSingleGapRows = (candidateSeatIds) => {
-    const candidateMap = Object.fromEntries(candidateSeatIds.map((seatId) => [String(seatId), true]));
-    const busyStates = new Set(['HOLD_OTHER', 'RESERVED', 'BOOKED', 'BLOCKED']);
-    const rows = {};
-
-    state.seats.forEach((seat) => {
-      rows[seat.row_label] = rows[seat.row_label] || [];
-      rows[seat.row_label].push(seat);
-    });
-
-    const invalidRows = [];
-    Object.entries(rows).forEach(([rowLabel, seats]) => {
-      const sorted = seats.sort((left, right) => Number(left.col_number) - Number(right.col_number));
-      let currentSegment = [];
-      let previousCol = null;
-      const segments = [];
-
-      sorted.forEach((seat) => {
-        if (previousCol !== null && (Number(seat.col_number) - Number(previousCol)) > 1) {
-          segments.push(currentSegment);
-          currentSegment = [];
-        }
-        currentSegment.push(seat);
-        previousCol = Number(seat.col_number);
-      });
-
-      if (currentSegment.length) {
-        segments.push(currentSegment);
-      }
-
-      segments.forEach((segment) => {
-        let availableRun = 0;
-        segment.forEach((seat) => {
-          const isUnavailable = candidateMap[String(seat.id)] || busyStates.has(String(seat.state));
-          if (isUnavailable) {
-            if (availableRun === 1 && !invalidRows.includes(rowLabel)) {
-              invalidRows.push(rowLabel);
-            }
-            availableRun = 0;
-            return;
-          }
-          availableRun += 1;
-        });
-
-        if (availableRun === 1 && !invalidRows.includes(rowLabel)) {
-          invalidRows.push(rowLabel);
-        }
-      });
-    });
-
-    return invalidRows;
-  };
-
-  const setLiveMessage = (message) => {
-    liveSeatStatus.querySelector('span:last-child').textContent = message;
-  };
-
-  const updateHoldBox = () => {
-    if (!state.selectedSeatIds.length) {
-      holdStatusBox.innerHTML = 'Bạn chưa chọn ghế nào.';
-      stopHoldCountdown();
-      return;
-    }
-    holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Sau <strong>${holdMinutes} phút</strong> không thanh toán, ghế sẽ tự nhả cho khách khác.`;
-  };
-
-  const renderSummary = () => {
-    const selectedSeats = state.selectedSeatIds.map((seatId) => getSeatById(seatId)).filter(Boolean);
-    const ticketSubtotal = selectedSeats.reduce((sum, seat) => {
-      const ticketTypeId = Number(state.seatTicketTypes[String(seat.id)] || defaultTicketTypeId || 0);
-      return sum + getSeatPrice(seat, ticketTypeId);
-    }, 0);
-
-    const productSubtotal = Object.entries(state.selectedProductQty).reduce((sum, [productId, qty]) => {
-      const product = productMap[String(productId)];
-      if (!product || !product.available) return sum;
-      return sum + (Number(qty || 0) * Number(product.price_amount || 0));
-    }, 0);
-
-    const total = ticketSubtotal + productSubtotal;
-    const selectedTicketBreakdown = selectedSeats.map((seat) => {
-      const ticketType = ticketTypeMap[String(state.seatTicketTypes[String(seat.id)] || defaultTicketTypeId || 0)];
-      return `${seat.seat_code} (${ticketType?.name || 'Loại vé'})`;
-    }).join(', ');
-
-    summaryBreakdown.innerHTML = `
-      <div class="summary-breakdown__row"><span>Suất chiếu</span><strong>${bookingConfig.show_date}</strong></div>
-      <div class="summary-breakdown__row"><span>Khung giờ</span><strong>${bookingConfig.start_time} → ${bookingConfig.end_time}</strong></div>
-      <div class="summary-breakdown__row"><span>Ghế / loại vé</span><strong>${selectedTicketBreakdown || 'Chưa chọn'}</strong></div>
-      <div class="summary-breakdown__row"><span>Tiền vé</span><strong>${formatCurrency(ticketSubtotal)}</strong></div>
-      <div class="summary-breakdown__row"><span>Combo / F&B</span><strong>${formatCurrency(productSubtotal)}</strong></div>
-    `;
-    bookingTotalValue.textContent = formatCurrency(total);
-    if (seatBoardTotalValue) {
-      seatBoardTotalValue.textContent = formatCurrency(total);
-    }
-
-    if (amountPerPoint > 0) {
-      const estimatedPoints = Math.floor(total / amountPerPoint);
-      loyaltyPreview.innerHTML = isMember
-        ? (estimatedPoints > 0
-            ? `Dự kiến cộng <strong>${estimatedPoints} điểm</strong> sau khi booking thanh toán thành công.`
-            : 'Đơn hàng hiện chưa đủ điều kiện cộng điểm.')
-        : (estimatedPoints > 0
-            ? `Đăng nhập tài khoản thành viên để lưu booking và tích khoảng <strong>${estimatedPoints} điểm</strong>.`
-            : 'Đăng nhập tài khoản thành viên để lưu lịch sử booking và tích điểm ở các đơn tiếp theo.');
-    } else {
-      loyaltyPreview.textContent = '';
-    }
-
-    syncHiddenInputs();
-    updateHoldBox();
-  };
-
-  const applySeatPayload = (seatPayload, selectedSeatIds = null) => {
-    state.seats = Array.isArray(seatPayload) ? seatPayload : [];
-    if (Array.isArray(selectedSeatIds)) {
-      state.selectedSeatIds = selectedSeatIds.map(Number).filter(Boolean);
-    } else {
-      state.selectedSeatIds = state.seats.filter((seat) => seat.selected_by_self).map((seat) => Number(seat.id));
-    }
-    normalizeTicketTypeSelections();
-    renderSeatMap();
-    renderSelectedSeatAssignments();
-    renderSummary();
-  };
-
-  const syncSelectedSeats = async ({ silent = false } = {}) => {
-    if (!csrfToken) {
-      return;
-    }
-
-    state.isSyncing = true;
-    bookingSubmitButton.disabled = true;
-    setLiveMessage('Đang cập nhật giữ ghế...');
-
-    try {
-      const response = await fetch(seatSyncUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': csrfToken,
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ seat_ids: state.selectedSeatIds }),
-      });
-
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(payload.message || 'Không thể cập nhật giữ ghế.');
-      }
-
-      applySeatPayload(payload.seats || [], payload.selected_seat_ids || []);
-      setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
-      startHoldCountdown();
-      if (!silent) {
-        clearAlert('seat-sync');
-      }
-    } catch (error) {
-      setLiveMessage('Không thể đồng bộ ghế, đang thử lại...');
-      showAlert(error.message || 'Không thể đồng bộ ghế. Vui lòng thử lại.', 'error', 'seat-sync');
-      applySeatPayload(state.seats, state.selectedSeatIds);
-    } finally {
-      state.isSyncing = false;
-      bookingSubmitButton.disabled = state.selectedSeatIds.length === 0;
-    }
-  };
-
-  const scheduleSeatSync = (options = {}) => {
-    window.clearTimeout(state.syncTimer);
-    state.syncTimer = window.setTimeout(() => syncSelectedSeats(options), 280);
-  };
-
-  const fetchSeatStatus = async () => {
-    try {
-      const response = await fetch(seatStatusUrl, {
-        headers: {
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        credentials: 'same-origin',
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        return;
-      }
-
-      const previousSelection = new Set(state.selectedSeatIds.map(Number));
-      applySeatPayload(payload.seats || []);
-      if (state.selectedSeatIds.length) {
-        startHoldCountdown();
-      } else {
-        stopHoldCountdown();
-      }
-      const removedSeats = Array.from(previousSelection).filter((seatId) => !state.selectedSeatIds.includes(Number(seatId)));
-      if (removedSeats.length) {
-        showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`);
-      } else {
-        clearAlert();
-      }
-      setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
-    } catch (error) {
-      setLiveMessage('Kết nối realtime tạm chậm, hệ thống sẽ tự thử lại');
-    }
-  };
-
-  const toggleSeatSelection = (seatId) => {
-    if (!seatId) return;
-    const seat = getSeatById(seatId);
-    if (!seat || !seat.available) return;
-
-    let candidateSeatIds = [...state.selectedSeatIds];
-    const alreadySelected = candidateSeatIds.includes(seatId);
-    const pairSeat = findPairSeat(seat);
-
-    if (alreadySelected) {
-      candidateSeatIds = candidateSeatIds.filter((value) => value !== seatId);
-      if (pairSeat) {
-        candidateSeatIds = candidateSeatIds.filter((value) => value !== Number(pairSeat.id));
-      }
-    } else {
-      if (candidateSeatIds.length >= maxSeats) {
-        window.alert(`Bạn chỉ có thể chọn tối đa ${maxSeats} ghế trong một booking.`);
-        return;
-      }
-
-      if (pairSeat) {
-        if (!pairSeat.available && !state.selectedSeatIds.includes(Number(pairSeat.id))) {
-          window.alert('Ghế đôi phải được chọn thành cặp liền nhau và hiện ghế còn lại không còn trống.');
-          return;
-        }
-
-        if (!candidateSeatIds.includes(seatId)) {
-          candidateSeatIds.push(seatId);
-        }
-        if (!candidateSeatIds.includes(Number(pairSeat.id))) {
-          if (candidateSeatIds.length >= maxSeats) {
-            window.alert(`Ghế đôi cần 2 chỗ. Bạn chỉ có thể chọn tối đa ${maxSeats} ghế.`);
-            return;
-          }
-          candidateSeatIds.push(Number(pairSeat.id));
-        }
-      } else {
-        candidateSeatIds.push(seatId);
-      }
-    }
-
-    candidateSeatIds = Array.from(new Set(candidateSeatIds.map(Number))).filter(Boolean);
-
-    const invalidRows = findSingleGapRows(candidateSeatIds);
-    if (invalidRows.length) {
-      window.alert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`);
-      return;
-    }
-
-    state.selectedSeatIds = candidateSeatIds;
-    normalizeTicketTypeSelections();
-    renderSeatMap();
-    renderSelectedSeatAssignments();
-    renderSummary();
-    scheduleSeatSync();
-  };
-
   const releaseSeatsOnLeave = () => {
     if (!state.selectedSeatIds.length || !navigator.sendBeacon || !csrfToken) {
       return;
     }
-    const formData = new FormData();
-    formData.append('_token', csrfToken);
-    navigator.sendBeacon(seatSyncUrl, formData);
+    const blob = new Blob([JSON.stringify({ _token: csrfToken, seat_ids: [] })], { type: 'application/json' });
+    navigator.sendBeacon(seatSyncUrl, blob);
   };
 
 
@@ -2745,7 +2455,7 @@
     const invalidRows = findSingleGapRows(state.selectedSeatIds);
     if (invalidRows.length) {
       event.preventDefault();
-      showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại.`, 'error', 'submit-gap');
+      showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Vui lòng điều chỉnh trước khi sang bước thanh toán.`, 'error', 'submit-gap', 'Chưa thể sang bước thanh toán');
       return;
     }
 
@@ -2768,9 +2478,10 @@
 
   window.addEventListener('beforeunload', releaseSeatsOnLeave);
 
+  applyHoldExpiry(bookingConfig.owner_hold_expires_at || null);
   applySeatPayload(state.seats, state.selectedSeatIds);
   syncHiddenInputs();
-  if (state.selectedSeatIds.length) {
+  if (state.holdDeadlineAt) {
     startHoldCountdown();
   }
   setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
