@@ -611,3 +611,4 @@ class BookingController extends Controller
         return $booking;
     }
 }
+

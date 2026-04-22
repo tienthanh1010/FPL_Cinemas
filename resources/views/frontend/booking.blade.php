@@ -1870,6 +1870,15 @@
     if (String(seat.seat_type_code).toUpperCase() === 'VIP') return 'VIP';
     return 'AVAILABLE';
   };
+  const chunkArray = (items, size) => {
+    const chunkSize = Math.max(1, Number(size) || 1);
+    const chunks = [];
+    for (let index = 0; index < items.length; index += chunkSize) {
+      chunks.push(items.slice(index, index + chunkSize));
+    }
+    return chunks;
+  };
+
   const rowGroups = () => Object.entries(
     state.seats.reduce((rows, seat) => {
       rows[String(seat.row_label)] = rows[String(seat.row_label)] || [];
@@ -1921,10 +1930,13 @@
     }
 
     const html = rowGroups().map(({ rowLabel, seats }) => {
-      const midpoint = Math.ceil(seats.length / 2);
-      const banks = [seats.slice(0, midpoint), seats.slice(midpoint)].filter((bank) => bank.length);
+      const isPairRow = seats.length > 0 && seats.every((seat) => pairSeatCodes.includes(String(seat.seat_type_code).toUpperCase()));
+      const banks = isPairRow
+        ? chunkArray(seats, 3)
+        : [seats.slice(0, Math.ceil(seats.length / 2)), seats.slice(Math.ceil(seats.length / 2))].filter((bank) => bank.length);
+
       const bankHtml = banks.map((bank) => `
-        <div class="seat-bank">
+        <div class="seat-bank ${isPairRow ? 'seat-bank--pair' : ''}">
           ${bank.map((seat) => {
             const seatClass = buildSeatTileClass(seat);
             return `
@@ -1943,9 +1955,9 @@
       `).join('');
 
       return `
-        <div class="seat-row">
+        <div class="seat-row ${isPairRow ? 'seat-row--pair' : ''}">
           <div class="seat-row__label">${rowLabel}</div>
-          <div class="seat-row__banks">${bankHtml}</div>
+          <div class="seat-row__banks ${isPairRow ? 'seat-row__banks--pair' : ''}">${bankHtml}</div>
         </div>
       `;
     }).join('');
@@ -2004,6 +2016,7 @@
     if (state.holdCountdownTimer) {
       window.clearInterval(state.holdCountdownTimer);
     }
+  };
 
     const tick = () => {
       const secondsLeft = Math.max(0, Math.ceil((state.holdDeadlineAt - nowFromServerClock()) / 1000));
@@ -2430,6 +2443,7 @@
     const blob = new Blob([JSON.stringify({ _token: csrfToken, seat_ids: [] })], { type: 'application/json' });
     navigator.sendBeacon(seatSyncUrl, blob);
   };
+
 
   form.addEventListener('submit', (event) => {
     if (!state.selectedSeatIds.length) {
