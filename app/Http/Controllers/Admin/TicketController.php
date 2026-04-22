@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\Movie;
+use App\Models\Promotion;
 use App\Models\Show;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -172,6 +175,21 @@ class TicketController extends Controller
             'issued_count' => $bookingTickets->where('status', 'ISSUED')->count(),
         ];
 
+        $compensationLog = null;
+        $compensationMeta = null;
+        if ($ticket->bookingTicket) {
+            $compensationLog = DB::table('audit_logs')
+                ->where('action', 'TICKET_COMPENSATION_VOUCHER')
+                ->where('entity_type', 'booking_tickets')
+                ->where('entity_id', $ticket->bookingTicket->id)
+                ->latest('id')
+                ->first();
+
+            $compensationMeta = $compensationLog && ! empty($compensationLog->meta)
+                ? json_decode((string) $compensationLog->meta, true)
+                : null;
+        }
+
         return view('admin.tickets.show', [
             'ticket' => $ticket,
             'booking' => $booking,
@@ -179,19 +197,21 @@ class TicketController extends Controller
             'metrics' => $metrics,
             'statusOptions' => self::STATUS_OPTIONS,
             'bookingStatusOptions' => self::BOOKING_STATUS_OPTIONS,
+            'compensationLog' => $compensationLog,
+            'compensationMeta' => $compensationMeta,
         ]);
     }
 
     public function quickCheckIn(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'ticket_code' => ['required', 'string', 'max:64'],
+            'ticket_code' => ['required', 'string', 'max:10000'],
         ]);
 
-        $ticket = Ticket::query()->where('ticket_code', trim($data['ticket_code']))->first();
+        $ticket = $this->resolveTicketFromScannerInput(trim($data['ticket_code']));
 
         if (! $ticket) {
-            return back()->with('error', 'Không tìm thấy vé với mã đã nhập.');
+            return back()->with('error', 'Không tìm thấy vé với dữ liệu đã nhập / quét.');
         }
 
         return $this->performCheckIn($ticket);
@@ -230,6 +250,122 @@ class TicketController extends Controller
         }
 
         return back()->with('success', 'Đã mở lại vé để kiểm vé lại.');
+    }
+
+    public function compensate(Ticket $ticket): RedirectResponse
+    {
+        $voucherCode = null;
+        $voucherAmount = 0;
+
+        try {
+            DB::transaction(function () use ($ticket, &$voucherCode, &$voucherAmount) {
+                /** @var Ticket $lockedTicket */
+                $lockedTicket = Ticket::query()
+                    ->with([
+                        'bookingTicket.booking.customer',
+                        'bookingTicket.booking.show.auditorium.cinema',
+                        'bookingTicket.ticketType',
+                        'bookingTicket.seat',
+                    ])
+                    ->lockForUpdate()
+                    ->findOrFail($ticket->id);
+
+                $bookingTicket = $lockedTicket->bookingTicket;
+                $booking = $bookingTicket?->booking;
+
+                if (! $bookingTicket || ! $booking) {
+                    abort(422, 'Vé này chưa liên kết booking hợp lệ để bồi hoàn.');
+                }
+
+                if ($lockedTicket->status !== 'ISSUED') {
+                    abort(422, 'Chỉ vé ở trạng thái phát hành mới có thể bồi hoàn bằng voucher.');
+                }
+
+                $alreadyCompensated = DB::table('audit_logs')
+                    ->where('action', 'TICKET_COMPENSATION_VOUCHER')
+                    ->where('entity_type', 'booking_tickets')
+                    ->where('entity_id', $bookingTicket->id)
+                    ->exists();
+
+                if ($alreadyCompensated) {
+                    abort(422, 'Vé này đã được bồi hoàn bằng voucher trước đó.');
+                }
+
+                $voucherAmount = (int) $bookingTicket->final_price_amount;
+                if ($voucherAmount <= 0) {
+                    abort(422, 'Không thể tạo voucher cho vé có giá trị bằng 0.');
+                }
+
+                $promotionCode = 'COMP_TICKET_CREDIT_' . $voucherAmount;
+                $promotion = Promotion::query()->firstOrCreate(
+                    ['code' => $promotionCode],
+                    [
+                        'name' => 'Bồi hoàn vé hỏng ' . number_format($voucherAmount) . 'đ',
+                        'description' => 'Voucher bồi hoàn vé do ghế gặp sự cố kỹ thuật.',
+                        'promo_type' => 'FIXED',
+                        'discount_value' => $voucherAmount,
+                        'max_discount_amount' => $voucherAmount,
+                        'min_order_amount' => 0,
+                        'applies_to' => 'ORDER',
+                        'is_stackable' => 0,
+                        'start_at' => now()->subMinute(),
+                        'end_at' => now()->addMonths(6),
+                        'usage_limit_total' => null,
+                        'usage_limit_per_customer' => 1,
+                        'status' => 'ACTIVE',
+                        'day_of_week' => null,
+                        'show_start_from' => null,
+                        'show_start_to' => null,
+                        'customer_scope' => 'ALL',
+                        'auto_apply' => 0,
+                        'coupon_required' => 1,
+                    ]
+                );
+
+                $voucherCode = 'BOIHOAN' . strtoupper(Str::random(8));
+                $coupon = Coupon::query()->create([
+                    'promotion_id' => $promotion->id,
+                    'code' => $voucherCode,
+                    'customer_id' => $booking->customer_id,
+                    'status' => 'ISSUED',
+                    'issued_at' => now(),
+                    'expires_at' => now()->addMonths(6),
+                ]);
+
+                $lockedTicket->update([
+                    'status' => 'REFUNDED',
+                    'used_at' => null,
+                ]);
+
+                $bookingTicket->update([
+                    'status' => 'CANCELLED',
+                ]);
+
+                DB::table('audit_logs')->insert([
+                    'actor_type' => 'admin_user',
+                    'actor_id' => (int) request()->session()->get('admin_user_id', 0) ?: null,
+                    'action' => 'TICKET_COMPENSATION_VOUCHER',
+                    'entity_type' => 'booking_tickets',
+                    'entity_id' => $bookingTicket->id,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => substr((string) request()->userAgent(), 0, 255),
+                    'meta' => json_encode([
+                        'coupon_id' => $coupon->id,
+                        'coupon_code' => $coupon->code,
+                        'promotion_id' => $promotion->id,
+                        'amount' => $voucherAmount,
+                        'ticket_code' => $lockedTicket->ticket_code,
+                        'booking_code' => $booking->booking_code,
+                        'reason' => 'COMPENSATION_FOR_DAMAGED_SEAT',
+                    ], JSON_UNESCAPED_UNICODE),
+                    'created_at' => now(),
+                ]);
+            }, 3);
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Đã tạo voucher bồi hoàn ' . $voucherCode . ' trị giá ' . number_format($voucherAmount) . 'đ cho khách.');
     }
 
     private function performCheckIn(Ticket $ticket): RedirectResponse
@@ -281,5 +417,45 @@ class TicketController extends Controller
         return redirect()
             ->route('admin.tickets.show', $ticket)
             ->with('success', 'Check-in vé thành công.');
+    }
+
+    private function resolveTicketFromScannerInput(string $rawInput): ?Ticket
+    {
+        $rawInput = trim($rawInput);
+        if ($rawInput === '') {
+            return null;
+        }
+
+        if ($ticket = Ticket::query()->where('ticket_code', $rawInput)->first()) {
+            return $ticket;
+        }
+
+        if (Str::startsWith($rawInput, '{') && Str::endsWith($rawInput, '}')) {
+            $payload = json_decode($rawInput, true);
+            if (is_array($payload) && ! empty($payload['ticket_code'])) {
+                return Ticket::query()->where('ticket_code', trim((string) $payload['ticket_code']))->first();
+            }
+        }
+
+        if (str_contains($rawInput, 'FPLTICKET|')) {
+            $parts = explode('|', $rawInput);
+            $candidate = trim((string) ($parts[1] ?? ''));
+            if ($candidate !== '') {
+                return Ticket::query()->where('ticket_code', $candidate)->first();
+            }
+        }
+
+        if (filter_var($rawInput, FILTER_VALIDATE_URL)) {
+            $queryString = parse_url($rawInput, PHP_URL_QUERY);
+            if ($queryString) {
+                parse_str($queryString, $queryParams);
+                $ticketCode = trim((string) ($queryParams['ticket_code'] ?? $queryParams['code'] ?? ''));
+                if ($ticketCode !== '') {
+                    return Ticket::query()->where('ticket_code', $ticketCode)->first();
+                }
+            }
+        }
+
+        return Ticket::query()->where('qr_payload', $rawInput)->first();
     }
 }
