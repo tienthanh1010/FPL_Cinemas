@@ -10,11 +10,7 @@ use App\Models\InventoryBalance;
 use App\Models\Movie;
 use App\Models\Seat;
 use App\Models\Show;
-<<<<<<< HEAD
 use App\Services\TicketLifecycleService;
-use App\Services\LoyaltyPointService;
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 use App\Models\StockLocation;
 use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
@@ -38,14 +34,10 @@ class BookingController extends Controller
 
     private const TERMINAL_STATUSES = ['CANCELLED', 'EXPIRED'];
 
-<<<<<<< HEAD
-    public function __construct(private readonly TicketLifecycleService $ticketLifecycleService,
-        private readonly LoyaltyPointService $loyaltyPointService)
+    public function __construct(private readonly TicketLifecycleService $ticketLifecycleService)
     {
     }
 
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     public function index(Request $request): View
     {
         $filters = $request->validate([
@@ -159,10 +151,7 @@ class BookingController extends Controller
             'show.movieVersion.movie',
             'show.auditorium.cinema',
             'tickets.seat',
-<<<<<<< HEAD
             'tickets.ticket',
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             'tickets.ticketType',
             'tickets.seatType',
             'bookingProducts.product',
@@ -227,12 +216,7 @@ class BookingController extends Controller
                         ->update(['status' => $ticketStatus]);
                 }
 
-<<<<<<< HEAD
-                $freshBooking = $lockedBooking->fresh(['customer.loyaltyAccount', 'tickets.ticket', 'payments.refunds']);
-                $this->ticketLifecycleService->syncForBooking($freshBooking);
-                $this->loyaltyPointService->syncForBooking($freshBooking);
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
+                $this->ticketLifecycleService->syncForBooking($lockedBooking->fresh(['tickets.ticket', 'payments.refunds']));
                 $this->refreshShowSaleStatus($lockedBooking->show);
             }, 3);
         } catch (\Throwable $e) {
@@ -281,13 +265,8 @@ class BookingController extends Controller
             ->whereIn('status', ['RESERVED', 'ISSUED'])
             ->update(['status' => $status]);
 
-<<<<<<< HEAD
-        $freshBooking = $booking->fresh(['customer.loyaltyAccount', 'tickets.ticket', 'payments.refunds']);
-        $this->ticketLifecycleService->syncForBooking($freshBooking);
-        $this->loyaltyPointService->syncForBooking($freshBooking);
+        $this->ticketLifecycleService->syncForBooking($booking->fresh(['tickets.ticket', 'payments.refunds']));
 
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         foreach ($booking->bookingProducts as $item) {
             $this->restoreInventory($booking, $item);
         }

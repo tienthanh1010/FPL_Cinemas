@@ -26,6 +26,7 @@ if (! function_exists('admin_url')) {
     {
         $path = ltrim($path, '/');
 
+
         return url('admin' . ($path ? '/' . $path : ''));
     }
 }
@@ -101,44 +102,3 @@ if (! function_exists('admin_movie_role_labels')) {
         ];
     }
 }
-<<<<<<< HEAD
-
-
-if (! function_exists('single_cinema_mode')) {
-    function single_cinema_mode(): bool
-    {
-        return app(\App\Services\CinemaContextService::class)->singleMode();
-    }
-}
-
-if (! function_exists('current_cinema')) {
-    function current_cinema(): ?\App\Models\Cinema
-    {
-        return app(\App\Services\CinemaContextService::class)->currentCinema();
-    }
-}
-
-if (! function_exists('current_cinema_id')) {
-    function current_cinema_id(): ?int
-    {
-        return app(\App\Services\CinemaContextService::class)->currentCinemaId();
-    }
-}
-
-if (! function_exists('member_customer')) {
-    function member_customer(): ?\App\Models\Customer
-    {
-        $user = auth()->user();
-
-        return $user ? app(\App\Services\CustomerAccountService::class)->customerForUser($user) : null;
-    }
-}
-
-if (! function_exists('loyalty_preview_points')) {
-    function loyalty_preview_points(int $amount): int
-    {
-        return app(\App\Services\LoyaltyPointService::class)->previewPoints($amount);
-    }
-}
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561

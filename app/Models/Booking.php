@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Booking extends Model
@@ -49,20 +50,11 @@ class Booking extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     public function cinema(): BelongsTo
     {
         return $this->belongsTo(Cinema::class, 'cinema_id');
     }
 
-<<<<<<< HEAD
-=======
-=======
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     public function bookingProducts(): HasMany
     {
         return $this->hasMany(BookingProduct::class, 'booking_id');

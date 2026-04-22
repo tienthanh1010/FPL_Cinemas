@@ -6,7 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Auditorium;
 use App\Models\Booking;
 use App\Models\Movie;
+use App\Models\Booking;
+use App\Models\Movie;
 use App\Models\MovieVersion;
+use App\Models\PricingProfile;
+use App\Models\Seat;
+use App\Models\SeatBlock;
+use App\Models\SeatType;
 use App\Models\PricingProfile;
 use App\Models\Seat;
 use App\Models\SeatBlock;
@@ -14,33 +20,28 @@ use App\Models\SeatType;
 use App\Models\Show;
 use App\Models\TicketType;
 use App\Services\ShowPricingService;
+use App\Models\TicketType;
+use App\Services\ShowPricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ShowController extends Controller
 {
     private const STATUSES = [
-<<<<<<< HEAD
-        'SCHEDULED' => 'Sắp mở bán',
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         'ON_SALE' => 'Đang mở bán',
         'SOLD_OUT' => 'Hết vé',
         'ENDED' => 'Đã chiếu',
         'CANCELLED' => 'Huỷ',
     ];
 
-<<<<<<< HEAD
-    private const MAX_END_CLOCK = '23:00';
-
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     public function __construct(private readonly ShowPricingService $pricingService)
     {
     }
@@ -51,7 +52,16 @@ class ShowController extends Controller
 
         $shows = Show::query()
             ->with(['movieVersion.movie', 'auditorium.cinema', 'pricingProfile'])
+            ->with(['movieVersion.movie', 'auditorium.cinema', 'pricingProfile'])
             ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($subQuery) use ($q) {
+                    $subQuery->whereHas('movieVersion.movie', function ($movieQuery) use ($q) {
+                        $movieQuery->where('title', 'like', "%{$q}%")
+                            ->orWhere('original_title', 'like', "%{$q}%");
+                    })->orWhereHas('auditorium', function ($auditoriumQuery) use ($q) {
+                        $auditoriumQuery->where('name', 'like', "%{$q}%")
+                            ->orWhere('auditorium_code', 'like', "%{$q}%");
+                    });
                 $query->where(function ($subQuery) use ($q) {
                     $subQuery->whereHas('movieVersion.movie', function ($movieQuery) use ($q) {
                         $movieQuery->where('title', 'like', "%{$q}%")
@@ -71,50 +81,22 @@ class ShowController extends Controller
             'q' => $q,
             'statusOptions' => self::STATUSES,
         ]);
+        return view('admin.shows.index', [
+            'shows' => $shows,
+            'q' => $q,
+            'statusOptions' => self::STATUSES,
+        ]);
     }
 
     public function create(): View
     {
+        return view('admin.shows.create', $this->formData(new Show()));
         return view('admin.shows.create', $this->formData(new Show()));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateData($request);
-<<<<<<< HEAD
-        $schedulePlan = $this->buildSchedulePlan($validated);
-
-        $createdShows = DB::transaction(function () use ($validated, $schedulePlan, $request) {
-            $shows = collect();
-
-            foreach ($schedulePlan as $slot) {
-                $show = Show::create([
-                    'public_id' => (string) Str::ulid(),
-                    'auditorium_id' => $validated['auditorium_id'],
-                    'movie_version_id' => $validated['movie_version_id'],
-                    'pricing_profile_id' => $validated['pricing_profile_id'],
-                    'start_time' => $slot['start_time'],
-                    'end_time' => $slot['end_time'],
-                    'on_sale_from' => $slot['on_sale_from'],
-                    'on_sale_until' => $slot['on_sale_until'],
-                    'status' => $validated['status'],
-                    'created_by' => (int) $request->session()->get('admin_user_id'),
-                ]);
-
-                $this->pricingService->syncShowPrices($show->load('pricingProfile'));
-                $shows->push($show);
-            }
-
-            return $shows;
-        });
-
-        $count = $createdShows->count();
-        $message = $count > 1
-            ? "Đã tạo {$count} suất chiếu liên tiếp."
-            : 'Đã tạo suất chiếu.';
-
-        return redirect()->route('admin.shows.index')->with('success', $message);
-=======
 
         $show = DB::transaction(function () use ($validated, $request) {
             $show = Show::create([
@@ -136,7 +118,6 @@ class ShowController extends Controller
         });
 
         return redirect()->route('admin.shows.show', $show)->with('success', 'Đã tạo suất chiếu.');
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     public function show(Show $show): View
@@ -229,44 +210,12 @@ class ShowController extends Controller
     public function edit(Show $show): View
     {
         return view('admin.shows.edit', $this->formData($show));
+        return view('admin.shows.edit', $this->formData($show));
     }
 
     public function update(Request $request, Show $show): RedirectResponse
     {
         $validated = $this->validateData($request, $show);
-<<<<<<< HEAD
-        $priceRelatedChanges = $this->hasPriceRelevantChanges($show, $validated);
-        $hasLockedTickets = $this->showHasLockedTickets($show);
-
-        if ($priceRelatedChanges && $hasLockedTickets) {
-            throw ValidationException::withMessages([
-                'show_date' => 'Suất chiếu này đã có vé giữ chỗ/đã bán. Bạn không thể đổi phim, hồ sơ giá, phòng hoặc giờ chiếu vì sẽ làm sai snapshot giá của khách đã mua.',
-            ]);
-        }
-
-        DB::transaction(function () use ($validated, $show, $priceRelatedChanges) {
-            $show->update([
-                'auditorium_id' => $validated['auditorium_id'],
-                'movie_version_id' => $validated['movie_version_id'],
-                'pricing_profile_id' => $validated['pricing_profile_id'],
-                'start_time' => $validated['start_time'],
-                'end_time' => $validated['end_time'],
-                'on_sale_from' => $validated['on_sale_from'],
-                'on_sale_until' => $validated['on_sale_until'],
-                'status' => $validated['status'],
-            ]);
-
-            if ($priceRelatedChanges) {
-                $this->pricingService->syncShowPrices($show->load('pricingProfile'));
-            }
-        });
-
-        $message = $priceRelatedChanges
-            ? 'Đã cập nhật suất chiếu và chụp lại bảng giá cho suất này.'
-            : 'Đã cập nhật suất chiếu.';
-
-        return redirect()->route('admin.shows.show', $show)->with('success', $message);
-=======
 
         DB::transaction(function () use ($validated, $show) {
             $show->update([
@@ -284,7 +233,6 @@ class ShowController extends Controller
         });
 
         return redirect()->route('admin.shows.show', $show)->with('success', 'Đã cập nhật suất chiếu.');
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     public function blockSeat(Request $request, Show $show): RedirectResponse
@@ -348,6 +296,7 @@ class ShowController extends Controller
         try {
             DB::transaction(function () use ($show) {
                 $show->prices()->delete();
+                $show->prices()->delete();
                 $show->delete();
             });
         } catch (\Throwable $e) {
@@ -369,206 +318,6 @@ class ShowController extends Controller
             'statusOptions' => self::STATUSES,
             'selectedMovieId' => old('movie_id', $show->movieVersion?->movie_id),
         ];
-<<<<<<< HEAD
-    }
-
-    private function validateData(Request $request, ?Show $show = null): array
-    {
-        $data = $request->validate([
-            'auditorium_id' => ['required', 'integer', 'exists:auditoriums,id'],
-            'movie_id' => ['required', 'integer', 'exists:movies,id'],
-            'pricing_profile_id' => ['required', 'integer', 'exists:pricing_profiles,id'],
-            'show_date' => ['required', 'date'],
-            'start_clock' => ['required', 'date_format:H:i'],
-            'status' => ['required', Rule::in(array_keys(self::STATUSES))],
-            'show_count' => [$show ? 'nullable' : 'required', 'integer', 'min:1', 'max:12'],
-            'break_minutes' => ['nullable', 'integer', 'min:0', 'max:180'],
-        ]);
-
-        $auditorium = Auditorium::query()->with('cinema')->findOrFail($data['auditorium_id']);
-        $movieVersion = MovieVersion::query()->where('movie_id', $data['movie_id'])->orderBy('id')->first();
-        if (! $movieVersion) {
-            throw ValidationException::withMessages([
-                'movie_id' => 'Phim này chưa có phiên bản chiếu. Hãy vào phần Phim để thêm ít nhất 1 phiên bản.',
-            ]);
-        }
-
-        $pricingProfile = PricingProfile::query()->findOrFail($data['pricing_profile_id']);
-        if ((int) $pricingProfile->is_active !== 1) {
-            throw ValidationException::withMessages([
-                'pricing_profile_id' => 'Hồ sơ giá đang tạm ngưng hoạt động.',
-            ]);
-        }
-        if ($pricingProfile->cinema_id && (int) $pricingProfile->cinema_id !== (int) $auditorium->cinema_id) {
-            throw ValidationException::withMessages([
-                'pricing_profile_id' => 'Hồ sơ giá này thuộc rạp khác, không thể áp cho phòng đã chọn.',
-            ]);
-        }
-
-        $timezone = $this->resolveCinemaTimezone($auditorium->cinema->timezone ?? null);
-        $startAt = Carbon::parse($data['show_date'] . ' ' . $data['start_clock'], $timezone);
-        $durationMinutes = (int) $movieVersion->movie->duration_minutes;
-        $endAt = $startAt->copy()->addMinutes($durationMinutes);
-
-        $this->assertEndWithinBusinessHours($startAt, $endAt);
-        $this->ensureNoOverlap($data['auditorium_id'], $startAt, $endAt, $data['status'], $show?->id);
-
-        $onSaleFrom = $data['status'] === 'ON_SALE'
-            ? now($timezone)->startOfMinute()
-            : $startAt->copy()->subDays(7);
-
-        $onSaleUntil = $startAt->copy();
-
-        return [
-            'auditorium_id' => (int) $data['auditorium_id'],
-            'movie_version_id' => (int) $movieVersion->id,
-            'pricing_profile_id' => (int) $pricingProfile->id,
-            'start_time' => $startAt,
-            'end_time' => $endAt,
-            'on_sale_from' => $onSaleFrom,
-            'on_sale_until' => $onSaleUntil,
-            'status' => $data['status'],
-            'show_count' => (int) ($data['show_count'] ?? 1),
-            'break_minutes' => (int) ($data['break_minutes'] ?? 20),
-            'duration_minutes' => $durationMinutes,
-            'timezone' => $timezone,
-        ];
-    }
-
-    private function buildSchedulePlan(array $validated): array
-    {
-        $showCount = max(1, (int) ($validated['show_count'] ?? 1));
-        $breakMinutes = max(0, (int) ($validated['break_minutes'] ?? 20));
-
-        $plan = [];
-        $cursor = $validated['start_time']->copy();
-        $latestAllowedEnd = $cursor->copy()->setTimeFromTimeString(self::MAX_END_CLOCK);
-
-        for ($index = 0; $index < $showCount; $index++) {
-            $slotStart = $cursor->copy();
-            $slotEnd = $slotStart->copy()->addMinutes((int) $validated['duration_minutes']);
-
-            if ($slotEnd->gt($latestAllowedEnd)) {
-                if ($index === 0) {
-                    throw ValidationException::withMessages([
-                        'start_clock' => 'Suất chiếu vượt quá 23:00. Hãy chọn giờ sớm hơn hoặc phim ngắn hơn.',
-                    ]);
-                }
-
-                throw ValidationException::withMessages([
-                    'show_count' => "Chỉ có thể xếp được {$index} suất chiếu trước 23:00 với thời lượng phim và thời gian nghỉ hiện tại.",
-                ]);
-            }
-
-            $this->ensureNoOverlap(
-                $validated['auditorium_id'],
-                $slotStart,
-                $slotEnd,
-                $validated['status'],
-                null,
-                $plan
-            );
-
-            $plan[] = [
-                'start_time' => $slotStart,
-                'end_time' => $slotEnd,
-                'on_sale_from' => $validated['status'] === 'ON_SALE'
-                    ? now($validated['timezone'])->startOfMinute()
-                    : $slotStart->copy()->subDays(7),
-                'on_sale_until' => $slotStart->copy(),
-            ];
-
-            $cursor = $slotEnd->copy()->addMinutes($breakMinutes);
-        }
-
-        return $plan;
-    }
-
-    private function ensureNoOverlap(
-        int $auditoriumId,
-        Carbon $startAt,
-        Carbon $endAt,
-        string $status,
-        ?int $ignoreShowId = null,
-        array $plannedSlots = []
-    ): void {
-        if ($status === 'CANCELLED') {
-            return;
-        }
-
-        $hasOverlap = Show::query()
-            ->where('auditorium_id', $auditoriumId)
-            ->where('status', '!=', 'CANCELLED')
-            ->when($ignoreShowId, fn ($query) => $query->where('id', '!=', $ignoreShowId))
-            ->where('start_time', '<', $endAt)
-            ->where('end_time', '>', $startAt)
-            ->exists();
-
-        if ($hasOverlap) {
-            throw ValidationException::withMessages([
-                'start_clock' => 'Không được để 2 phim chiếu cùng 1 phòng cùng giờ.',
-            ]);
-        }
-
-        foreach ($plannedSlots as $slot) {
-            if ($slot['start_time']->lt($endAt) && $slot['end_time']->gt($startAt)) {
-                throw ValidationException::withMessages([
-                    'show_count' => 'Chuỗi suất chiếu liên tiếp đang bị chồng thời gian. Hãy tăng thời gian nghỉ giữa các suất.',
-                ]);
-            }
-        }
-    }
-
-    private function assertEndWithinBusinessHours(Carbon $startAt, Carbon $endAt): void
-    {
-        $latestAllowedEnd = $startAt->copy()->setTimeFromTimeString(self::MAX_END_CLOCK);
-
-        if ($endAt->gt($latestAllowedEnd)) {
-            throw ValidationException::withMessages([
-                'start_clock' => 'Suất chiếu không được kết thúc sau 23:00.',
-            ]);
-        }
-    }
-
-    private function hasPriceRelevantChanges(Show $show, array $validated): bool
-    {
-        return (int) $show->auditorium_id !== (int) $validated['auditorium_id']
-            || (int) $show->movie_version_id !== (int) $validated['movie_version_id']
-            || (int) $show->pricing_profile_id !== (int) $validated['pricing_profile_id']
-            || ! $show->start_time?->equalTo($validated['start_time'])
-            || ! $show->end_time?->equalTo($validated['end_time']);
-    }
-
-    private function showHasLockedTickets(Show $show): bool
-    {
-        return $show->tickets()
-            ->whereIn('status', ['RESERVED', 'ISSUED'])
-            ->exists();
-    }
-
-    private function resolveCinemaTimezone(?string $timezone): string
-    {
-        $timezone = $timezone ?: config('app.timezone', 'UTC');
-
-        $aliases = [
-            'Asia/Ha_Noi' => 'Asia/Ho_Chi_Minh',
-            'Asia/Saigon' => 'Asia/Ho_Chi_Minh',
-            'Vietnam' => 'Asia/Ho_Chi_Minh',
-        ];
-
-        $timezone = $aliases[$timezone] ?? $timezone;
-
-        try {
-            new \DateTimeZone($timezone);
-
-            return $timezone;
-        } catch (\Throwable $e) {
-            return config('app.timezone', 'UTC');
-        }
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     private function validateData(Request $request, ?Show $show = null): array
@@ -602,7 +351,10 @@ class ShowController extends Controller
             ]);
         }
 
-        $startAt = Carbon::parse($data['show_date'] . ' ' . $data['start_clock'], $auditorium->cinema->timezone ?? config('app.timezone'));
+        $startAt = Carbon::parse(
+            $data['show_date'] . ' ' . $data['start_clock'],
+            $this->resolveCinemaTimezone($auditorium->cinema->timezone ?? null)
+        );
         $endAt = $startAt->copy()->addMinutes((int) $movieVersion->movie->duration_minutes);
 
         if ($data['status'] !== 'CANCELLED') {
@@ -629,13 +381,30 @@ class ShowController extends Controller
             'end_time' => $endAt,
             'status' => $data['status'],
         ];
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
     }
 
-    private function validateData(Request $request, ?Show $show = null): array
+
+    private function resolveCinemaTimezone(?string $timezone): string
     {
-        $data = $request->validate([
-            'auditorium_id' => ['required', 'integer', 'exists:auditoriums,id'],
+        $timezone = $timezone ?: config('app.timezone', 'UTC');
+
+        $aliases = [
+            'Asia/Ha_Noi' => 'Asia/Ho_Chi_Minh',
+            'Asia/Saigon' => 'Asia/Ho_Chi_Minh',
+            'Vietnam' => 'Asia/Ho_Chi_Minh',
+        ];
+
+        $timezone = $aliases[$timezone] ?? $timezone;
+
+        try {
+            new \DateTimeZone($timezone);
+
+            return $timezone;
+        } catch (\Throwable $e) {
+            return config('app.timezone', 'UTC');
+        }
+    }
+
             'movie_id' => ['required', 'integer', 'exists:movies,id'],
             'pricing_profile_id' => ['required', 'integer', 'exists:pricing_profiles,id'],
             'show_date' => ['required', 'date'],

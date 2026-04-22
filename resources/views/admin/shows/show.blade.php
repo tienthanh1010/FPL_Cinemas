@@ -4,10 +4,6 @@
 
 @push('styles')
 <style>
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     .seatmap-shell {
         background:
             radial-gradient(circle at top, rgba(59, 130, 246, .18), transparent 42%),
@@ -195,30 +191,10 @@
         .seat-bank { gap: 8px; }
         .seat-tile, .seat-tile.couple { min-width: 72px; }
     }
-<<<<<<< HEAD
-=======
-=======
-    .seat-grid { display:grid; gap:10px; }
-    .seat-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .seat-label { min-width:26px; font-weight:700; }
-    .seat-tile { min-width:72px; border-radius:14px; border:1px solid rgba(15,23,42,.1); padding:8px 10px; font-size:.8rem; text-align:center; background:#fff; }
-    .seat-tile button { border:0; background:transparent; width:100%; padding:0; }
-    .seat-empty { background:#ecfdf5; }
-    .seat-hold { background:#fef3c7; }
-    .seat-booked { background:#fee2e2; }
-    .seat-blocked { background:#e2e8f0; }
-    .seat-maintenance { background:#dbeafe; }
-    .legend-chip { padding:8px 12px; border-radius:999px; font-size:.85rem; font-weight:600; }
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 </style>
 @endpush
 
 @section('content')
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 @php
     $typeDetector = function ($typeName) {
         $type = mb_strtolower((string) $typeName);
@@ -250,11 +226,6 @@
         })
         ->groupBy('section');
 @endphp
-<<<<<<< HEAD
-=======
-=======
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
 <section class="page-header">
     <div>
         <p class="eyebrow">Show detail</p>
@@ -314,10 +285,6 @@
 <div class="card mb-4">
     <div class="card-header fw-semibold">Sơ đồ ghế trực quan theo suất chiếu</div>
     <div class="card-body">
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         <div class="seatmap-shell">
             <div class="screen-arc"><span>Màn hình</span></div>
             <p class="seatmap-note">Sơ đồ đã được sắp theo chuẩn rạp: ghế thường ở phía trước, ghế VIP ở giữa và ghế đôi ở hàng dưới cùng. Nhấn ghế trống để khoá, nhấn ghế đang khoá để mở khoá.</p>
@@ -436,57 +403,6 @@
                                     </div>
                                 @endif
                             </div>
-<<<<<<< HEAD
-=======
-=======
-        <div class="d-flex gap-2 flex-wrap mb-3">
-            <span class="legend-chip seat-empty">Trống</span>
-            <span class="legend-chip seat-hold">Đang giữ</span>
-            <span class="legend-chip seat-booked">Đã đặt</span>
-            <span class="legend-chip seat-blocked">Khoá thủ công</span>
-            <span class="legend-chip seat-maintenance">Ghế hỏng / bảo trì</span>
-        </div>
-        <div class="alert alert-light border small">Nhấn vào ghế màu xanh để khoá thủ công. Nhấn ghế màu xám để mở khoá. Ghế đang giữ/đã đặt không thể thay đổi trực tiếp.</div>
-        <div class="seat-grid">
-            @foreach($seats as $row => $items)
-                <div class="seat-row">
-                    <span class="seat-label">{{ $row }}</span>
-                    @foreach($items as $seat)
-                        @php
-                            $cls = match($seat['status']) {
-                                'booked' => 'seat-booked',
-                                'hold' => 'seat-hold',
-                                'blocked' => 'seat-blocked',
-                                'maintenance' => 'seat-maintenance',
-                                default => 'seat-empty',
-                            };
-                        @endphp
-                        <div class="seat-tile {{ $cls }}" title="{{ $seat['seat_type_name'] }}">
-                            @if($seat['status'] === 'empty')
-                                <form method="POST" action="{{ route('admin.shows.seats.block', $show) }}">
-                                    @csrf
-                                    <input type="hidden" name="seat_id" value="{{ $seat['id'] }}">
-                                    <input type="hidden" name="reason" value="Khoá thủ công từ admin">
-                                    <button type="submit">
-                                        <div class="fw-semibold">{{ $seat['seat_code'] }}</div>
-                                        <div class="text-muted">{{ $seat['seat_type_name'] }}</div>
-                                    </button>
-                                </form>
-                            @elseif($seat['status'] === 'blocked')
-                                <form method="POST" action="{{ route('admin.shows.seats.unblock', [$show, $seat['block_id']]) }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit">
-                                        <div class="fw-semibold">{{ $seat['seat_code'] }}</div>
-                                        <div class="text-muted">Mở khoá</div>
-                                    </button>
-                                </form>
-                            @else
-                                <div class="fw-semibold">{{ $seat['seat_code'] }}</div>
-                                <div class="text-muted">{{ $seat['seat_type_name'] }}</div>
-                            @endif
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                         </div>
                     @endforeach
                 </div>

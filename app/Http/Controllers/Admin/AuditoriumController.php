@@ -39,6 +39,7 @@ class AuditoriumController extends Controller
         $screenTypes = self::SCREEN_TYPES;
 
         return view('admin.auditoriums.create', compact('auditorium', 'screenTypes'));
+        return view('admin.auditoriums.create', compact('auditorium', 'screenTypes'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -46,7 +47,9 @@ class AuditoriumController extends Controller
         $data = $this->validateData($request);
         $data['public_id'] = (string) Str::ulid();
         $data['cinema_id'] = $this->resolveCinemaId();
+        $data['cinema_id'] = $this->resolveCinemaId();
 
+        $auditorium = Auditorium::create($data);
         $auditorium = Auditorium::create($data);
 
         return redirect()->route('admin.auditoriums.show', $auditorium)->with('success', 'Đã tạo phòng chiếu.');
@@ -58,21 +61,10 @@ class AuditoriumController extends Controller
         $seats = DB::table('seats as s')
             ->leftJoin('seat_types as st', 'st.id', '=', 's.seat_type_id')
             ->where('s.auditorium_id', $auditorium->id)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-            ->where('s.is_active', 1)
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             ->orderBy('s.row_label')
             ->orderBy('s.col_number')
             ->get(['s.*', 'st.name as seat_type_name']);
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         $seatStats = [
             'total' => $seats->count(),
             'active' => $seats->where('is_active', 1)->count(),
@@ -80,12 +72,6 @@ class AuditoriumController extends Controller
         ];
 
         return view('admin.auditoriums.show', compact('auditorium', 'seats', 'seatStats'));
-<<<<<<< HEAD
-=======
-=======
-        return view('admin.auditoriums.show', compact('auditorium', 'seats'));
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
     }
 
     public function edit(Auditorium $auditorium): View
@@ -93,15 +79,18 @@ class AuditoriumController extends Controller
         $screenTypes = self::SCREEN_TYPES;
 
         return view('admin.auditoriums.edit', compact('auditorium', 'screenTypes'));
+        return view('admin.auditoriums.edit', compact('auditorium', 'screenTypes'));
     }
 
     public function update(Request $request, Auditorium $auditorium): RedirectResponse
     {
         $data = $this->validateData($request, $auditorium);
         $data['cinema_id'] = $auditorium->cinema_id ?: $this->resolveCinemaId();
+        $data['cinema_id'] = $auditorium->cinema_id ?: $this->resolveCinemaId();
 
         $auditorium->update($data);
 
+        return redirect()->route('admin.auditoriums.show', $auditorium)->with('success', 'Đã cập nhật phòng chiếu.');
         return redirect()->route('admin.auditoriums.show', $auditorium)->with('success', 'Đã cập nhật phòng chiếu.');
     }
 
@@ -121,7 +110,9 @@ class AuditoriumController extends Controller
     private function validateData(Request $request, ?Auditorium $auditorium = null): array
     {
         $cinemaId = $auditorium?->cinema_id ?: $this->resolveCinemaId();
+        $cinemaId = $auditorium?->cinema_id ?: $this->resolveCinemaId();
         $uniquePerCinema = Rule::unique('auditoriums', 'auditorium_code')
+            ->where(fn ($q) => $q->where('cinema_id', $cinemaId));
             ->where(fn ($q) => $q->where('cinema_id', $cinemaId));
 
         if ($auditorium) {
@@ -135,6 +126,17 @@ class AuditoriumController extends Controller
             'seat_map_version' => ['required', 'integer', 'min:1'],
             'is_active' => ['required', 'boolean'],
         ]);
+    }
+
+    private function resolveCinemaId(): int
+    {
+        $cinema = Cinema::query()->first();
+
+        if (! $cinema) {
+            abort(422, 'Bạn cần tạo rạp trước khi tạo phòng chiếu.');
+        }
+
+        return (int) $cinema->id;
     }
 
     private function resolveCinemaId(): int

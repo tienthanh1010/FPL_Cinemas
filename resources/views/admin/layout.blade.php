@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin') · FPL Cinemas</title>
+    <title>@yield('title', 'Admin') · FPL Cinemas</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
@@ -223,12 +226,7 @@
             flex-wrap: wrap;
         }
 
-<<<<<<< HEAD
-        .admin-user-chip,
-        .admin-cinema-chip {
-=======
         .admin-user-chip {
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -239,12 +237,7 @@
             box-shadow: var(--admin-shadow-soft);
         }
 
-<<<<<<< HEAD
-        .admin-user-chip .avatar,
-        .admin-cinema-chip .avatar {
-=======
         .admin-user-chip .avatar {
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
             width: 38px;
             height: 38px;
             border-radius: 14px;
@@ -256,13 +249,6 @@
             font-weight: 700;
         }
 
-<<<<<<< HEAD
-        .admin-cinema-chip .avatar {
-            background: linear-gradient(135deg, #0f766e, #14b8a6);
-        }
-
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
         .page-body {
             padding: 28px;
         }
@@ -659,7 +645,10 @@
         }
     </style>
     @stack('styles')
+    @stack('styles')
 </head>
+<body class="admin-body">
+<div class="admin-shell">
 <body class="admin-body">
 <div class="admin-shell">
     @include('admin.partials.sidebar')
@@ -669,7 +658,15 @@
             <div class="d-flex align-items-start gap-3">
                 <button class="btn btn-light-soft d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar">
                     <i class="bi bi-list"></i>
+    <div class="admin-content">
+        <header class="topbar">
+            <div class="d-flex align-items-start gap-3">
+                <button class="btn btn-light-soft d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar">
+                    <i class="bi bi-list"></i>
                 </button>
+                <div>
+                    <p class="topbar-subtitle">Bảng điều khiển quản trị rạp phim</p>
+                    <h1 class="topbar-title">@yield('title', 'Admin')</h1>
                 <div>
                     <p class="topbar-subtitle">Bảng điều khiển quản trị rạp phim</p>
                     <h1 class="topbar-title">@yield('title', 'Admin')</h1>
@@ -677,27 +674,11 @@
             </div>
 
             <div class="topbar-meta">
-<<<<<<< HEAD
-                @if(($singleCinemaMode ?? false) === true)
-                    <div class="admin-cinema-chip">
-                        <span class="avatar"><i class="bi bi-buildings-fill"></i></span>
-                        <div>
-                            <div class="fw-semibold">{{ $primaryCinema?->name ?? 'Rạp mặc định' }}</div>
-                            <div class="small text-secondary">Mô hình 1 rạp đang bật</div>
-                        </div>
-                    </div>
-                @endif
-=======
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                 <div class="admin-user-chip">
                     <span class="avatar">{{ strtoupper(mb_substr($adminUser->name ?? 'A', 0, 1, 'UTF-8')) }}</span>
                     <div>
                         <div class="fw-semibold">{{ $adminUser->name ?? 'Admin' }}</div>
-<<<<<<< HEAD
-                        <div class="small text-secondary">{{ $adminUser->roles->pluck('name')->implode(', ') ?: now()->format('d/m/Y H:i') }}</div>
-=======
                         <div class="small text-secondary">{{ now()->format('d/m/Y H:i') }}</div>
->>>>>>> 64d8c448b79abac0443c5ccf39a8cc0d12ef3561
                     </div>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">
@@ -717,6 +698,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@stack('scripts')
 @stack('scripts')
 </body>
 </html>

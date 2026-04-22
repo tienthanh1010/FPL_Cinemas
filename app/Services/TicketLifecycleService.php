@@ -9,16 +9,8 @@ use Illuminate\Support\Str;
 
 class TicketLifecycleService
 {
-    public function syncForBooking(Booking $booking): array
+    public function syncForBooking(Booking $booking): void
     {
-        $summary = [
-            'booking_id' => $booking->id,
-            'created' => 0,
-            'updated' => 0,
-            'unchanged' => 0,
-            'skipped' => 0,
-        ];
-
         $booking->loadMissing(['tickets.ticket', 'payments.refunds']);
 
         $fullyRefunded = $this->isFullyRefunded($booking);
@@ -29,7 +21,6 @@ class TicketLifecycleService
             $targetStatus = $this->resolveTicketStatus($bookingTicket, $bookingStatus, $fullyRefunded);
 
             if ($targetStatus === null) {
-                $summary['skipped']++;
                 continue;
             }
 
@@ -45,12 +36,10 @@ class TicketLifecycleService
                     'used_at' => $targetStatus === 'USED' ? now() : null,
                 ]);
                 $bookingTicket->setRelation('ticket', $ticket);
-                $summary['created']++;
                 continue;
             }
 
             if (! $ticket) {
-                $summary['skipped']++;
                 continue;
             }
 
@@ -69,23 +58,8 @@ class TicketLifecycleService
                 $payload['issued_at'] = $ticket->issued_at;
             }
 
-            $dirty = false;
-            foreach ($payload as $key => $value) {
-                if ($ticket->{$key} != $value) {
-                    $dirty = true;
-                    break;
-                }
-            }
-
-            if ($dirty) {
-                $ticket->update($payload);
-                $summary['updated']++;
-            } else {
-                $summary['unchanged']++;
-            }
+            $ticket->update($payload);
         }
-
-        return $summary;
     }
 
     private function resolveTicketStatus(BookingTicket $bookingTicket, string $bookingStatus, bool $fullyRefunded): ?string
