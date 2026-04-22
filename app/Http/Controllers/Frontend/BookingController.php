@@ -56,8 +56,11 @@ class BookingController extends Controller
                 ->with('error', 'Suất chiếu này hiện chưa mở bán để đặt vé trực tiếp.');
         }
 
+        $ownerToken = $this->seatHoldService->ownerToken(session('seat_hold_owner_token'));
+        $editableBooking = $this->restoreEditablePendingBookingIfNeeded($show, $ownerToken);
+        $authCustomer = member_customer();
         $ticketTypes = $this->availableTicketTypes($movie);
-        $bookingConfig = $this->buildBookingConfig($show);
+        $bookingConfig = $this->buildBookingConfig($show, $ownerToken);
 
         $relatedShows = Show::query()
             ->frontendVisible()
@@ -69,13 +72,13 @@ class BookingController extends Controller
             ->limit(8)
             ->get();
 
-        return view('frontend.booking', compact('movie', 'show', 'ticketTypes', 'bookingConfig', 'relatedShows'));
+        return view('frontend.booking', compact('movie', 'show', 'ticketTypes', 'bookingConfig', 'relatedShows', 'editableBooking', 'authCustomer'));
     }
 
-    private function buildBookingConfig(Show $show): array
+    private function buildBookingConfig(Show $show, ?string $ownerToken = null): array
     {
         $movie = $show->movieVersion?->movie;
-        $seatPayload = $this->seatHoldService->seatPayload($show, session('seat_hold_owner_token'));
+        $seatPayload = $this->seatHoldService->seatPayload($show, $ownerToken);
 
         $prices = ShowPrice::query()
             ->where('show_id', $show->id)
@@ -103,6 +106,7 @@ class BookingController extends Controller
             'seat_poll_seconds' => max(3, (int) config('cinema_booking.seat_poll_seconds', 5)),
             'max_seats_per_booking' => max(1, (int) config('cinema_booking.max_seats_per_booking', 10)),
             'child_ticket_blocked' => movie_blocks_child_tickets($movie),
+            'owner_hold_expires_at' => $ownerToken ? $this->seatHoldService->ownerHoldExpiresAt($show, $ownerToken) : null,
             'seats' => $seatPayload,
             'prices' => $priceMap,
             'products' => [],
@@ -135,6 +139,7 @@ class BookingController extends Controller
 
         try {
             DB::transaction(function () use ($request, $data, $memberUser, $holdOwnerToken, &$bookingCode) {
+                /** @var Show $show */
                 $show = Show::query()
                     ->with(['auditorium.cinema', 'movieVersion.movie.contentRating'])
                     ->lockForUpdate()
@@ -270,7 +275,7 @@ class BookingController extends Controller
                     abort(422, 'Một hoặc nhiều ghế đang bị khóa thủ công / bảo trì.');
                 }
                 if ($reservedSeatIds->merge($otherHeldSeatIds)->intersect($requestedSeatIds)->isNotEmpty()) {
-                    abort(422, 'Một hoặc nhiều ghế đã được giữ/đặt, vui lòng chọn ghế khác.');
+                    abort(422, 'Một hoặc nhiều ghế đã được giữ hoặc đang nằm ở bước thanh toán. Vui lòng chọn ghế khác.');
                 }
 
                 $this->validateSeatSelectionRules($show, $seats, array_unique(array_merge(
@@ -357,12 +362,9 @@ class BookingController extends Controller
                 }
 
                 $discountTotal = 0;
-                $autoPromotions = $this->promotionService->eligiblePromotions($show, $booking, ['subtotal' => $subtotal]);
+                $autoPromotions = $this->promotionService->eligiblePromotions($show, $booking, ['subtotal' => $ticketSubtotal]);
                 foreach ($autoPromotions as $promotion) {
-                    $base = $promotion->applies_to === 'PRODUCT'
-                        ? $productSubtotal
-                        : ($promotion->applies_to === 'TICKET' ? $ticketSubtotal : ($subtotal - $discountTotal));
-                    $amount = $this->promotionService->discountAmount($promotion, $base);
+                    $amount = $this->promotionService->discountAmount($promotion, $ticketSubtotal - $discountTotal);
                     $discountTotal += $amount;
                     $this->promotionService->persistDiscount($booking, $promotion, $amount, null, ['mode' => 'AUTO']);
                     if (! $promotion->is_stackable) {
@@ -371,27 +373,26 @@ class BookingController extends Controller
                 }
 
                 if (! empty($data['coupon_code'])) {
-                    $couponResult = $this->promotionService->couponPromotion($data['coupon_code'], $show, $booking, $subtotal - $discountTotal);
+                    $couponResult = $this->promotionService->couponPromotion($data['coupon_code'], $show, $booking, $ticketSubtotal - $discountTotal);
                     if (! empty($couponResult['error'])) {
                         abort(422, $couponResult['error']);
                     }
                     $promotion = $couponResult['promotion'];
                     $coupon = $couponResult['coupon'];
-                    $base = $promotion->applies_to === 'PRODUCT'
-                        ? $productSubtotal
-                        : ($promotion->applies_to === 'TICKET' ? $ticketSubtotal : ($subtotal - $discountTotal));
-                    $amount = $this->promotionService->discountAmount($promotion, $base);
+                    $amount = $this->promotionService->discountAmount($promotion, $ticketSubtotal - $discountTotal);
                     $discountTotal += $amount;
                     $this->promotionService->persistDiscount($booking, $promotion, $amount, $coupon, ['mode' => 'COUPON', 'code' => $coupon->code]);
                 }
 
                 $booking->update([
                     'discount_amount' => $discountTotal,
-                    'total_amount' => max(0, $subtotal - $discountTotal),
+                    'total_amount' => max(0, $ticketSubtotal - $discountTotal),
+                    'expires_at' => $expiresAt,
                 ]);
 
-                $this->seatHoldService->releaseOwnerSeats($show, $holdOwnerToken);
+                $this->seatHoldService->releaseOwnerSeats($show, $holdOwnerToken, true);
                 $this->bookingLifecycleService->refreshShowSaleStatus($show);
+                session(['editable_booking_code' => $booking->booking_code]);
             }, 3);
         } catch (\Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
@@ -509,7 +510,6 @@ class BookingController extends Controller
                 'tickets.ticket',
                 'tickets.ticketType',
                 'tickets.seatType',
-                'payments',
                 'show.movieVersion.movie.contentRating',
                 'show.auditorium.cinema',
             ])
@@ -520,32 +520,111 @@ class BookingController extends Controller
             abort(404);
         }
 
-        if (! in_array((string) $booking->status, ['PAID', 'CONFIRMED', 'COMPLETED'], true)) {
-            abort(403, 'Booking chưa đủ điều kiện để in vé cứng.');
+        return view('frontend.print_ticket', compact('booking'));
+    }
+
+    private function resolveCustomer($memberUser, array $data): Customer
+    {
+        if ($memberUser) {
+            return $this->customerAccountService->syncCustomerForUser($memberUser, [
+                'full_name' => $data['contact_name'],
+                'phone' => $data['contact_phone'],
+                'email' => $data['contact_email'] ?? $memberUser->email,
+            ]);
         }
 
-        $issuedTickets = $booking->tickets->filter(function ($bookingTicket) {
-            return strtoupper((string) $bookingTicket->status) === 'ISSUED'
-                && $bookingTicket->ticket
-                && $bookingTicket->ticket->ticket_code;
-        })->values();
-
-        if ($issuedTickets->isEmpty()) {
-            abort(404, 'Booking này chưa có vé điện tử để in.');
+        $query = Customer::query();
+        if (! empty($data['contact_email']) || ! empty($data['contact_phone'])) {
+            $query->where(function ($builder) use ($data) {
+                if (! empty($data['contact_email'])) {
+                    $builder->orWhere('email', $data['contact_email']);
+                }
+                if (! empty($data['contact_phone'])) {
+                    $builder->orWhere('phone', $data['contact_phone']);
+                }
+            });
         }
 
-        $booking->setRelation('tickets', $issuedTickets);
+        $customer = $query->orderByDesc('id')->first();
+        if ($customer) {
+            $customer->update([
+                'full_name' => $data['contact_name'],
+                'phone' => $data['contact_phone'],
+                'email' => $data['contact_email'] ?? $customer->email,
+                'account_status' => 'ACTIVE',
+            ]);
 
-        $lastSuccessfulPayment = $booking->payments
-            ->filter(fn ($payment) => in_array(strtoupper((string) $payment->status), ['CAPTURED', 'REFUNDED'], true))
-            ->sortByDesc(fn ($payment) => optional($payment->paid_at)->getTimestamp() ?: 0)
+            return $customer->fresh();
+        }
+
+        return Customer::create([
+            'public_id' => (string) Str::ulid(),
+            'full_name' => $data['contact_name'],
+            'phone' => $data['contact_phone'],
+            'email' => $data['contact_email'] ?? null,
+            'account_status' => 'ACTIVE',
+        ]);
+    }
+
+    private function restoreEditablePendingBookingIfNeeded(Show $show, string $ownerToken): ?Booking
+    {
+        $bookingCode = (string) session('editable_booking_code', '');
+        if ($bookingCode === '') {
+            return null;
+        }
+
+        /** @var Booking|null $booking */
+        $booking = Booking::query()
+            ->where('booking_code', $bookingCode)
+            ->with(['show', 'tickets'])
             ->first();
 
-        return view('frontend.print_ticket', [
-            'booking' => $booking,
-            'printedAt' => now(),
-            'lastSuccessfulPayment' => $lastSuccessfulPayment,
-        ]);
+        if (! $booking || (int) $booking->show_id !== (int) $show->id || (string) $booking->status !== 'PENDING') {
+            session()->forget('editable_booking_code');
+
+            return null;
+        }
+
+        if ($booking->expires_at && now()->gte($booking->expires_at)) {
+            $this->bookingLifecycleService->expirePendingBooking($booking);
+            session()->forget('editable_booking_code');
+
+            return null;
+        }
+
+        $restored = $this->seatHoldService->restorePendingBookingForEditing($booking, $ownerToken);
+        session(['editable_booking_code' => $restored->booking_code]);
+
+        return $restored->fresh(['show', 'tickets']);
+    }
+
+    private function lockEditablePendingBooking(Show $show): ?Booking
+    {
+        $bookingCode = (string) session('editable_booking_code', '');
+        if ($bookingCode === '') {
+            return null;
+        }
+
+        $booking = Booking::query()
+            ->where('booking_code', $bookingCode)
+            ->where('show_id', $show->id)
+            ->where('status', 'PENDING')
+            ->lockForUpdate()
+            ->first();
+
+        if (! $booking) {
+            session()->forget('editable_booking_code');
+
+            return null;
+        }
+
+        if ($booking->expires_at && now()->gte($booking->expires_at)) {
+            session()->forget('editable_booking_code');
+
+            return null;
+        }
+
+        return $booking;
     }
 }
 
