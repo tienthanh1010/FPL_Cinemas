@@ -1,6 +1,6 @@
 @extends('admin.layout')
 
-@section('title', 'Sửa rạp')
+@section('title', 'Cập nhật rạp')
 
 @section('content')
     <section class="page-header">

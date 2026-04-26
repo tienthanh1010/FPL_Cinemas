@@ -1,6 +1,7 @@
 @extends('frontend.layout')
 
 @section('title', 'Thể loại ' . $category->name)
+@section('title', 'Thể loại ' . $category->name)
 
 @section('content')
   <section class="section-space pt-4 pt-lg-5">
@@ -17,6 +18,7 @@
             <span>tựa phim</span>
           </div>
           <a class="btn btn-cinema-secondary" href="{{ route('home') }}"><i class="bi bi-arrow-left me-2"></i>Về trang chủ</a>
+          <a class="btn btn-cinema-secondary" href="{{ route('home') }}"><i class="bi bi-arrow-left me-2"></i>Về trang chủ</a>
         </div>
       </div>
 
@@ -30,6 +32,11 @@
         @endforelse
       </div>
 
+      <div class="app-pagination mt-4">
+        {{ $movies->links() }}
+      </div>
+    </div>
+  </section>
       <div class="app-pagination mt-4">
         {{ $movies->links() }}
       </div>

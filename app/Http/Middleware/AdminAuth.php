@@ -17,9 +17,9 @@ class AdminAuth
             return redirect()->route('admin.login');
         }
 
-        // Share current admin user to all admin views
-        $adminUser = AdminUser::find($adminId);
-        if (!$adminUser) {
+        $adminUser = AdminUser::with('roles')->find($adminId);
+
+        if (! $adminUser) {
             $request->session()->forget('admin_user_id');
             return redirect()->route('admin.login');
         }

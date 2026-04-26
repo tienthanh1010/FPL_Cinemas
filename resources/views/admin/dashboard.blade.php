@@ -1,6 +1,7 @@
 @extends('admin.layout')
 
 @section('title', 'Tổng quan vận hành')
+@section('title', 'Tổng quan vận hành')
 
 @section('content')
     <section class="page-header">
@@ -125,7 +126,7 @@
                         @endforelse
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 

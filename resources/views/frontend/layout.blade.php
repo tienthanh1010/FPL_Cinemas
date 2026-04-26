@@ -1,5 +1,20 @@
+@php
+  $brand = $appBrand ?? config('app.name', 'FPL Cinemas');
+  $cinemaName = $primaryCinema?->name ?: $brand;
+  $cinemaHotline = $primaryCinema?->phone ?: '1900 6868';
+  $cinemaEmail = $primaryCinema?->email ?: 'support@fplcinemas.local';
+  $cinemaAddress = collect([
+      $primaryCinema?->address_line,
+      $primaryCinema?->ward,
+      $primaryCinema?->district,
+      $primaryCinema?->province,
+  ])->filter()->implode(', ');
+  $cinemaAddress = $cinemaAddress !== '' ? $cinemaAddress : 'Hà Nội, Việt Nam';
+  $memberPoints = (int) ($authCustomer?->loyaltyAccount?->points_balance ?? 0);
+  $navCategories = ($globalCategories ?? collect())->take(8);
+@endphp
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -127,17 +142,10 @@
           <div>
             <h3>Liên hệ</h3>
             <ul>
-<<<<<<< HEAD
               <li><i class="bi bi-geo-alt me-2"></i>Hà Nội, Việt Nam</li>
               <li><i class="bi bi-telephone me-2"></i>1900 2307</li>
               <li><i class="bi bi-envelope me-2"></i>support@auroracinema.vn</li>
               <li><i class="bi bi-clock me-2"></i>07:00 - 23:00 mỗi ngày</li>
-=======
-              <li><i class="bi bi-geo-alt me-2"></i>Thái Nguyên, Việt Nam</li>
-              <li><i class="bi bi-telephone me-2"></i>1900 6868</li>
-              <li><i class="bi bi-envelope me-2"></i>support@auroracinema.vn</li>
-              <li><i class="bi bi-clock me-2"></i>08:00 - 23:00 mỗi ngày</li>
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
             </ul>
           </div>
         </div>

@@ -112,6 +112,7 @@
                     <th>Ghế</th>
                     <th>Loại ghế</th>
                     <th>Loại vé</th>
+                    <th>Vé điện tử</th>
                     <th>Đơn giá</th>
                     <th>Giảm giá</th>
                     <th>Thành tiền</th>
@@ -124,13 +125,20 @@
                     <td class="fw-semibold">{{ $ticket->seat?->seat_code ?: ('#'.$ticket->seat_id) }}</td>
                     <td>{{ $ticket->seatType?->name ?: ('#'.$ticket->seat_type_id) }}</td>
                     <td>{{ $ticket->ticketType?->name ?: ('#'.$ticket->ticket_type_id) }}</td>
+                    <td>
+                        @if($ticket->ticket)
+                            <a href="{{ route('admin.tickets.show', $ticket->ticket) }}" class="text-decoration-none">{{ $ticket->ticket->ticket_code }}</a>
+                        @else
+                            <span class="text-muted">Chưa phát hành</span>
+                        @endif
+                    </td>
                     <td>{{ number_format($ticket->unit_price_amount) }}đ</td>
                     <td>{{ number_format($ticket->discount_amount) }}đ</td>
                     <td>{{ number_format($ticket->final_price_amount) }}đ</td>
                     <td>{{ $ticket->status }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="empty-state">Booking chưa có vé nào.</td></tr>
+                <tr><td colspan="8" class="empty-state">Booking chưa có vé nào.</td></tr>
             @endforelse
             </tbody>
         </table>

@@ -5,7 +5,11 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\BookingTicket;
 use App\Models\Category;
+<<<<<<< HEAD
 use App\Models\CustomerFeedback;
+=======
+<<<<<<< HEAD
+>>>>>>> 7ada19c29237b2541b0821399777bbed0a0e14c3
 use App\Models\InventoryBalance;
 use App\Models\Movie;
 use App\Models\Product;
@@ -13,11 +17,14 @@ use App\Models\Seat;
 use App\Models\SeatBlock;
 use App\Models\SeatType;
 use App\Models\Show;
+<<<<<<< HEAD
 use App\Models\ShowPrice;
 use App\Models\TicketType;
 use App\Services\ProductPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+=======
+>>>>>>> 7ada19c29237b2541b0821399777bbed0a0e14c3
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -31,13 +38,18 @@ class HomeController extends Controller
     {
         $categories = Category::query()
             ->withCount('movies')
+            ->withCount('movies')
             ->orderBy('name')
             ->get();
 
         $movies = Movie::query()
             ->active()
             ->with(['genres', 'contentRating', 'versions'])
+<<<<<<< HEAD
             ->orderByDesc('is_hot')
+=======
+            ->with(['genres', 'contentRating', 'versions'])
+>>>>>>> 7ada19c29237b2541b0821399777bbed0a0e14c3
             ->orderByDesc('release_date')
             ->orderByDesc('id')
             ->limit(24)
@@ -161,6 +173,7 @@ class HomeController extends Controller
         $movies = $category->movies()
             ->where('movies.status', 'ACTIVE')
             ->with(['genres', 'contentRating'])
+            ->with(['genres', 'contentRating'])
             ->orderByDesc('release_date')
             ->paginate(12);
 
@@ -170,17 +183,26 @@ class HomeController extends Controller
     public function showtimes(Request $request, Movie $movie): View
     {
         abort_if($movie->status !== 'ACTIVE', 404);
+<<<<<<< HEAD
 
         $movie->loadMissing(['genres', 'contentRating']);
 
         $currentCinemaId = current_cinema_id();
+=======
+>>>>>>> 7ada19c29237b2541b0821399777bbed0a0e14c3
 
         $shows = Show::query()
             ->frontendVisible()
             ->when($currentCinemaId, fn ($query) => $query->whereHas('auditorium', fn ($auditoriumQuery) => $auditoriumQuery->where('cinema_id', $currentCinemaId)))
             ->whereHas('movieVersion', fn ($query) => $query->where('movie_id', $movie->id))
+<<<<<<< HEAD
             ->whereHas('movieVersion.movie', fn ($query) => $query->where('status', 'ACTIVE'))
             ->whereHas('auditorium', fn ($query) => $query->where('is_active', 1)->whereHas('cinema', fn ($cinemaQuery) => $cinemaQuery->where('status', 'ACTIVE')))
+=======
+            ->whereHas('movieVersion', fn ($query) => $query->where('movie_id', $movie->id))
+            ->whereIn('status', ['SCHEDULED', 'ON_SALE'])
+            ->where('start_time', '>', now())
+>>>>>>> 7ada19c29237b2541b0821399777bbed0a0e14c3
             ->orderBy('start_time')
             ->with(['auditorium.cinema', 'movieVersion'])
             ->get();
@@ -191,6 +213,7 @@ class HomeController extends Controller
             ->filter(fn (Show $show) => $show->isOnSaleNow())
             ->values();
 
+<<<<<<< HEAD
         $ticketTypes = TicketType::query()->orderBy('id')->get(['id', 'code', 'name', 'description']);
         $seatTypes = SeatType::query()->get(['id', 'code', 'name'])->keyBy('id');
         $products = Product::query()
@@ -367,5 +390,8 @@ class HomeController extends Controller
             'movieFeedbackSummary',
             'movieFeedbacks'
         ));
+=======
+        return view('frontend.showtimes', compact('movie', 'shows', 'showsByDate', 'bookableShows'));
+>>>>>>> 7ada19c29237b2541b0821399777bbed0a0e14c3
     }
 }
