@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\BookingTicket;
 use App\Models\Category;
 use App\Models\CustomerFeedback;
+
+use App\Models\CustomerFeedback;
+
 use App\Models\InventoryBalance;
 use App\Models\Movie;
 use App\Models\Product;
@@ -18,6 +21,7 @@ use App\Models\TicketType;
 use App\Services\ProductPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -39,6 +43,9 @@ class HomeController extends Controller
             ->active()
             ->with(['genres', 'contentRating', 'versions'])
             ->orderByDesc('is_hot')
+
+            ->orderByDesc('is_hot')
+
             ->orderByDesc('release_date')
             ->orderByDesc('id')
             ->limit(24)
@@ -177,12 +184,20 @@ class HomeController extends Controller
 
         $currentCinemaId = current_cinema_id();
 
+        $movie->loadMissing(['genres', 'contentRating']);
+
+        $currentCinemaId = current_cinema_id();
+
         $shows = Show::query()
             ->frontendVisible()
             ->when($currentCinemaId, fn ($query) => $query->whereHas('auditorium', fn ($auditoriumQuery) => $auditoriumQuery->where('cinema_id', $currentCinemaId)))
             ->whereHas('movieVersion', fn ($query) => $query->where('movie_id', $movie->id))
             ->whereHas('movieVersion.movie', fn ($query) => $query->where('status', 'ACTIVE'))
             ->whereHas('auditorium', fn ($query) => $query->where('is_active', 1)->whereHas('cinema', fn ($cinemaQuery) => $cinemaQuery->where('status', 'ACTIVE')))
+
+            ->whereHas('movieVersion.movie', fn ($query) => $query->where('status', 'ACTIVE'))
+            ->whereHas('auditorium', fn ($query) => $query->where('is_active', 1)->whereHas('cinema', fn ($cinemaQuery) => $cinemaQuery->where('status', 'ACTIVE')))
+
             ->orderBy('start_time')
             ->with(['auditorium.cinema', 'movieVersion'])
             ->get();
@@ -369,5 +384,6 @@ class HomeController extends Controller
             'movieFeedbackSummary',
             'movieFeedbacks'
         ));
+
     }
 }
