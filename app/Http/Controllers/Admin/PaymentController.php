@@ -8,6 +8,7 @@ use App\Models\Movie;
 use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\Show;
+use App\Services\TicketLifecycleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -26,7 +27,11 @@ class PaymentController extends Controller
         'REFUNDED' => 'Đã hoàn tiền',
     ];
 
-    private const BOOKING_TERMINAL_STATUSES = ['CANCELLED', 'EXPIRED', 'COMPLETED', 'CONFIRMED'];
+    private const BOOKING_TERMINAL_STATUSES = ['CANCELLED', 'EXPIRED'];
+
+    public function __construct(private readonly TicketLifecycleService $ticketLifecycleService)
+    {
+    }
 
     public function index(Request $request): View
     {
@@ -227,19 +232,43 @@ class PaymentController extends Controller
         $paidAmount = (int) $booking->payments->sum(fn (Payment $payment) => $this->netCapturedAmount($payment));
         $paidAmount = max(0, min((int) $booking->total_amount, $paidAmount));
 
+        $successfulRefundAmount = (int) $booking->payments
+            ->flatMap(fn (Payment $payment) => $payment->refunds)
+            ->where('status', 'SUCCESS')
+            ->sum('amount');
+
+        $fullSuccessRefund = $successfulRefundAmount > 0 && $paidAmount <= 0;
+        $currentStatus = (string) $booking->status;
+
         $payload = ['paid_amount' => $paidAmount];
 
-        if (! in_array((string) $booking->status, self::BOOKING_TERMINAL_STATUSES, true)) {
-            $payload['status'] = $paidAmount > 0 ? 'PAID' : 'PENDING';
+        if (! in_array($currentStatus, self::BOOKING_TERMINAL_STATUSES, true)) {
+            if ($fullSuccessRefund && $currentStatus !== 'COMPLETED') {
+                $payload['status'] = 'CANCELLED';
+            } else {
+                $payload['status'] = $paidAmount > 0 ? 'PAID' : 'PENDING';
+            }
         }
 
         $booking->update($payload);
 
-        if (! in_array((string) $booking->status, self::BOOKING_TERMINAL_STATUSES, true)) {
+        $nextBookingStatus = (string) ($payload['status'] ?? $currentStatus);
+
+        if ($nextBookingStatus === 'CANCELLED') {
+            $booking->tickets()
+                ->whereIn('status', ['RESERVED', 'ISSUED'])
+                ->update(['status' => 'CANCELLED']);
+        } elseif ($nextBookingStatus === 'EXPIRED') {
+            $booking->tickets()
+                ->whereIn('status', ['RESERVED', 'ISSUED'])
+                ->update(['status' => 'EXPIRED']);
+        } else {
             $booking->tickets()
                 ->whereIn('status', ['RESERVED', 'ISSUED'])
                 ->update(['status' => $paidAmount > 0 ? 'ISSUED' : 'RESERVED']);
         }
+
+        $this->ticketLifecycleService->syncForBooking($booking->fresh(['tickets.ticket', 'payments.refunds']));
     }
 
     private function netCapturedAmount(Payment $payment): int

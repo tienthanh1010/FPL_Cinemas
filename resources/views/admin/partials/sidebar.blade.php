@@ -24,14 +24,11 @@
         [
             'title' => 'Bán hàng & marketing',
             'items' => [
-<<<<<<< HEAD
                 ['route' => 'admin.bookings.index', 'pattern' => 'admin.bookings.*', 'label' => 'Booking / đơn vé', 'icon' => 'bi-receipt-cutoff'],
+                ['route' => 'admin.tickets.index', 'pattern' => 'admin.tickets.*', 'label' => 'Soát vé / check-in', 'icon' => 'bi-qr-code-scan'],
                 ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Combo bắp nước', 'icon' => 'bi-cup-straw'],
                 ['route' => 'admin.payments.index', 'pattern' => 'admin.payments.*', 'label' => 'Thanh toán', 'icon' => 'bi-credit-card-2-front'],
                 ['route' => 'admin.refunds.index', 'pattern' => 'admin.refunds.*', 'label' => 'Hoàn tiền', 'icon' => 'bi-arrow-counterclockwise'],
-=======
-                ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Combo bắp nước', 'icon' => 'bi-cup-straw'],
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
                 ['route' => 'admin.inventory.index', 'pattern' => 'admin.inventory.*', 'label' => 'Tồn kho F&B', 'icon' => 'bi-box-seam'],
                 ['route' => 'admin.promotions.index', 'pattern' => 'admin.promotions.*', 'label' => 'Khuyến mãi', 'icon' => 'bi-megaphone'],
                 ['route' => 'admin.coupons.index', 'pattern' => 'admin.coupons.*', 'label' => 'Voucher', 'icon' => 'bi-ticket-perforated'],
@@ -83,14 +80,66 @@
                 </ul>
             </div>
         @endforeach
+<aside class="admin-sidebar d-none d-xl-flex flex-column">
+    <a href="{{ route('admin.dashboard') }}" class="admin-brand">
+        <span class="admin-brand-badge"><i class="bi bi-camera-reels-fill"></i></span>
+        <span>
+            <small>FPL Cinemas</small>
+            <strong>Admin Studio</strong>
+        </span>
+    </a>
+
+    <div class="sidebar-groups">
+        @foreach($navGroups as $group)
+            @php($items = $visibleItems($group['items']))
+            @continue(empty($items))
+            <div class="sidebar-group-card">
+                <div class="sidebar-section-title">{{ $group['title'] }}</div>
+                <ul class="nav flex-column">
+                    @foreach($items as $item)
+                        <li>
+                            <a href="{{ route($item['route']) }}" class="nav-link {{ $isActive($item['pattern']) }}">
+                                <span class="nav-icon-wrap"><i class="bi {{ $item['icon'] }}"></i></span>
+                                <span>{{ $item['label'] }}</span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endforeach
     </div>
+</aside>
 </aside>
 
 <div class="offcanvas offcanvas-start text-bg-dark border-0" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
     <div class="offcanvas-header px-4 pt-4">
         <h5 class="offcanvas-title" id="adminSidebarLabel">FPL Cinemas Admin</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+<div class="offcanvas offcanvas-start text-bg-dark border-0" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarLabel">
+    <div class="offcanvas-header px-4 pt-4">
+        <h5 class="offcanvas-title" id="adminSidebarLabel">FPL Cinemas Admin</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
+    <div class="offcanvas-body px-3 pb-4">
+        <div class="sidebar-groups">
+            @foreach($navGroups as $group)
+                @php($items = $visibleItems($group['items']))
+                @continue(empty($items))
+                <div class="sidebar-group-card">
+                    <div class="sidebar-section-title">{{ $group['title'] }}</div>
+                    <ul class="nav flex-column">
+                        @foreach($items as $item)
+                            <li>
+                                <a href="{{ route($item['route']) }}" class="nav-link {{ $isActive($item['pattern']) }}">
+                                    <span class="nav-icon-wrap"><i class="bi {{ $item['icon'] }}"></i></span>
+                                    <span>{{ $item['label'] }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div>
     <div class="offcanvas-body px-3 pb-4">
         <div class="sidebar-groups">
             @foreach($navGroups as $group)

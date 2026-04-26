@@ -3,12 +3,39 @@
     $selectedMovieId = old('movie_id', $selectedMovieId ?? null);
     $dateValue = old('show_date', optional($show->start_time)->format('Y-m-d'));
     $timeValue = old('start_clock', optional($show->start_time)->format('H:i'));
+    $selectedMovieId = old('movie_id', $selectedMovieId ?? null);
+    $dateValue = old('show_date', optional($show->start_time)->format('Y-m-d'));
+    $timeValue = old('start_clock', optional($show->start_time)->format('H:i'));
 @endphp
 
 <div class="section-card">
     <h3>Thông tin cơ bản của suất chiếu</h3>
     <p class="section-description">Chọn phim, phòng, ngày chiếu và giờ bắt đầu. Giờ kết thúc sẽ tự tính theo thời lượng phim.</p>
 
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <label class="form-label">Phim *</label>
+            <select id="movie_id" name="movie_id" class="form-select" required>
+                <option value="">-- Chọn phim --</option>
+                @foreach($movies as $movie)
+                    <option value="{{ $movie->id }}" data-duration="{{ $movie->duration_minutes }}" @selected((string) $selectedMovieId === (string) $movie->id)>
+                        {{ $movie->title }} ({{ $movie->duration_minutes }} phút)
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-lg-6">
+            <label class="form-label">Phòng chiếu *</label>
+            <select name="auditorium_id" class="form-select" required>
+                <option value="">-- Chọn phòng --</option>
+                @foreach($auditoriums as $auditorium)
+                    <option value="{{ $auditorium->id }}" @selected((string) old('auditorium_id', $show->auditorium_id) === (string) $auditorium->id)>
+                        {{ $auditorium->name }} ({{ $auditorium->auditorium_code }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
     <div class="row g-3">
         <div class="col-lg-6">
             <label class="form-label">Phim *</label>
@@ -51,12 +78,24 @@
             <label class="form-label">Ngày chiếu *</label>
             <input id="show_date" type="date" name="show_date" value="{{ $dateValue }}" class="form-control" required>
         </div>
+        <div class="col-md-4">
+            <label class="form-label">Ngày chiếu *</label>
+            <input id="show_date" type="date" name="show_date" value="{{ $dateValue }}" class="form-control" required>
+        </div>
 
         <div class="col-md-4">
             <label class="form-label">Giờ bắt đầu *</label>
             <input id="start_clock" type="time" name="start_clock" value="{{ $timeValue }}" class="form-control" required>
         </div>
+        <div class="col-md-4">
+            <label class="form-label">Giờ bắt đầu *</label>
+            <input id="start_clock" type="time" name="start_clock" value="{{ $timeValue }}" class="form-control" required>
+        </div>
 
+        <div class="col-md-4">
+            <label class="form-label">Giờ kết thúc (tự tính)</label>
+            <input id="end_clock_preview" type="text" class="form-control" value="{{ optional($show->end_time)->format('H:i') }}" readonly>
+        </div>
         <div class="col-md-4">
             <label class="form-label">Giờ kết thúc (tự tính)</label>
             <input id="end_clock_preview" type="text" class="form-control" value="{{ optional($show->end_time)->format('H:i') }}" readonly>

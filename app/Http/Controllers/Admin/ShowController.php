@@ -6,7 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Auditorium;
 use App\Models\Booking;
 use App\Models\Movie;
+use App\Models\Booking;
+use App\Models\Movie;
 use App\Models\MovieVersion;
+use App\Models\PricingProfile;
+use App\Models\Seat;
+use App\Models\SeatBlock;
+use App\Models\SeatType;
 use App\Models\PricingProfile;
 use App\Models\Seat;
 use App\Models\SeatBlock;
@@ -14,12 +20,16 @@ use App\Models\SeatType;
 use App\Models\Show;
 use App\Models\TicketType;
 use App\Services\ShowPricingService;
+use App\Models\TicketType;
+use App\Services\ShowPricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -42,7 +52,16 @@ class ShowController extends Controller
 
         $shows = Show::query()
             ->with(['movieVersion.movie', 'auditorium.cinema', 'pricingProfile'])
+            ->with(['movieVersion.movie', 'auditorium.cinema', 'pricingProfile'])
             ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($subQuery) use ($q) {
+                    $subQuery->whereHas('movieVersion.movie', function ($movieQuery) use ($q) {
+                        $movieQuery->where('title', 'like', "%{$q}%")
+                            ->orWhere('original_title', 'like', "%{$q}%");
+                    })->orWhereHas('auditorium', function ($auditoriumQuery) use ($q) {
+                        $auditoriumQuery->where('name', 'like', "%{$q}%")
+                            ->orWhere('auditorium_code', 'like', "%{$q}%");
+                    });
                 $query->where(function ($subQuery) use ($q) {
                     $subQuery->whereHas('movieVersion.movie', function ($movieQuery) use ($q) {
                         $movieQuery->where('title', 'like', "%{$q}%")
@@ -62,10 +81,16 @@ class ShowController extends Controller
             'q' => $q,
             'statusOptions' => self::STATUSES,
         ]);
+        return view('admin.shows.index', [
+            'shows' => $shows,
+            'q' => $q,
+            'statusOptions' => self::STATUSES,
+        ]);
     }
 
     public function create(): View
     {
+        return view('admin.shows.create', $this->formData(new Show()));
         return view('admin.shows.create', $this->formData(new Show()));
     }
 
@@ -185,6 +210,7 @@ class ShowController extends Controller
     public function edit(Show $show): View
     {
         return view('admin.shows.edit', $this->formData($show));
+        return view('admin.shows.edit', $this->formData($show));
     }
 
     public function update(Request $request, Show $show): RedirectResponse
@@ -270,6 +296,7 @@ class ShowController extends Controller
         try {
             DB::transaction(function () use ($show) {
                 $show->prices()->delete();
+                $show->prices()->delete();
                 $show->delete();
             });
         } catch (\Throwable $e) {
@@ -291,8 +318,6 @@ class ShowController extends Controller
             'statusOptions' => self::STATUSES,
             'selectedMovieId' => old('movie_id', $show->movieVersion?->movie_id),
         ];
-<<<<<<< HEAD
-=======
     }
 
     private function validateData(Request $request, ?Show $show = null): array
@@ -326,7 +351,10 @@ class ShowController extends Controller
             ]);
         }
 
-        $startAt = Carbon::parse($data['show_date'] . ' ' . $data['start_clock'], $auditorium->cinema->timezone ?? config('app.timezone'));
+        $startAt = Carbon::parse(
+            $data['show_date'] . ' ' . $data['start_clock'],
+            $this->resolveCinemaTimezone($auditorium->cinema->timezone ?? null)
+        );
         $endAt = $startAt->copy()->addMinutes((int) $movieVersion->movie->duration_minutes);
 
         if ($data['status'] !== 'CANCELLED') {
@@ -353,13 +381,30 @@ class ShowController extends Controller
             'end_time' => $endAt,
             'status' => $data['status'],
         ];
->>>>>>> b5618e45f81aeb711d5a8795a20e6bc35d4cabb2
     }
 
-    private function validateData(Request $request, ?Show $show = null): array
+
+    private function resolveCinemaTimezone(?string $timezone): string
     {
-        $data = $request->validate([
-            'auditorium_id' => ['required', 'integer', 'exists:auditoriums,id'],
+        $timezone = $timezone ?: config('app.timezone', 'UTC');
+
+        $aliases = [
+            'Asia/Ha_Noi' => 'Asia/Ho_Chi_Minh',
+            'Asia/Saigon' => 'Asia/Ho_Chi_Minh',
+            'Vietnam' => 'Asia/Ho_Chi_Minh',
+        ];
+
+        $timezone = $aliases[$timezone] ?? $timezone;
+
+        try {
+            new \DateTimeZone($timezone);
+
+            return $timezone;
+        } catch (\Throwable $e) {
+            return config('app.timezone', 'UTC');
+        }
+    }
+
             'movie_id' => ['required', 'integer', 'exists:movies,id'],
             'pricing_profile_id' => ['required', 'integer', 'exists:pricing_profiles,id'],
             'show_date' => ['required', 'date'],

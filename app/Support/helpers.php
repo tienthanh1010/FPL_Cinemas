@@ -101,3 +101,138 @@ if (! function_exists('admin_movie_role_labels')) {
         ];
     }
 }
+
+if (! function_exists('single_cinema_mode')) {
+    function single_cinema_mode(): bool
+    {
+        return app(\App\Services\CinemaContextService::class)->singleMode();
+    }
+}
+
+if (! function_exists('current_cinema')) {
+    function current_cinema(): ?\App\Models\Cinema
+    {
+        return app(\App\Services\CinemaContextService::class)->currentCinema();
+    }
+}
+
+if (! function_exists('current_cinema_id')) {
+    function current_cinema_id(): ?int
+    {
+        return app(\App\Services\CinemaContextService::class)->currentCinemaId();
+    }
+}
+
+if (! function_exists('member_customer')) {
+    function member_customer(): ?\App\Models\Customer
+    {
+        $user = auth()->user();
+
+        return $user ? app(\App\Services\CustomerAccountService::class)->customerForUser($user) : null;
+    }
+}
+
+if (! function_exists('loyalty_preview_points')) {
+    function loyalty_preview_points(int $amount): int
+    {
+        return app(\App\Services\LoyaltyPointService::class)->previewPoints($amount);
+    }
+}
+
+if (! function_exists('booking_hold_minutes')) {
+    function booking_hold_minutes(): int
+    {
+        return max(1, (int) config('cinema_booking.seat_hold_minutes', 2));
+    }
+}
+
+if (! function_exists('movie_blocks_child_tickets')) {
+    function movie_blocks_child_tickets(?\App\Models\Movie $movie): bool
+    {
+        if (! $movie || ! $movie->contentRating) {
+            return true;
+        }
+
+        $ratingCode = strtoupper(trim((string) ($movie->contentRating?->code ?? '')));
+        $minAge = (int) ($movie->contentRating?->min_age ?? 0);
+
+        return ! ($ratingCode === 'P' && $minAge <= 0);
+    }
+}
+
+if (! function_exists('booking_transfer_reference')) {
+    function booking_transfer_reference(string $value): string
+    {
+        $normalized = \Illuminate\Support\Str::of($value)
+            ->upper()
+            ->ascii()
+            ->replaceMatches('/[^A-Z0-9 ]+/', ' ')
+            ->replaceMatches('/\s+/', ' ')
+            ->trim()
+            ->value();
+
+        return \Illuminate\Support\Str::limit($normalized, 50, '');
+    }
+}
+
+if (! function_exists('vietqr_url')) {
+    function vietqr_url(
+        string $bankId,
+        string $accountNo,
+        int $amount = 0,
+        ?string $addInfo = null,
+        ?string $accountName = null,
+        ?string $template = null,
+    ): string {
+        $template ??= (string) config('cinema_booking.bank_transfer.qr_template', 'compact2');
+
+        $query = array_filter([
+            'amount' => max(0, $amount),
+            'addInfo' => $addInfo ? booking_transfer_reference($addInfo) : null,
+            'accountName' => $accountName ?: null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        return 'https://img.vietqr.io/image/'
+            . rawurlencode($bankId)
+            . '-'
+            . rawurlencode($accountNo)
+            . '-'
+            . rawurlencode($template)
+            . '.png'
+            . ($query ? ('?' . http_build_query($query)) : '');
+    }
+}
+
+if (! function_exists('ticket_qr_image_url')) {
+    function ticket_qr_image_url(?string $payload, int $size = 220): ?string
+    {
+        if (! $payload) {
+            return null;
+        }
+
+        return 'https://quickchart.io/qr?text=' . rawurlencode($payload) . '&size=' . max(120, $size);
+    }
+}
+
+
+if (! function_exists('ticket_barcode_image_url')) {
+    function ticket_barcode_image_url(?string $payload, int $height = 72): ?string
+    {
+        if (! $payload) {
+            return null;
+        }
+
+        return 'https://bwipjs-api.metafloor.com/?bcid=code128&includetext=1&scale=2&height=' . max(36, $height) . '&text=' . rawurlencode($payload);
+    }
+}
+
+if (! function_exists('ticket_scan_payload')) {
+    function ticket_scan_payload(?\App\Models\Ticket $ticket): ?string
+    {
+        if (! $ticket) {
+            return null;
+        }
+
+        return $ticket->ticket_code ?: ($ticket->qr_payload ?: null);
+    }
+}

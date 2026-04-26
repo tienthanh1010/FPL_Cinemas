@@ -10,6 +10,7 @@ use App\Models\InventoryBalance;
 use App\Models\Movie;
 use App\Models\Seat;
 use App\Models\Show;
+use App\Services\TicketLifecycleService;
 use App\Models\StockLocation;
 use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,10 @@ class BookingController extends Controller
     private const PAID_LIKE_STATUSES = ['PAID', 'CONFIRMED', 'COMPLETED'];
 
     private const TERMINAL_STATUSES = ['CANCELLED', 'EXPIRED'];
+
+    public function __construct(private readonly TicketLifecycleService $ticketLifecycleService)
+    {
+    }
 
     public function index(Request $request): View
     {
@@ -146,6 +151,7 @@ class BookingController extends Controller
             'show.movieVersion.movie',
             'show.auditorium.cinema',
             'tickets.seat',
+            'tickets.ticket',
             'tickets.ticketType',
             'tickets.seatType',
             'bookingProducts.product',
@@ -210,6 +216,7 @@ class BookingController extends Controller
                         ->update(['status' => $ticketStatus]);
                 }
 
+                $this->ticketLifecycleService->syncForBooking($lockedBooking->fresh(['tickets.ticket', 'payments.refunds']));
                 $this->refreshShowSaleStatus($lockedBooking->show);
             }, 3);
         } catch (\Throwable $e) {
@@ -257,6 +264,8 @@ class BookingController extends Controller
         $booking->tickets()
             ->whereIn('status', ['RESERVED', 'ISSUED'])
             ->update(['status' => $status]);
+
+        $this->ticketLifecycleService->syncForBooking($booking->fresh(['tickets.ticket', 'payments.refunds']));
 
         foreach ($booking->bookingProducts as $item) {
             $this->restoreInventory($booking, $item);

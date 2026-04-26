@@ -31,6 +31,7 @@ class HomeController extends Controller
     {
         $categories = Category::query()
             ->withCount('movies')
+            ->withCount('movies')
             ->orderBy('name')
             ->get();
 
@@ -160,6 +161,7 @@ class HomeController extends Controller
     {
         $movies = $category->movies()
             ->where('movies.status', 'ACTIVE')
+            ->with(['genres', 'contentRating'])
             ->with(['genres', 'contentRating'])
             ->orderByDesc('release_date')
             ->paginate(12);

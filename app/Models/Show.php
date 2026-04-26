@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +18,7 @@ class Show extends Model
         'public_id',
         'auditorium_id',
         'movie_version_id',
+        'pricing_profile_id',
         'pricing_profile_id',
         'start_time',
         'end_time',
