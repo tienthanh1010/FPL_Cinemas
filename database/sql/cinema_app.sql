@@ -1,30 +1,3 @@
--- =========================================================
--- Cinema Chain Management Database (Vietnam) - MySQL 8.0+
--- Target: Laravel 12 + Laragon + MySQL
--- Author: ChatGPT
--- Notes:
---   - All money amounts are stored as BIGINT in VND (minor units). Example: 120000 = 120.000đ
---   - Show times are stored as DATETIME in local time (Asia/Ho_Chi_Minh).
---   - Engine: InnoDB, Charset: utf8mb4
---   - Concurrency:
---       seat_holds.active_lock and booking_tickets.active_lock are GENERATED columns (indexed)
---       so only one active lock per (show, seat) at a time.
---       Expire holds by setting status='EXPIRED' when expires_at < NOW().
--- =========================================================
-
-/*!40101 SET NAMES utf8mb4 */;
-/*!40101 SET SQL_MODE = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */;
-
--- Optional (uncomment if you want to create a dedicated database)
--- CREATE DATABASE IF NOT EXISTS cinema_vn
---   CHARACTER SET utf8mb4
---   COLLATE utf8mb4_unicode_ci;
--- USE cinema_vn;
-
--- =========================================================
--- 01) Master: Chains, Cinemas, Auditoriums, Seats
--- =========================================================
-
 CREATE TABLE IF NOT EXISTS cinema_chains (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   public_id CHAR(26) NOT NULL,

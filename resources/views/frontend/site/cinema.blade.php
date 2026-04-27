@@ -14,6 +14,10 @@
       <div class="glass-panel content-hero mb-4">
         <span class="section-eyebrow">Một rạp duy nhất</span>
         <h1>{{ $cinema->name }}</h1>
+<<<<<<< HEAD
+=======
+        <p class="mb-0">Toàn bộ website hiện đã được chuẩn hóa theo mô hình một rạp tuyệt đối, tập trung mọi lịch chiếu, booking, thanh toán, nội dung và vận hành về {{ $cinema->name }}.</p>
+>>>>>>> origin/main
       </div>
 
       <div class="row g-4 mb-4">

@@ -8,6 +8,10 @@
       <div class="glass-panel content-hero mb-4">
         <span class="section-eyebrow">Tra cứu booking</span>
         <h1>Kiểm tra đơn vé đã đặt</h1>
+<<<<<<< HEAD
+=======
+        <p class="mb-0">Tính năng này đặc biệt cần thiết cho website rạp chiếu phim: khách chưa đăng nhập vẫn có thể tra cứu đơn bằng mã booking và thông tin liên hệ đã dùng khi đặt.</p>
+>>>>>>> origin/main
       </div>
 
       <div class="row g-4">
@@ -45,6 +49,10 @@
                 $seatLabels = $booking->tickets->pluck('seat.label')->filter()->implode(', ');
                 $comboSummary = $booking->bookingProducts->map(fn($item) => ($item->product?->name ?: 'Combo') . ' x' . $item->qty)->implode(', ');
                 $capturedAmount = (int) $booking->payments->sum('amount');
+<<<<<<< HEAD
+=======
+                $successRefundAmount = (int) $booking->payments->flatMap->refunds->where('status', 'SUCCESS')->sum('amount');
+>>>>>>> origin/main
                 $canPay = in_array((string) $booking->status, ['PENDING'], true) && (int) $booking->paid_amount < (int) $booking->total_amount;
               @endphp
 
@@ -62,7 +70,11 @@
                 <article class="account-kpi-card">
                   <small>Thanh toán</small>
                   <strong>{{ number_format($capturedAmount) }}đ</strong>
+<<<<<<< HEAD
                   <span>{{ $booking->payments->count() }} giao dịch trong hệ thống</span>
+=======
+                  <span>Hoàn thành công {{ number_format($successRefundAmount) }}đ</span>
+>>>>>>> origin/main
                 </article>
                 <article class="account-kpi-card">
                   <small>Điểm dự kiến</small>

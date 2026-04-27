@@ -2,6 +2,7 @@
   $showtimeData = $showtimesByMovie[$movie->id] ?? ['count' => 0, 'groups' => []];
   $groups = collect($showtimeData['groups'] ?? [])->values();
   $firstCinema = collect($groups)->pluck('shows')->flatten(1)->pluck('cinema')->filter()->first();
+<<<<<<< HEAD
   $hasLateShow = $groups->pluck('shows')->flatten(1)->contains(fn ($show) => (int) \Carbon\Carbon::createFromFormat('H:i', $show['time'] ?? '00:00')->format('H') >= 22);
 @endphp
 
@@ -183,6 +184,9 @@
   @endpush
 @endonce
 
+=======
+@endphp
+>>>>>>> origin/main
 <div class="modal fade movie-showtime-modal" id="movieShowtimesModal-{{ $movie->id }}" tabindex="-1" aria-labelledby="movieShowtimesModalLabel-{{ $movie->id }}" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
     <div class="modal-content movie-showtime-modal__content schedule-modal__content">
@@ -218,20 +222,32 @@
               @php
                 $showsByFormat = collect($group['shows'] ?? [])->groupBy(fn ($show) => $show['format'] ?: '2D');
               @endphp
+<<<<<<< HEAD
               <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="movie-showtime-pane-{{ $movie->id }}-{{ $index }}" role="tabpanel">
+=======
+              <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}"
+                   id="movie-showtime-pane-{{ $movie->id }}-{{ $index }}"
+                   role="tabpanel">
+>>>>>>> origin/main
                 @foreach($showsByFormat as $format => $formatShows)
                   <section class="schedule-format-block">
                     <h6 class="schedule-format-block__title">{{ $format }}</h6>
                     <div class="schedule-show-grid">
                       @foreach($formatShows as $show)
+<<<<<<< HEAD
                         @php($showHour = (int) \Carbon\Carbon::createFromFormat('H:i', $show['time'] ?? '00:00')->format('H'))
+=======
+>>>>>>> origin/main
                         <div class="schedule-show-chip {{ !empty($show['is_on_sale']) ? 'is-on-sale' : 'is-muted' }}">
                           <div class="schedule-show-chip__time">{{ $show['time'] }}</div>
                           <div class="schedule-show-chip__date">{{ $group['day_number'] ?? '' }}/{{ $group['month_label'] ?? '' }}</div>
                           <div class="schedule-show-chip__meta">{{ $show['auditorium'] }}</div>
+<<<<<<< HEAD
                           @if($showHour >= 22)
                             <div class="schedule-show-chip__late-note">Suất chiếu muộn từ 22h00</div>
                           @endif
+=======
+>>>>>>> origin/main
                           @if(!empty($show['is_on_sale']))
                             <a href="{{ route('shows.book', $show['id']) }}" class="schedule-show-chip__action">Đặt vé</a>
                           @else
@@ -245,6 +261,7 @@
               </div>
             @endforeach
           </div>
+<<<<<<< HEAD
 
           @if($hasLateShow)
             <div class="schedule-modal__legend">
@@ -252,6 +269,8 @@
               <span>Suất chiếu muộn từ 22h00</span>
             </div>
           @endif
+=======
+>>>>>>> origin/main
         @else
           <div class="empty-panel mt-4">Phim này hiện chưa có suất chiếu khả dụng để đặt vé.</div>
         @endif

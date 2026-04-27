@@ -8,6 +8,10 @@
       <div class="glass-panel content-hero mb-4">
         <span class="section-eyebrow">Hỗ trợ khách hàng</span>
         <h1>FAQ, chính sách và hướng dẫn sử dụng</h1>
+<<<<<<< HEAD
+=======
+        <p class="mb-0">Đây là nhóm nội dung nên có và thực tế đã được bổ sung cho website rạp chiếu phim một rạp duy nhất: hướng dẫn đặt vé, tra cứu booking, chính sách hủy/hoàn và thông tin quyền lợi thành viên.</p>
+>>>>>>> origin/main
       </div>
 
       <div class="row g-4 mb-4">

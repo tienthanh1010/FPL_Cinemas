@@ -1,9 +1,18 @@
 @extends('admin.layout')
 
-@section('title', 'Sửa rạp')
+@section('title', 'Cập nhật rạp')
 
 @section('content')
-    <h2 class="h4 mb-3">Sửa rạp #{{ $cinema->id }}</h2>
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Edit Cinema</p>
+            <h2>Chỉnh sửa rạp #{{ $cinema->id }}</h2>
+            <p>Cập nhật thông tin địa điểm, timezone và giờ mở cửa chuẩn hoá.</p>
+        </div>
+        <div>
+            <a href="{{ route('admin.cinemas.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+        </div>
+    </section>
 
     <div class="card">
         <div class="card-body">

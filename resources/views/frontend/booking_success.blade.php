@@ -3,6 +3,7 @@
 @section('title', 'Chi tiết booking ' . $booking->booking_code)
 
 @section('content')
+<<<<<<< HEAD
   @php
     $amountDue = max(0, (int) $booking->total_amount - (int) $booking->paid_amount);
     $isTerminal = in_array((string) $booking->status, ['CANCELLED', 'EXPIRED'], true);
@@ -25,6 +26,16 @@
           @endif
         </p>
 
+=======
+  <section class="section-space pt-4 pt-lg-5">
+    <div class="container-fluid app-container">
+      <div class="success-shell glass-panel">
+        <div class="success-icon"><i class="bi bi-check2-circle"></i></div>
+        <span class="section-eyebrow">Booking đã được tạo</span>
+        <h1>{{ $booking->booking_code }}</h1>
+        <p>Thiết kế trang kết quả cũng được làm đồng bộ với giao diện mới: card nổi, nền tối và cách trình bày rõ ràng, gọn mắt.</p>
+
+>>>>>>> origin/main
         <div class="success-grid">
           <div class="success-card">
             <span>Trạng thái</span>
@@ -35,8 +46,13 @@
             <strong>{{ number_format($booking->total_amount) }}đ</strong>
           </div>
           <div class="success-card">
+<<<<<<< HEAD
             <span>Đã thanh toán</span>
             <strong>{{ number_format($booking->paid_amount) }}đ</strong>
+=======
+            <span>Khách hàng</span>
+            <strong>{{ $booking->contact_name }}</strong>
+>>>>>>> origin/main
           </div>
           <div class="success-card">
             <span>Hết hạn</span>
@@ -44,6 +60,7 @@
           </div>
         </div>
 
+<<<<<<< HEAD
         <div class="success-grid mt-3">
           <div class="success-card">
             <span>Phim</span>
@@ -81,6 +98,9 @@
         </div>
 
         <div class="tickets-panel mt-4">
+=======
+        <div class="tickets-panel">
+>>>>>>> origin/main
           <h2>Danh sách vé</h2>
           <div class="table-responsive">
             <table class="table app-table align-middle mb-0">
@@ -88,13 +108,17 @@
                 <tr>
                   <th>#</th>
                   <th>Ghế</th>
+<<<<<<< HEAD
                   <th>Loại vé</th>
                   <th>Mã vé điện tử</th>
+=======
+>>>>>>> origin/main
                   <th>Giá</th>
                   <th>Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
+<<<<<<< HEAD
                 @forelse($booking->tickets as $ticket)
                   <tr>
                     <td>{{ $loop->iteration }}</td>
@@ -109,11 +133,22 @@
                     <td colspan="6" class="text-center text-muted">Chưa có vé nào trong booking này.</td>
                   </tr>
                 @endforelse
+=======
+                @foreach($booking->tickets as $ticket)
+                  <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>#{{ $ticket->seat_id }}</td>
+                    <td>{{ number_format($ticket->final_price_amount) }}đ</td>
+                    <td><span class="status-badge">{{ $ticket->status }}</span></td>
+                  </tr>
+                @endforeach
+>>>>>>> origin/main
               </tbody>
             </table>
           </div>
         </div>
 
+<<<<<<< HEAD
         @if($booking->tickets->isNotEmpty())
           <div class="tickets-panel mt-4">
             <h2>QR code / barcode check-in</h2>
@@ -316,9 +351,17 @@
             <a class="btn btn-cinema-primary" href="{{ route('booking.payment', $booking->booking_code) }}"><i class="bi bi-credit-card me-2"></i>Thanh toán ngay {{ number_format($amountDue) }}đ</a>
           @endif
           <a class="btn btn-cinema-secondary" href="{{ route('home') }}"><i class="bi bi-house-door me-2"></i>Về trang chủ</a>
+=======
+        <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
+          <a class="btn btn-cinema-primary" href="{{ route('home') }}"><i class="bi bi-house-door me-2"></i>Về trang chủ</a>
+>>>>>>> origin/main
           <a class="btn btn-cinema-secondary" href="javascript:history.back()"><i class="bi bi-arrow-counterclockwise me-2"></i>Quay lại</a>
         </div>
       </div>
     </div>
   </section>
+<<<<<<< HEAD
+=======
+  </section>
+>>>>>>> origin/main
 @endsection
