@@ -4,62 +4,80 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request): View
     {
-        $categories = Category::query()->orderBy('id', 'desc')->paginate(10);
-        return view('admin.categories.index', compact('categories'));
+        $q = trim((string) $request->get('q', ''));
+
+        $categories = Category::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where('code', 'like', "%{$q}%")
+                    ->orWhere('name', 'like', "%{$q}%");
+            })
+            ->withCount('movies')
+            ->orderBy('name')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('admin.categories.index', compact('categories', 'q'));
     }
 
-    public function create()
+    public function create(): View
     {
-        return view('admin.categories.create');
+        $category = new Category();
+
+        return view('admin.categories.create', compact('category'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'max:32', 'unique:genres,code'],
-            'name' => ['required', 'string', 'max:255'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $data = $this->validateData($request);
 
-        $data['is_active'] = (bool)($data['is_active'] ?? false);
+        $category = Category::create($data);
 
-        Category::create($data);
-
-        return redirect()->route('admin.categories.index')->with('success', 'Đã tạo danh mục.');
+        return redirect()->route('admin.categories.show', $category)->with('success', 'Đã tạo thể loại phim.');
     }
 
-    public function edit(Category $category)
+    public function show(Category $category): View
+    {
+        $category->load(['movies' => fn ($q) => $q->orderByDesc('release_date')]);
+
+        return view('admin.categories.show', compact('category'));
+    }
+
+    public function edit(Category $category): View
     {
         return view('admin.categories.edit', compact('category'));
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, Category $category): RedirectResponse
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'max:32', Rule::unique('genres', 'code')->ignore($category->id)],
-            'name' => ['required', 'string', 'max:255'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
-
-        $data['is_active'] = (bool)($data['is_active'] ?? false);
+        $data = $this->validateData($request, $category);
 
         $category->update($data);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Đã cập nhật danh mục.');
+        return redirect()->route('admin.categories.show', $category)->with('success', 'Đã cập nhật thể loại phim.');
     }
 
-    public function destroy(Category $category)
+    public function destroy(Category $category): RedirectResponse
     {
         $category->movies()->detach();
         $category->delete();
 
-        return redirect()->route('admin.categories.index')->with('success', 'Đã xoá danh mục.');
+        return redirect()->route('admin.categories.index')->with('success', 'Đã xoá thể loại phim.');
+    }
+
+    private function validateData(Request $request, ?Category $category = null): array
+    {
+        return $request->validate([
+            'code' => ['required', 'string', 'max:32', $category ? Rule::unique('genres', 'code')->ignore($category->id) : Rule::unique('genres', 'code')],
+            'name' => ['required', 'string', 'max:255'],
+        ]);
     }
 }
