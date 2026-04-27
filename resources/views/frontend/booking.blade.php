@@ -14,13 +14,20 @@
 
   $oldSeatIdsPayload = collect(old('seat_ids', []))->map(fn ($value) => (int) $value)->values()->all();
   $oldSeatTicketTypesPayload = collect(old('seat_ticket_types', []))->mapWithKeys(fn ($value, $seatId) => [(string) $seatId => (int) $value])->all();
+<<<<<<< HEAD
+  $oldProductQtyPayload = collect(old('product_qty', []))->mapWithKeys(fn ($value, $key) => [(string) $key => (int) $value])->all();
+=======
   $oldProductQtyPayload = []; // F&B đã được loại bỏ khỏi luồng đặt vé
+>>>>>>> origin/main
 @endphp
 
 @push('styles')
 <style>
   .booking-hero {
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
     display: grid;
     grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
     gap: 1.4rem;
@@ -28,8 +35,11 @@
   }
   .booking-hero__poster {
     border-radius: 26px;
+<<<<<<< HEAD
+=======
   .booking-hero__poster {
     border-radius: 26px;
+>>>>>>> origin/main
     overflow: hidden;
     min-height: 360px;
     background: var(--surface-2);
@@ -691,6 +701,8 @@
       border-top: 1px solid rgba(15, 23, 42, .08);
     }
   }
+<<<<<<< HEAD
+=======
     overflow: hidden;
     min-height: 360px;
     background: var(--surface-2);
@@ -1410,6 +1422,7 @@
       border-top: 1px solid rgba(15, 23, 42, .08);
     }
   }
+>>>>>>> origin/main
 </style>
 @endpush
 
@@ -1419,8 +1432,11 @@
       <div class="glass-panel mb-4">
         <div class="booking-hero">
           <div class="booking-hero__poster">
+<<<<<<< HEAD
+=======
         <div class="booking-hero">
           <div class="booking-hero__poster">
+>>>>>>> origin/main
             @if($movie->poster_url)
               <img src="{{ $movie->poster_url }}" alt="{{ $movie->title }}">
             @else
@@ -1436,6 +1452,8 @@
               gán loại vé cho từng ghế, thêm combo bắp nước và chuyển sang bước thanh toán QR.
             </p>
 
+<<<<<<< HEAD
+=======
             @if($movie->poster_url)
               <img src="{{ $movie->poster_url }}" alt="{{ $movie->title }}">
             @else
@@ -1452,12 +1470,16 @@
             </p>
 
 
+>>>>>>> origin/main
             <div class="hero-meta hero-meta--compact">
               <span><i class="bi bi-clock me-2"></i>{{ $movie->duration_minutes }} phút</span>
               <span><i class="bi bi-camera-reels me-2"></i>{{ $show->movieVersion?->format ?: '2D' }}</span>
               <span><i class="bi bi-door-open me-2"></i>{{ $show->auditorium?->name ?: 'Phòng chiếu' }}</span>
               <span><i class="bi bi-person-badge me-2"></i>{{ $movie->contentRating?->code ?: 'P' }}</span>
+<<<<<<< HEAD
+=======
               <span><i class="bi bi-person-badge me-2"></i>{{ $movie->contentRating?->code ?: 'P' }}</span>
+>>>>>>> origin/main
             </div>
 
             <div class="booking-meta-grid">
@@ -1486,6 +1508,8 @@
               @endif
               @if($bookingConfig['child_ticket_blocked'])
                 <span class="booking-info-chip"><i class="bi bi-shield-exclamation"></i>Phim {{ $movie->contentRating?->code }} không cho chọn vé trẻ em</span>
+<<<<<<< HEAD
+=======
             </div>
 
             <div class="booking-meta-grid">
@@ -1515,6 +1539,7 @@
               @if($bookingConfig['child_ticket_blocked'])
                 <span class="booking-info-chip"><i class="bi bi-shield-exclamation"></i>Phim {{ $movie->contentRating?->code }} không cho chọn vé trẻ em</span>
 
+>>>>>>> origin/main
               @endif
             </div>
           </div>
@@ -1528,8 +1553,11 @@
         <div id="seatInputs"></div>
 
         <div class="booking-layout">
+<<<<<<< HEAD
+=======
         <div class="booking-layout">
 
+>>>>>>> origin/main
           <div>
             @if($errors->any())
               <div class="app-alert app-alert--error mb-4">
@@ -1547,6 +1575,26 @@
             <div class="booking-card">
               <div class="booking-card__header">
                 <div>
+<<<<<<< HEAD
+                  <h2>Sơ đồ ghế trực quan</h2>
+                  <p>
+                    Giao diện chọn ghế đã được làm lại theo dạng bản đồ lớn giống form rạp chiếu phim,
+                    giúp bạn nhìn rõ trạng thái ghế ngay khi kéo trang và thao tác nhanh hơn.
+                  </p>
+                </div>
+                <div class="booking-live-chip" id="liveSeatStatus">
+                  <span class="booking-live-chip__dot"></span>
+                  <span>Đang đồng bộ ghế realtime</span>
+                </div>
+              </div>
+
+              <div class="booking-note-box mb-3">
+                <p>
+                  Quy tắc hợp lệ: ghế đôi phải chọn theo cặp liền nhau, hệ thống không cho để lại 1 ghế lẻ trong cùng dãy,
+                  và mỗi ghế có thể gán một loại vé riêng như 2 vé người lớn + 1 vé trẻ em nếu phim cho phép.
+                </p>
+              </div>
+=======
                   <h2>Chọn ghế</h2>
                   <p>Chọn nhanh ghế phù hợp trên sơ đồ gọn hơn, rõ hơn và dễ thao tác hơn.</p>
                 </div>
@@ -1556,6 +1604,7 @@
                 </div>
               </div>
 
+>>>>>>> origin/main
 
               <div class="booking-seat-panel">
                 <div class="booking-seat-panel__toolbar">
@@ -1566,6 +1615,12 @@
                     <span class="seat-inline-legend"><span class="seat-inline-legend__chip swatch-booked"></span>Ghế đã bán</span>
                     <span class="seat-inline-legend"><span class="seat-inline-legend__chip swatch-blocked"></span>Ghế đặt trước</span>
                   </div>
+<<<<<<< HEAD
+                  <div class="booking-info-chip">
+                    <i class="bi bi-arrows-fullscreen"></i>Khung ghế đã được mở rộng
+                  </div>
+=======
+>>>>>>> origin/main
                 </div>
 
                 <div class="seat-board-wrap">
@@ -1574,12 +1629,21 @@
 
                   <div class="seat-board-footer">
                     <div class="seat-board-footer__item">
+<<<<<<< HEAD
+                      <small>Loại ghế</small>
+                      <div class="seat-board-footer__seat"><span class="seat-inline-legend__chip swatch-regular"></span>Ghế thường</div>
+                    </div>
+                    <div class="seat-board-footer__item">
+                      <small>Loại ghế</small>
+                      <div class="seat-board-footer__seat"><span class="seat-inline-legend__chip swatch-couple"></span>Ghế đôi</div>
+=======
                       <small>Phân khu ghế</small>
                       <div class="seat-type-inline-list">
                         <span class="seat-inline-legend"><span class="seat-inline-legend__chip swatch-regular"></span>Thường</span>
                         <span class="seat-inline-legend"><span class="seat-inline-legend__chip swatch-vip"></span>VIP</span>
                         <span class="seat-inline-legend"><span class="seat-inline-legend__chip swatch-couple"></span>Đôi</span>
                       </div>
+>>>>>>> origin/main
                     </div>
                     <div class="seat-board-footer__item">
                       <small>Phiên giữ ghế</small>
@@ -1595,7 +1659,10 @@
                     </div>
                   </div>
                 </div>
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
               </div>
             </div>
 
@@ -1606,18 +1673,35 @@
                   <p>Ví dụ: bạn có thể chọn 2 vé người lớn và 1 vé trẻ em trong cùng một booking.</p>
                 </div>
                 <div class="booking-info-chip" id="selectedSeatCount">0 ghế</div>
+<<<<<<< HEAD
+=======
           <div class="booking-sticky">
             <div class="booking-card">
               <h3 class="mb-3">Thông tin người đặt</h3>
               <div class="form-field mb-3">
                 <label>Họ và tên</label>
                 <input class="form-control cinema-input" name="contact_name" value="{{ old('contact_name', $authCustomer?->full_name ?: auth()->user()?->name) }}" placeholder="Nguyễn Văn A" required>
+>>>>>>> origin/main
               </div>
 
               <div class="selected-seat-pills mb-3" id="selectedSeatPills"></div>
               <div id="selectedSeatAssignments" class="seat-selection-grid"></div>
               <div id="selectedSeatEmpty" class="booking-empty">Chưa có ghế nào được chọn.</div>
             </div>
+<<<<<<< HEAD
+
+            <div class="booking-card">
+              <div class="booking-card__header">
+                <div>
+                  <h3>Combo bắp nước & đồ ăn kèm</h3>
+                  <p>Phần combo đã được tách riêng với vé xem phim. Bạn có thể thêm ảnh và mô tả cho từng món trong admin.</p>
+                </div>
+                <div class="booking-info-chip" id="selectedProductCount">0 món</div>
+              </div>
+              <div id="productCatalog" class="product-grid"></div>
+            </div>
+=======
+>>>>>>> origin/main
           </div>
 
           <div class="booking-sticky">
@@ -1626,8 +1710,11 @@
               <div class="form-field mb-3">
                 <label>Họ và tên</label>
                 <input class="form-control cinema-input" name="contact_name" value="{{ old('contact_name', $authCustomer?->full_name ?: auth()->user()?->name) }}" placeholder="Nguyễn Văn A" required>
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> origin/main
               </div>
               <div class="form-field mb-3">
                 <label>Điện thoại</label>
@@ -1666,7 +1753,11 @@
               <div class="booking-card__header">
                 <div>
                   <h3>Tóm tắt đơn hàng</h3>
+<<<<<<< HEAD
+                  <p>Tổng tiền sẽ tự tính theo loại ghế, loại vé và combo bạn chọn.</p>
+=======
                   <p>Tổng tiền sẽ tự tính theo loại ghế và loại vé bạn chọn.</p>
+>>>>>>> origin/main
                 </div>
               </div>
               <div class="summary-breakdown" id="summaryBreakdown"></div>
@@ -1677,13 +1768,20 @@
             </div>
 
             <button class="btn btn-cinema-primary w-100 mt-3" type="submit" id="bookingSubmitButton">
+<<<<<<< HEAD
+              <i class="bi bi-ticket-detailed me-2"></i>Tạo booking và sang bước thanh toán
+=======
               <i class="bi bi-ticket-detailed me-2"></i>Xác nhận ghế và sang bước thanh toán
+>>>>>>> origin/main
             </button>
             <p class="booking-submit-note mb-0">
               Sau khi xác nhận, ghế sẽ được chuyển sang bước thanh toán và chỉ giữ tối đa {{ $bookingConfig['hold_minutes'] }} phút.
               Nếu quá thời gian mà chưa thanh toán, booking sẽ tự động hết hạn và ghế được mở lại cho khách khác.
             </p>
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
           </div>
         </div>
       </form>
@@ -1698,6 +1796,8 @@
   const seatStatusUrl = @json(route('shows.seats.status', $show));
   const seatSyncUrl = @json(route('shows.seats.sync', $show));
   const ticketTypes = @json($ticketTypePayload);
+<<<<<<< HEAD
+=======
   const seatStatusUrl = @json(route('shows.seats.status', $show));
   const seatSyncUrl = @json(route('shows.seats.sync', $show));
   const ticketTypes = @json($ticketTypePayload);
@@ -1715,6 +1815,7 @@
   const selectedSeatPills = document.getElementById('selectedSeatPills');
   const selectedSeatAssignments = document.getElementById('selectedSeatAssignments');
   const selectedSeatEmpty = document.getElementById('selectedSeatEmpty');
+>>>>>>> origin/main
   const oldState = {
     seatIds: @json($oldSeatIdsPayload),
     seatTicketTypes: @json($oldSeatTicketTypesPayload),
@@ -1731,7 +1832,10 @@
   const selectedSeatEmpty = document.getElementById('selectedSeatEmpty');
   const productCatalog = document.getElementById('productCatalog');
   const selectedProductCount = document.getElementById('selectedProductCount');
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
   const summaryBreakdown = document.getElementById('summaryBreakdown');
   const bookingTotalValue = document.getElementById('bookingTotalValue');
   const loyaltyPreview = document.getElementById('loyaltyPreview');
@@ -1759,14 +1863,21 @@
     seats: Array.isArray(bookingConfig.seats) ? bookingConfig.seats : [],
     selectedSeatIds: [],
     seatTicketTypes: Object.fromEntries(Object.entries(oldState.seatTicketTypes || {}).map(([seatId, ticketTypeId]) => [String(seatId), Number(ticketTypeId)])),
+<<<<<<< HEAD
+    selectedProductQty: Object.fromEntries(Object.entries(oldState.productQty || {}).map(([productId, qty]) => [String(productId), Number(qty || 0)])),
+=======
+>>>>>>> origin/main
     syncTimer: null,
     pollTimer: null,
     isSyncing: false,
     lastAlertKey: null,
     holdDeadlineAt: null,
     holdCountdownTimer: null,
+<<<<<<< HEAD
+=======
     serverTimeOffsetMs: 0,
     alertTimer: null,
+>>>>>>> origin/main
   };
 
   const initialSeatIds = new Set([
@@ -1777,6 +1888,17 @@
 
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
   const ticketTypeMap = Object.fromEntries(ticketTypes.map((ticketType) => [String(ticketType.id), ticketType]));
+<<<<<<< HEAD
+  const productMap = Object.fromEntries((bookingConfig.products || []).map((product) => [String(product.id), product]));
+  const showAlert = (message, level = 'info', key = null) => {
+    if (key && state.lastAlertKey === key) {
+      return;
+    }
+    state.lastAlertKey = key || null;
+    inlineAlert.textContent = message;
+    inlineAlert.dataset.level = level;
+    inlineAlert.classList.add('is-visible');
+=======
   const productMap = {};
   const showAlert = (message, level = 'info', key = null, title = null) => {
     if (key && state.lastAlertKey === key && inlineAlert.classList.contains('is-visible')) {
@@ -1806,12 +1928,18 @@
     if (level !== 'error') {
       state.alertTimer = window.setTimeout(() => clearAlert(key), 4500);
     }
+>>>>>>> origin/main
   };
 
   const clearAlert = (key = null) => {
     if (key && state.lastAlertKey && state.lastAlertKey !== key) {
       return;
     }
+<<<<<<< HEAD
+    state.lastAlertKey = null;
+    inlineAlert.classList.remove('is-visible');
+    inlineAlert.textContent = '';
+=======
     if (state.alertTimer) {
       window.clearTimeout(state.alertTimer);
       state.alertTimer = null;
@@ -1819,6 +1947,7 @@
     state.lastAlertKey = null;
     inlineAlert.classList.remove('is-visible');
     inlineAlert.innerHTML = '';
+>>>>>>> origin/main
   };
 
   const seatMapById = () => Object.fromEntries(state.seats.map((seat) => [String(seat.id), seat]));
@@ -1870,6 +1999,8 @@
     if (String(seat.seat_type_code).toUpperCase() === 'VIP') return 'VIP';
     return 'AVAILABLE';
   };
+<<<<<<< HEAD
+=======
   const chunkArray = (items, size) => {
     const chunkSize = Math.max(1, Number(size) || 1);
     const chunks = [];
@@ -1879,6 +2010,7 @@
     return chunks;
   };
 
+>>>>>>> origin/main
   const rowGroups = () => Object.entries(
     state.seats.reduce((rows, seat) => {
       rows[String(seat.row_label)] = rows[String(seat.row_label)] || [];
@@ -1891,6 +2023,8 @@
       rowLabel,
       seats: seats.sort((left, right) => Number(left.col_number) - Number(right.col_number)),
     }));
+<<<<<<< HEAD
+=======
   };
 
   const buildProductCard = (product, qty) => {
@@ -1922,6 +2056,7 @@
               <input class="product-qty-input" type="number" min="0" max="${maxQty}" step="1" name="product_qty[${product.id}]" value="${safeQty}" data-product-input data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>
               <button type="button" class="product-qty-button" data-product-action="increase" data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>+</button>
             </div>
+>>>>>>> origin/main
 
   const renderSeatMap = () => {
     if (!state.seats.length) {
@@ -1930,6 +2065,12 @@
     }
 
     const html = rowGroups().map(({ rowLabel, seats }) => {
+<<<<<<< HEAD
+      const midpoint = Math.ceil(seats.length / 2);
+      const banks = [seats.slice(0, midpoint), seats.slice(midpoint)].filter((bank) => bank.length);
+      const bankHtml = banks.map((bank) => `
+        <div class="seat-bank">
+=======
       const isPairRow = seats.length > 0 && seats.every((seat) => pairSeatCodes.includes(String(seat.seat_type_code).toUpperCase()));
       const banks = isPairRow
         ? chunkArray(seats, 3)
@@ -1937,6 +2078,7 @@
 
       const bankHtml = banks.map((bank) => `
         <div class="seat-bank ${isPairRow ? 'seat-bank--pair' : ''}">
+>>>>>>> origin/main
           ${bank.map((seat) => {
             const seatClass = buildSeatTileClass(seat);
             return `
@@ -1955,9 +2097,15 @@
       `).join('');
 
       return `
+<<<<<<< HEAD
+        <div class="seat-row">
+          <div class="seat-row__label">${rowLabel}</div>
+          <div class="seat-row__banks">${bankHtml}</div>
+=======
         <div class="seat-row ${isPairRow ? 'seat-row--pair' : ''}">
           <div class="seat-row__label">${rowLabel}</div>
           <div class="seat-row__banks ${isPairRow ? 'seat-row__banks--pair' : ''}">${bankHtml}</div>
+>>>>>>> origin/main
         </div>
       `;
     }).join('');
@@ -1969,6 +2117,8 @@
     });
   };
 
+<<<<<<< HEAD
+=======
   const applyServerClock = (serverTimeIso) => {
     if (!serverTimeIso) return;
     const serverMillis = new Date(serverTimeIso).getTime();
@@ -1990,6 +2140,7 @@
 
   const humanizeRowList = (rows) => rows.length === 1 ? `dãy ${rows[0]}` : `các dãy ${rows.join(', ')}`;
 
+>>>>>>> origin/main
   const formatCountdown = (totalSeconds) => {
     const safeSeconds = Math.max(0, Number(totalSeconds || 0));
     const minutes = Math.floor(safeSeconds / 60).toString().padStart(2, '0');
@@ -2002,17 +2153,34 @@
       window.clearInterval(state.holdCountdownTimer);
       state.holdCountdownTimer = null;
     }
+<<<<<<< HEAD
+    state.holdDeadlineAt = null;
+=======
+>>>>>>> origin/main
     if (holdCountdownValue) {
       holdCountdownValue.textContent = '00:00';
     }
   };
 
   const startHoldCountdown = () => {
+<<<<<<< HEAD
+    if (!state.selectedSeatIds.length) {
+=======
     if (!state.holdDeadlineAt) {
+>>>>>>> origin/main
       stopHoldCountdown();
       return;
     }
 
+<<<<<<< HEAD
+    state.holdDeadlineAt = Date.now() + (holdMinutes * 60 * 1000);
+    if (state.holdCountdownTimer) {
+      window.clearInterval(state.holdCountdownTimer);
+    }
+
+    const tick = () => {
+      const secondsLeft = Math.max(0, Math.ceil((state.holdDeadlineAt - Date.now()) / 1000));
+=======
     if (state.holdCountdownTimer) {
       window.clearInterval(state.holdCountdownTimer);
     }
@@ -2020,13 +2188,17 @@
 
     const tick = () => {
       const secondsLeft = Math.max(0, Math.ceil((state.holdDeadlineAt - nowFromServerClock()) / 1000));
+>>>>>>> origin/main
       if (holdCountdownValue) {
         holdCountdownValue.textContent = formatCountdown(secondsLeft);
       }
       if (secondsLeft <= 0) {
         window.clearInterval(state.holdCountdownTimer);
         state.holdCountdownTimer = null;
+<<<<<<< HEAD
+=======
         state.holdDeadlineAt = null;
+>>>>>>> origin/main
         setLiveMessage('Phiên giữ ghế đã hết hạn, đang làm mới trạng thái...');
         fetchSeatStatus();
       }
@@ -2071,7 +2243,10 @@
               <span>${seat.seat_type_name} · ${seat.state_label}</span>
             </div>
             <button type="button" class="btn btn-sm btn-cinema-secondary" data-remove-seat="${seat.id}">Bỏ</button>
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
           </div>
           <label class="form-label small text-muted mb-2">Loại vé cho ghế này</label>
           <select class="form-select cinema-select" data-seat-ticket-type="${seat.id}">${options}</select>
@@ -2094,7 +2269,101 @@
     });
   };
 
+<<<<<<< HEAD
+  const buildProductCard = (product, qty) => {
+    const safeQty = Math.max(0, Number(qty || 0));
+    const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
+    const imageHtml = product.image_url
+      ? `<img src="${product.image_url}" alt="${product.name}">`
+      : `<span>${product.is_combo ? 'Combo bắp nước' : 'F&B tại quầy'}</span>`;
+
+    return `
+      <div class="product-card ${product.available ? '' : 'is-disabled'}">
+        <div class="product-card__media">${imageHtml}</div>
+        <div class="product-card__body">
+          <div class="product-card__badges">
+            <span class="product-badge ${product.is_combo ? 'product-badge--combo' : ''}">${product.is_combo ? 'Combo' : product.category}</span>
+            <span class="product-badge">${product.unit || 'ITEM'}</span>
+          </div>
+          <div>
+            <div class="product-card__title">${product.name}</div>
+            <div class="product-card__description">${product.description || 'Sản phẩm được phục vụ tại quầy F&B của rạp.'}</div>
+          </div>
+          <div class="product-card__footer">
+            <div>
+              <div class="product-price">${formatCurrency(product.price_amount)}</div>
+              <div class="product-stock">${product.available ? `Còn ${product.qty_on_hand} ${product.unit || 'món'}` : 'Tạm hết hàng'}</div>
+            </div>
+            <div class="product-qty-control">
+              <button type="button" class="product-qty-button" data-product-action="decrease" data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>−</button>
+              <input class="product-qty-input" type="number" min="0" max="${maxQty}" step="1" name="product_qty[${product.id}]" value="${safeQty}" data-product-input data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>
+              <button type="button" class="product-qty-button" data-product-action="increase" data-product-id="${product.id}" ${product.available ? '' : 'disabled'}>+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const sanitizeSelectedProducts = () => {
+    state.selectedProductQty = Object.fromEntries(
+      Object.entries(state.selectedProductQty)
+        .map(([productId, qty]) => {
+          const product = productMap[String(productId)];
+          if (!product || !product.available) {
+            return null;
+          }
+          const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
+          return [String(productId), Math.max(0, Math.min(maxQty, Number(qty || 0)))];
+        })
+        .filter(Boolean)
+    );
+  };
+
+  const renderProducts = () => {
+    const products = Array.isArray(bookingConfig.products) ? bookingConfig.products : [];
+    sanitizeSelectedProducts();
+
+    if (!products.length) {
+      productCatalog.innerHTML = '<div class="booking-empty">Hiện chưa có sản phẩm F&B hoạt động cho rạp này.</div>';
+      selectedProductCount.textContent = '0 món';
+      return;
+    }
+
+    productCatalog.innerHTML = products.map((product) => buildProductCard(product, state.selectedProductQty[String(product.id)] || 0)).join('');
+    const totalProducts = Object.values(state.selectedProductQty).reduce((sum, qty) => sum + Number(qty || 0), 0);
+    selectedProductCount.textContent = `${totalProducts} món`;
+
+    productCatalog.querySelectorAll('[data-product-action]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const productId = String(button.dataset.productId || '');
+        const product = productMap[productId];
+        if (!product) return;
+        const currentQty = Number(state.selectedProductQty[productId] || 0);
+        const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
+        state.selectedProductQty[productId] = button.dataset.productAction === 'increase'
+          ? Math.min(maxQty, currentQty + 1)
+          : Math.max(0, currentQty - 1);
+        renderProducts();
+        renderSummary();
+      });
+    });
+
+    productCatalog.querySelectorAll('[data-product-input]').forEach((input) => {
+      input.addEventListener('input', () => {
+        const productId = String(input.dataset.productId || '');
+        const product = productMap[productId];
+        if (!product) return;
+        const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
+        state.selectedProductQty[productId] = Math.max(0, Math.min(maxQty, Number(input.value || 0)));
+        renderProducts();
+        renderSummary();
+      });
+    });
+  };
+=======
   const renderProducts = () => {};
+>>>>>>> origin/main
 
   const findPairSeat = (seat) => {
     if (!seat || !pairSeatCodes.includes(String(seat.seat_type_code).toUpperCase())) {
@@ -2171,6 +2440,14 @@
   };
 
   const updateHoldBox = () => {
+<<<<<<< HEAD
+    if (!state.selectedSeatIds.length) {
+      holdStatusBox.innerHTML = 'Bạn chưa chọn ghế nào.';
+      stopHoldCountdown();
+      return;
+    }
+    holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Sau <strong>${holdMinutes} phút</strong> không thanh toán, ghế sẽ tự nhả cho khách khác.`;
+=======
     if (!state.holdDeadlineAt) {
       holdStatusBox.innerHTML = 'Bộ đếm sẽ bắt đầu ngay khi bạn chọn ghế đầu tiên.';
       stopHoldCountdown();
@@ -2221,6 +2498,7 @@
         const currentQty = Number(state.selectedProductQty[productId] || 0);
         const maxQty = Math.min(20, Number(product.qty_on_hand || 0));
         state.selectedProductQty[productId] = button.dataset.productAction === 'increase'
+>>>>>>> origin/main
   };
 
   const renderSummary = () => {
@@ -2230,7 +2508,17 @@
       return sum + getSeatPrice(seat, ticketTypeId);
     }, 0);
 
+<<<<<<< HEAD
+    const productSubtotal = Object.entries(state.selectedProductQty).reduce((sum, [productId, qty]) => {
+      const product = productMap[String(productId)];
+      if (!product || !product.available) return sum;
+      return sum + (Number(qty || 0) * Number(product.price_amount || 0));
+    }, 0);
+
+    const total = ticketSubtotal + productSubtotal;
+=======
     const total = ticketSubtotal;
+>>>>>>> origin/main
     const selectedTicketBreakdown = selectedSeats.map((seat) => {
       const ticketType = ticketTypeMap[String(state.seatTicketTypes[String(seat.id)] || defaultTicketTypeId || 0)];
       return `${seat.seat_code} (${ticketType?.name || 'Loại vé'})`;
@@ -2241,6 +2529,10 @@
       <div class="summary-breakdown__row"><span>Khung giờ</span><strong>${bookingConfig.start_time} → ${bookingConfig.end_time}</strong></div>
       <div class="summary-breakdown__row"><span>Ghế / loại vé</span><strong>${selectedTicketBreakdown || 'Chưa chọn'}</strong></div>
       <div class="summary-breakdown__row"><span>Tiền vé</span><strong>${formatCurrency(ticketSubtotal)}</strong></div>
+<<<<<<< HEAD
+      <div class="summary-breakdown__row"><span>Combo / F&B</span><strong>${formatCurrency(productSubtotal)}</strong></div>
+=======
+>>>>>>> origin/main
     `;
     bookingTotalValue.textContent = formatCurrency(total);
     if (seatBoardTotalValue) {
@@ -2260,6 +2552,9 @@
       loyaltyPreview.textContent = '';
     }
 
+<<<<<<< HEAD
+    syncHiddenInputs();
+=======
     const invalidRows = findSingleGapRows(state.selectedSeatIds);
     if (invalidRows.length) {
       showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
@@ -2269,6 +2564,7 @@
 
     syncHiddenInputs();
     bookingSubmitButton.disabled = state.selectedSeatIds.length === 0 || state.isSyncing || invalidRows.length > 0;
+>>>>>>> origin/main
     updateHoldBox();
   };
 
@@ -2312,6 +2608,11 @@
         throw new Error(payload.message || 'Không thể cập nhật giữ ghế.');
       }
 
+<<<<<<< HEAD
+      applySeatPayload(payload.seats || [], payload.selected_seat_ids || []);
+      setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
+      startHoldCountdown();
+=======
       applyServerClock(payload.server_time);
       applyHoldExpiry(payload.owner_hold_expires_at);
       applySeatPayload(payload.seats || [], payload.selected_seat_ids || []);
@@ -2322,6 +2623,7 @@
         stopHoldCountdown();
         state.holdDeadlineAt = null;
       }
+>>>>>>> origin/main
       if (!silent) {
         clearAlert('seat-sync');
       }
@@ -2331,7 +2633,11 @@
       applySeatPayload(state.seats, state.selectedSeatIds);
     } finally {
       state.isSyncing = false;
+<<<<<<< HEAD
+      bookingSubmitButton.disabled = state.selectedSeatIds.length === 0;
+=======
       renderSummary();
+>>>>>>> origin/main
     }
   };
 
@@ -2355,6 +2661,19 @@
       }
 
       const previousSelection = new Set(state.selectedSeatIds.map(Number));
+<<<<<<< HEAD
+      applySeatPayload(payload.seats || []);
+      if (state.selectedSeatIds.length) {
+        startHoldCountdown();
+      } else {
+        stopHoldCountdown();
+      }
+      const removedSeats = Array.from(previousSelection).filter((seatId) => !state.selectedSeatIds.includes(Number(seatId)));
+      if (removedSeats.length) {
+        showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`);
+      } else {
+        clearAlert();
+=======
       applyServerClock(payload.server_time);
       applyHoldExpiry(payload.owner_hold_expires_at);
       applySeatPayload(payload.seats || []);
@@ -2369,6 +2688,7 @@
         showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`, 'Sơ đồ ghế vừa được cập nhật');
       } else {
         clearAlert('seat-sync');
+>>>>>>> origin/main
       }
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
     } catch (error) {
@@ -2383,6 +2703,40 @@
 
     let candidateSeatIds = [...state.selectedSeatIds];
     const alreadySelected = candidateSeatIds.includes(seatId);
+<<<<<<< HEAD
+    const pairSeat = findPairSeat(seat);
+
+    if (alreadySelected) {
+      candidateSeatIds = candidateSeatIds.filter((value) => value !== seatId);
+      if (pairSeat) {
+        candidateSeatIds = candidateSeatIds.filter((value) => value !== Number(pairSeat.id));
+      }
+    } else {
+      if (candidateSeatIds.length >= maxSeats) {
+        window.alert(`Bạn chỉ có thể chọn tối đa ${maxSeats} ghế trong một booking.`);
+        return;
+      }
+
+      if (pairSeat) {
+        if (!pairSeat.available && !state.selectedSeatIds.includes(Number(pairSeat.id))) {
+          window.alert('Ghế đôi phải được chọn thành cặp liền nhau và hiện ghế còn lại không còn trống.');
+          return;
+        }
+
+        if (!candidateSeatIds.includes(seatId)) {
+          candidateSeatIds.push(seatId);
+        }
+        if (!candidateSeatIds.includes(Number(pairSeat.id))) {
+          if (candidateSeatIds.length >= maxSeats) {
+            window.alert(`Ghế đôi cần 2 chỗ. Bạn chỉ có thể chọn tối đa ${maxSeats} ghế.`);
+            return;
+          }
+          candidateSeatIds.push(Number(pairSeat.id));
+        }
+      } else {
+        candidateSeatIds.push(seatId);
+      }
+=======
 
     if (alreadySelected) {
       candidateSeatIds = candidateSeatIds.filter((value) => value !== seatId);
@@ -2393,13 +2747,19 @@
       }
 
       candidateSeatIds.push(seatId);
+>>>>>>> origin/main
     }
 
     candidateSeatIds = Array.from(new Set(candidateSeatIds.map(Number))).filter(Boolean);
 
     const invalidRows = findSingleGapRows(candidateSeatIds);
+<<<<<<< HEAD
+    if (invalidRows.length) {
+      window.alert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`);
+=======
     if (!alreadySelected && invalidRows.length) {
       showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
+>>>>>>> origin/main
       return;
     }
 
@@ -2408,6 +2768,11 @@
     renderSeatMap();
     renderSelectedSeatAssignments();
     renderSummary();
+<<<<<<< HEAD
+    scheduleSeatSync();
+  };
+
+=======
     if (alreadySelected) {
       syncSelectedSeats({ silent: true });
     } else {
@@ -2436,15 +2801,24 @@
   };
 
 
+>>>>>>> origin/main
   const releaseSeatsOnLeave = () => {
     if (!state.selectedSeatIds.length || !navigator.sendBeacon || !csrfToken) {
       return;
     }
+<<<<<<< HEAD
+    const formData = new FormData();
+    formData.append('_token', csrfToken);
+    navigator.sendBeacon(seatSyncUrl, formData);
+  };
+
+=======
     const blob = new Blob([JSON.stringify({ _token: csrfToken, seat_ids: [] })], { type: 'application/json' });
     navigator.sendBeacon(seatSyncUrl, blob);
   };
 
 
+>>>>>>> origin/main
   form.addEventListener('submit', (event) => {
     if (!state.selectedSeatIds.length) {
       event.preventDefault();
@@ -2455,7 +2829,11 @@
     const invalidRows = findSingleGapRows(state.selectedSeatIds);
     if (invalidRows.length) {
       event.preventDefault();
+<<<<<<< HEAD
+      showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại.`, 'error', 'submit-gap');
+=======
       showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Vui lòng điều chỉnh trước khi sang bước thanh toán.`, 'error', 'submit-gap', 'Chưa thể sang bước thanh toán');
+>>>>>>> origin/main
       return;
     }
 
@@ -2478,10 +2856,17 @@
 
   window.addEventListener('beforeunload', releaseSeatsOnLeave);
 
+<<<<<<< HEAD
+  applySeatPayload(state.seats, state.selectedSeatIds);
+  renderProducts();
+  syncHiddenInputs();
+  if (state.selectedSeatIds.length) {
+=======
   applyHoldExpiry(bookingConfig.owner_hold_expires_at || null);
   applySeatPayload(state.seats, state.selectedSeatIds);
   syncHiddenInputs();
   if (state.holdDeadlineAt) {
+>>>>>>> origin/main
     startHoldCountdown();
   }
   setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
@@ -2490,7 +2875,10 @@
     scheduleSeatSync({ silent: true });
   }
   state.pollTimer = window.setInterval(fetchSeatStatus, seatPollSeconds * 1000);
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 })();
 </script>
 @endpush
