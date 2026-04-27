@@ -1,31 +1,37 @@
 @extends('frontend.layout')
 
-@section('title', 'Danh mục: ' . $category->name)
+@section('title', 'Thể loại ' . $category->name)
 
 @section('content')
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">Danh mục: {{ $category->name }}</h1>
-    <a class="btn btn-outline-secondary" href="{{ route('home') }}">← Trang chủ</a>
-  </div>
-
-  <div class="row g-3">
-    @forelse($movies as $m)
-      <div class="col-md-3">
-        <div class="card h-100">
-          @if($m->poster_url)
-            <img src="{{ $m->poster_url }}" class="card-img-top" style="height:180px;object-fit:cover;" alt="poster">
-          @endif
-          <div class="card-body">
-            <div class="fw-semibold">{{ $m->title }}</div>
-            <div class="text-muted small mb-2">{{ $m->duration_minutes }} phút</div>
-            <a class="btn btn-sm btn-dark" href="{{ route('movies.showtimes', $m) }}">Suất chiếu</a>
+  <section class="section-space pt-4 pt-lg-5">
+    <div class="container-fluid app-container">
+      <div class="inner-hero glass-panel mb-4">
+        <div>
+          <span class="section-eyebrow">Bộ lọc theo thể loại</span>
+          <h1>{{ $category->name }}</h1>
+        </div>
+        <div class="inner-hero__meta">
+          <div>
+            <strong>{{ $movies->total() }}</strong>
+            <span>tựa phim</span>
           </div>
+          <a class="btn btn-cinema-secondary" href="{{ route('home') }}"><i class="bi bi-arrow-left me-2"></i>Về trang chủ</a>
         </div>
       </div>
-    @empty
-      <div class="col-12"><div class="alert alert-warning mb-0">Không có phim trong danh mục này.</div></div>
-    @endforelse
-  </div>
 
-  <div class="mt-3">{{ $movies->links() }}</div>
+      <div class="row g-4">
+        @forelse($movies as $movie)
+          <div class="col-md-6 col-xl-4">
+            @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Genre'])
+          </div>
+        @empty
+          <div class="col-12"><div class="glass-panel empty-panel">Không có phim trong thể loại này.</div></div>
+        @endforelse
+      </div>
+
+      <div class="app-pagination mt-4">
+        {{ $movies->links() }}
+      </div>
+    </div>
+  </section>
 @endsection
