@@ -74,17 +74,14 @@
                   <button class="btn btn-cinema-primary" type="submit">
                     <i class="bi bi-credit-card me-2"></i>Thanh toán ngay {{ number_format($amountDue) }}đ
                   </button>
-                  <a class="btn btn-cinema-secondary" href="{{ route('shows.book', ['show' => $booking->show_id, 'booking_code' => $booking->booking_code]) }}">
+                  <a class="btn btn-cinema-secondary" href="{{ route('shows.book', $booking->show_id) }}">
                     <i class="bi bi-arrow-left me-2"></i>Quay lại sửa ghế
                   </a>
                 </div>
               </form>
             @else
               <div class="d-flex flex-wrap gap-3">
-                <a class="btn btn-cinema-primary" href="{{ route('booking.success', $booking->booking_code) }}"><i class="bi bi-ticket-perforated me-2"></i>Xem vé</a>
-                @if($isPaid)
-                  <a class="btn btn-cinema-secondary" href="{{ route('booking.print', $booking->booking_code) }}" target="_blank"><i class="bi bi-printer me-2"></i>In vé cứng</a>
-                @endif
+                <a class="btn btn-cinema-primary" href="{{ route('booking.success', $booking->booking_code) }}">Xem vé</a>
               </div>
             @endif
           </div>
