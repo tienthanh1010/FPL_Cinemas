@@ -3,22 +3,17 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-<<<<<<< HEAD
-=======
 use App\Mail\SoftTicketIssuedMail;
 
 use App\Mail\SoftTicketIssuedMail;
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\BookingLifecycleService;
 use App\Services\LoyaltyPointService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-<<<<<<< HEAD
 use Illuminate\Support\Facades\DB;
-=======
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -27,7 +22,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -35,12 +30,10 @@ use Illuminate\View\View;
 class CheckoutController extends Controller
 {
     private const PROVIDER_OPTIONS = [
-<<<<<<< HEAD
         'MOMO' => ['label' => 'Ví MoMo', 'method' => 'EWALLET', 'description' => 'Thanh toán mô phỏng bằng ví MoMo.'],
         'ZALOPAY' => ['label' => 'ZaloPay', 'method' => 'EWALLET', 'description' => 'Thanh toán mô phỏng qua ví ZaloPay.'],
         'VNPAY' => ['label' => 'VNPay', 'method' => 'BANK_TRANSFER', 'description' => 'Thanh toán mô phỏng qua VNPay / ngân hàng nội địa.'],
         'CARD' => ['label' => 'Thẻ ngân hàng', 'method' => 'CARD', 'description' => 'Thanh toán mô phỏng bằng thẻ nội địa / quốc tế.'],
-=======
         'MOMO' => [
             'label' => 'Ví MoMo',
             'method' => 'EWALLET',
@@ -56,20 +49,18 @@ class CheckoutController extends Controller
             'short' => 'VNP',
         ],
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
     ];
 
     private const TERMINAL_BOOKING_STATUSES = ['CANCELLED', 'EXPIRED'];
     private const PAID_LIKE_BOOKING_STATUSES = ['PAID', 'CONFIRMED', 'COMPLETED'];
-<<<<<<< HEAD
-=======
     private const GATEWAY_PAYMENT_STATUSES = ['INITIATED', 'WAITING_TRANSFER'];
     private const FAILED_PAYMENT_STATUSES = ['FAILED', 'CANCELLED'];
 
     private const GATEWAY_PAYMENT_STATUSES = ['INITIATED', 'WAITING_TRANSFER'];
     private const FAILED_PAYMENT_STATUSES = ['FAILED', 'CANCELLED'];
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
 
     public function __construct(
         private readonly LoyaltyPointService $loyaltyPointService,
@@ -79,10 +70,8 @@ class CheckoutController extends Controller
 
     public function show(string $booking_code): View|RedirectResponse
     {
-<<<<<<< HEAD
         $booking = Booking::query()
             ->where('booking_code', $booking_code)
-=======
         $booking = $this->findBooking($booking_code);
         $booking = $this->bookingLifecycleService->expirePendingBooking($booking);
 
@@ -405,7 +394,7 @@ class CheckoutController extends Controller
     {
         $booking = Booking::query()
             ->where('booking_code', $bookingCode)
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
             ->with([
                 'customer',
                 'show.movieVersion.movie',
@@ -425,8 +414,6 @@ class CheckoutController extends Controller
             abort(404);
         }
 
-<<<<<<< HEAD
-=======
         return $booking;
     }
 
@@ -513,7 +500,7 @@ class CheckoutController extends Controller
     private function resolveRecipient(Booking $booking): ?string
     {
         return $booking->contact_email ?: $booking->customer?->email;
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
         $booking = $this->bookingLifecycleService->expirePendingBooking($booking);
 
         if (in_array((string) $booking->status, self::TERMINAL_BOOKING_STATUSES, true)) {
@@ -943,10 +930,104 @@ class CheckoutController extends Controller
     {
         return $booking->contact_email ?: $booking->customer?->email;
 
-<<<<<<< HEAD
         return redirect()->route('booking.success', ['booking_code' => $booking_code])
             ->with('success', 'Thanh toán thành công. Vé của bạn đã được phát hành.');
 =======
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
+        $currentCinemaId = current_cinema_id();
+        if ($currentCinemaId && (int) $booking->cinema_id !== (int) $currentCinemaId) {
+            abort(404);
+        }
+
+        return $booking;
+    }
+
+
+
+    private function assertBookingPayable(Booking $booking, bool $allowGatewayPending = false): void
+    {
+        $currentCinemaId = current_cinema_id();
+        if ($currentCinemaId && (int) $booking->cinema_id !== (int) $currentCinemaId) {
+            abort(404);
+        }
+
+        $booking = $this->bookingLifecycleService->expirePendingBooking($booking);
+
+        if (in_array((string) $booking->status, self::TERMINAL_BOOKING_STATUSES, true)) {
+            abort(422, 'Booking đã hết hạn hoặc đã bị huỷ, không thể thanh toán tiếp.');
+        }
+
+        if ($booking->show && $booking->show->start_time && now()->gte($booking->show->start_time)) {
+            abort(422, 'Suất chiếu đã bắt đầu hoặc đã kết thúc, không thể thanh toán.');
+        }
+
+        if (! $allowGatewayPending && (int) $booking->paid_amount >= (int) $booking->total_amount) {
+            abort(422, 'Booking này không còn số tiền nào cần thanh toán.');
+        }
+    }
+
+    private function ensureSoftTicketMail(Booking $booking): void
+    {
+        if (! in_array((string) $booking->status, self::PAID_LIKE_BOOKING_STATUSES, true)) {
+            return;
+        }
+
+        $payment = $booking->payments
+            ->where('status', 'CAPTURED')
+            ->sortByDesc('paid_at')
+            ->first();
+
+        if (! $payment) {
+            return;
+        }
+
+        $payload = (array) $payment->response_payload;
+        if (! empty($payload['ticket_email_sent_at'])) {
+            return;
+        }
+
+        $this->sendSoftTicketMail($booking, $payment->id, false);
+    }
+
+    private function sendSoftTicketMail(Booking $booking, int $paymentId, bool $force = false): array
+    {
+        $recipient = $this->resolveRecipient($booking);
+        if (! $recipient) {
+            return ['sent' => false, 'recipient' => null];
+        }
+
+        $payment = Payment::query()->find($paymentId);
+        if (! $payment) {
+            return ['sent' => false, 'recipient' => $recipient];
+        }
+
+        $payload = (array) $payment->response_payload;
+        if (! $force && ! empty($payload['ticket_email_sent_at'])) {
+            return ['sent' => true, 'recipient' => $recipient];
+        }
+
+        try {
+            Mail::to($recipient)->send(new SoftTicketIssuedMail($booking));
+            $payload['ticket_email_sent_at'] = now()->toIso8601String();
+            $payload['ticket_email_status'] = 'SENT';
+            unset($payload['ticket_email_error']);
+            $payment->update(['response_payload' => $payload]);
+
+            return ['sent' => true, 'recipient' => $recipient];
+        } catch (\Throwable $e) {
+            report($e);
+            $payload['ticket_email_status'] = 'FAILED';
+            $payload['ticket_email_error'] = Str::limit($e->getMessage(), 180, '');
+            $payment->update(['response_payload' => $payload]);
+
+            return ['sent' => false, 'recipient' => $recipient];
+        }
+    }
+
+    private function resolveRecipient(Booking $booking): ?string
+    {
+        return $booking->contact_email ?: $booking->customer?->email;
+
+
     }
 }

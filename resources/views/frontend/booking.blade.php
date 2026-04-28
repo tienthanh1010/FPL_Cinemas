@@ -1759,12 +1759,9 @@
     lastAlertKey: null,
     holdDeadlineAt: null,
     holdCountdownTimer: null,
-<<<<<<< HEAD
     serverTimeOffsetMs: 0,
     alertTimer: null,
-=======
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
   };
 
   const initialSeatIds = new Set([
@@ -1775,15 +1772,13 @@
 
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
   const ticketTypeMap = Object.fromEntries(ticketTypes.map((ticketType) => [String(ticketType.id), ticketType]));
-<<<<<<< HEAD
   const productMap = {};
   const showAlert = (message, level = 'info', key = null, title = null) => {
     if (key && state.lastAlertKey === key && inlineAlert.classList.contains('is-visible')) {
-=======
   const productMap = Object.fromEntries((bookingConfig.products || []).map((product) => [String(product.id), product]));
   const showAlert = (message, level = 'info', key = null) => {
     if (key && state.lastAlertKey === key) {
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
       return;
     }
 
@@ -1805,15 +1800,12 @@
       <button type="button" class="booking-alert-inline__close" aria-label="Đóng">×</button>
     `;
     inlineAlert.classList.add('is-visible');
-<<<<<<< HEAD
     inlineAlert.querySelector('.booking-alert-inline__close')?.addEventListener('click', () => clearAlert(key));
 
     if (level !== 'error') {
       state.alertTimer = window.setTimeout(() => clearAlert(key), 4500);
     }
-=======
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
   };
 
   const clearAlert = (key = null) => {
@@ -1826,15 +1818,14 @@
     }
     state.lastAlertKey = null;
     inlineAlert.classList.remove('is-visible');
-<<<<<<< HEAD
     inlineAlert.innerHTML = '';
-=======
-    inlineAlert.textContent = '';
+
+
     state.lastAlertKey = null;
     inlineAlert.classList.remove('is-visible');
     inlineAlert.textContent = '';
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
   };
 
   const seatMapById = () => Object.fromEntries(state.seats.map((seat) => [String(seat.id), seat]));
@@ -1957,26 +1948,16 @@
     if (state.holdCountdownTimer) {
       window.clearInterval(state.holdCountdownTimer);
       state.holdCountdownTimer = null;
-    }
-<<<<<<< HEAD
-=======
-    state.holdDeadlineAt = null;
-    state.holdDeadlineAt = null;
+   
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
     if (holdCountdownValue) {
       holdCountdownValue.textContent = '00:00';
     }
   };
 
   const startHoldCountdown = () => {
-<<<<<<< HEAD
     if (!state.holdDeadlineAt) {
-=======
-    if (!state.selectedSeatIds.length || !state.holdDeadlineAt) {
-    if (!state.selectedSeatIds.length) {
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
       stopHoldCountdown();
       return;
     }
@@ -1994,11 +1975,8 @@
       if (secondsLeft <= 0) {
         window.clearInterval(state.holdCountdownTimer);
         state.holdCountdownTimer = null;
-<<<<<<< HEAD
         state.holdDeadlineAt = null;
-=======
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
         setLiveMessage('Phiên giữ ghế đã hết hạn, đang làm mới trạng thái...');
         fetchSeatStatus();
       }
@@ -2238,7 +2216,6 @@
       stopHoldCountdown();
       return;
     }
-<<<<<<< HEAD
 
     if (!state.selectedSeatIds.length) {
       holdStatusBox.innerHTML = 'Phiên giữ ghế vẫn đang chạy. Bạn có thể chọn lại ghế khác mà đồng hồ sẽ không bị đặt lại từ đầu.';
@@ -2247,8 +2224,8 @@
     }
 
     holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Đồng hồ sẽ tiếp tục chạy đến khi bạn thanh toán hoặc hết thời gian giữ ghế.`;
+
 =======
-    holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Sau <strong>${holdMinutes} phút</strong> không thanh toán, ghế sẽ tự nhả cho khách khác.`;
     if (!state.selectedSeatIds.length) {
       holdStatusBox.innerHTML = 'Bạn chưa chọn ghế nào.';
       stopHoldCountdown();
@@ -2256,7 +2233,7 @@
     }
     holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Sau <strong>${holdMinutes} phút</strong> không thanh toán, ghế sẽ tự nhả cho khách khác.`;
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
   };
 
   const renderSummary = () => {
@@ -2303,7 +2280,6 @@
       loyaltyPreview.textContent = '';
     }
 
-<<<<<<< HEAD
     const invalidRows = findSingleGapRows(state.selectedSeatIds);
     if (invalidRows.length) {
       showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
@@ -2311,8 +2287,7 @@
       clearAlert('seat-gap');
     }
 
-=======
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
     syncHiddenInputs();
     updateHoldBox();
   };
@@ -2359,7 +2334,6 @@
 
       applySeatPayload(payload.seats || [], payload.selected_seat_ids || []);
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
-<<<<<<< HEAD
       if (state.holdDeadlineAt) {
         startHoldCountdown();
       } else {
@@ -2368,7 +2342,7 @@
       }
 =======
       startHoldCountdown();
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
       if (!silent) {
         clearAlert('seat-sync');
       }
@@ -2413,13 +2387,9 @@
       if (removedSeats.length) {
         showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`, 'Sơ đồ ghế vừa được cập nhật');
       } else {
-<<<<<<< HEAD
         clearAlert('seat-sync');
 =======
-        clearAlert();
-        clearAlert();
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
       }
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
     } catch (error) {
@@ -2471,15 +2441,13 @@
     candidateSeatIds = Array.from(new Set(candidateSeatIds.map(Number))).filter(Boolean);
 
     const invalidRows = findSingleGapRows(candidateSeatIds);
-<<<<<<< HEAD
     if (!alreadySelected && invalidRows.length) {
       showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
-=======
     if (invalidRows.length) {
       window.alert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`);
       showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`, 'error', 'seat-gap');
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
       return;
     }
 
@@ -2511,13 +2479,12 @@
     const invalidRows = findSingleGapRows(state.selectedSeatIds);
     if (invalidRows.length) {
       event.preventDefault();
-<<<<<<< HEAD
       showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Vui lòng điều chỉnh trước khi sang bước thanh toán.`, 'error', 'submit-gap', 'Chưa thể sang bước thanh toán');
-=======
-      showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại.`, 'error', 'submit-gap');
+
+
       showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại.`, 'error', 'submit-gap');
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
       return;
     }
 
@@ -2543,16 +2510,16 @@
   applyHoldExpiry(bookingConfig.owner_hold_expires_at || null);
   applySeatPayload(state.seats, state.selectedSeatIds);
   syncHiddenInputs();
-<<<<<<< HEAD
   if (state.holdDeadlineAt) {
+
 =======
-  if (state.selectedSeatIds.length) {
   applySeatPayload(state.seats, state.selectedSeatIds);
   renderProducts();
   syncHiddenInputs();
   if (state.selectedSeatIds.length) {
 
->>>>>>> 60b5dfd28df79746f0d5240335a4bbcb72257900
+
+
     startHoldCountdown();
   }
   setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
