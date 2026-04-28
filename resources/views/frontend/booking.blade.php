@@ -885,28 +885,11 @@
     gap: 1.3rem;
     flex-wrap: nowrap;
   }
-  .seat-row--pair {
-    align-items: start;
-  }
-  .seat-row__banks--pair {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(232px, max-content));
-    justify-content: center;
-    gap: .6rem .9rem;
-    width: 100%;
-    max-width: 100%;
-  }
   .seat-bank {
     display: flex;
     gap: .35rem;
     justify-content: center;
     flex-wrap: nowrap;
-  }
-  .seat-bank--pair {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(72px, 84px));
-    gap: .4rem;
-    justify-content: center;
   }
   .seat-tile {
     min-width: 38px;
@@ -932,10 +915,7 @@
     opacity: .96;
   }
   .seat-tile--pair {
-    min-width: 72px;
-    height: 34px;
-    padding: 0 .25rem;
-    border-radius: 999px 999px 14px 14px;
+    min-width: 78px;
   }
   .seat-tile__code {
     font-size: .72rem;
@@ -1307,26 +1287,71 @@
   .booking-alert-inline {
     display: none;
     margin-bottom: .9rem;
-    padding: .85rem 1rem;
+    padding: .9rem 1rem;
     border-radius: 18px;
-    font-size: .9rem;
     border: 1px solid transparent;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .10);
   }
-  .booking-alert-inline.is-visible { display: block; }
-  .booking-alert-inline[data-level="error"] {
-    background: rgba(239, 68, 68, .08);
-    border-color: rgba(239, 68, 68, .22);
+  .booking-alert-inline.is-visible {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: .85rem;
+    align-items: start;
+  }
+  .booking-alert-inline__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1rem;
+    box-shadow: inset 0 -3px 0 rgba(15, 23, 42, .08);
+  }
+  .booking-alert-inline__body strong {
+    display: block;
+    margin-bottom: .2rem;
+    font-size: .95rem;
+  }
+  .booking-alert-inline__body span {
+    display: block;
+    line-height: 1.55;
+    font-size: .9rem;
+  }
+  .booking-alert-inline__close {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: .15rem;
+    opacity: .72;
+  }
+  .booking-alert-inline__close:hover { opacity: 1; }
+  .booking-alert-inline.is-visible[data-level="error"] {
+    background: rgba(239, 68, 68, .10);
+    border-color: rgba(239, 68, 68, .26);
     color: #dc2626;
   }
-  .booking-alert-inline[data-level="info"] {
-    background: rgba(59, 130, 246, .08);
-    border-color: rgba(59, 130, 246, .22);
+  .booking-alert-inline.is-visible[data-level="error"] .booking-alert-inline__icon {
+    background: rgba(239, 68, 68, .14);
+  }
+  .booking-alert-inline.is-visible[data-level="info"] {
+    background: rgba(59, 130, 246, .10);
+    border-color: rgba(59, 130, 246, .24);
     color: #2563eb;
   }
-  .booking-alert-inline[data-level="success"] {
-    background: rgba(34, 197, 94, .08);
-    border-color: rgba(34, 197, 94, .22);
+  .booking-alert-inline.is-visible[data-level="info"] .booking-alert-inline__icon {
+    background: rgba(59, 130, 246, .14);
+  }
+  .booking-alert-inline.is-visible[data-level="success"] {
+    background: rgba(34, 197, 94, .10);
+    border-color: rgba(34, 197, 94, .24);
     color: #16a34a;
+  }
+  .booking-alert-inline.is-visible[data-level="success"] .booking-alert-inline__icon {
+    background: rgba(34, 197, 94, .14);
   }
   @media (max-width: 1199.98px) {
     .booking-layout {
@@ -1359,9 +1384,6 @@
     .seat-row__banks {
       gap: 1rem;
     }
-    .seat-row__banks--pair {
-      grid-template-columns: repeat(2, minmax(210px, max-content));
-    }
   }
   @media (max-width: 767.98px) {
     .booking-meta-grid {
@@ -1377,20 +1399,6 @@
       overflow-x: auto;
       justify-content: flex-start;
       padding-bottom: .25rem;
-    }
-    .seat-row__banks--pair {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(150px, 1fr));
-      gap: .5rem;
-      overflow: visible;
-      justify-content: stretch;
-      padding-bottom: 0;
-    }
-    .seat-bank--pair {
-      grid-template-columns: repeat(2, minmax(68px, 1fr));
-    }
-    .seat-tile--pair {
-      min-width: 100%;
     }
     .seat-board-footer {
       grid-template-columns: 1fr;
@@ -1751,6 +1759,8 @@
     lastAlertKey: null,
     holdDeadlineAt: null,
     holdCountdownTimer: null,
+    serverTimeOffsetMs: 0,
+    alertTimer: null,
 
   };
 
@@ -1762,15 +1772,39 @@
 
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
   const ticketTypeMap = Object.fromEntries(ticketTypes.map((ticketType) => [String(ticketType.id), ticketType]));
+  const productMap = {};
+  const showAlert = (message, level = 'info', key = null, title = null) => {
+    if (key && state.lastAlertKey === key && inlineAlert.classList.contains('is-visible')) {
   const productMap = Object.fromEntries((bookingConfig.products || []).map((product) => [String(product.id), product]));
   const showAlert = (message, level = 'info', key = null) => {
     if (key && state.lastAlertKey === key) {
+
       return;
     }
+
+    if (state.alertTimer) {
+      window.clearTimeout(state.alertTimer);
+      state.alertTimer = null;
+    }
+
     state.lastAlertKey = key || null;
-    inlineAlert.textContent = message;
+    const iconMap = { error: '!', info: 'i', success: '✓' };
+    const titleMap = { error: 'Chưa thể chọn ghế này', info: 'Thông báo', success: 'Đã cập nhật' };
     inlineAlert.dataset.level = level;
+    inlineAlert.innerHTML = `
+      <div class="booking-alert-inline__icon">${iconMap[level] || 'i'}</div>
+      <div class="booking-alert-inline__body">
+        <strong>${title || titleMap[level] || 'Thông báo'}</strong>
+        <span>${message}</span>
+      </div>
+      <button type="button" class="booking-alert-inline__close" aria-label="Đóng">×</button>
+    `;
     inlineAlert.classList.add('is-visible');
+    inlineAlert.querySelector('.booking-alert-inline__close')?.addEventListener('click', () => clearAlert(key));
+
+    if (level !== 'error') {
+      state.alertTimer = window.setTimeout(() => clearAlert(key), 4500);
+    }
 
   };
 
@@ -1778,12 +1812,19 @@
     if (key && state.lastAlertKey && state.lastAlertKey !== key) {
       return;
     }
+    if (state.alertTimer) {
+      window.clearTimeout(state.alertTimer);
+      state.alertTimer = null;
+    }
+    state.lastAlertKey = null;
+    inlineAlert.classList.remove('is-visible');
+    inlineAlert.innerHTML = '';
+
+
     state.lastAlertKey = null;
     inlineAlert.classList.remove('is-visible');
     inlineAlert.textContent = '';
-    state.lastAlertKey = null;
-    inlineAlert.classList.remove('is-visible');
-    inlineAlert.textContent = '';
+
 
   };
 
@@ -1894,6 +1935,8 @@
   };
 
 
+  const humanizeRowList = (rows) => rows.length === 1 ? `dãy ${rows[0]}` : `các dãy ${rows.join(', ')}`;
+
   const formatCountdown = (totalSeconds) => {
     const safeSeconds = Math.max(0, Number(totalSeconds || 0));
     const minutes = Math.floor(safeSeconds / 60).toString().padStart(2, '0');
@@ -1905,9 +1948,7 @@
     if (state.holdCountdownTimer) {
       window.clearInterval(state.holdCountdownTimer);
       state.holdCountdownTimer = null;
-    }
-    state.holdDeadlineAt = null;
-    state.holdDeadlineAt = null;
+   
 
     if (holdCountdownValue) {
       holdCountdownValue.textContent = '00:00';
@@ -1915,8 +1956,7 @@
   };
 
   const startHoldCountdown = () => {
-    if (!state.selectedSeatIds.length || !state.holdDeadlineAt) {
-    if (!state.selectedSeatIds.length) {
+    if (!state.holdDeadlineAt) {
 
       stopHoldCountdown();
       return;
@@ -1935,6 +1975,7 @@
       if (secondsLeft <= 0) {
         window.clearInterval(state.holdCountdownTimer);
         state.holdCountdownTimer = null;
+        state.holdDeadlineAt = null;
 
         setLiveMessage('Phiên giữ ghế đã hết hạn, đang làm mới trạng thái...');
         fetchSeatStatus();
@@ -2170,18 +2211,28 @@
   };
 
   const updateHoldBox = () => {
+    if (!state.holdDeadlineAt) {
+      holdStatusBox.innerHTML = 'Bộ đếm sẽ bắt đầu ngay khi bạn chọn ghế đầu tiên.';
+      stopHoldCountdown();
+      return;
+    }
+
+    if (!state.selectedSeatIds.length) {
+      holdStatusBox.innerHTML = 'Phiên giữ ghế vẫn đang chạy. Bạn có thể chọn lại ghế khác mà đồng hồ sẽ không bị đặt lại từ đầu.';
+      startHoldCountdown();
+      return;
+    }
+
+    holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Đồng hồ sẽ tiếp tục chạy đến khi bạn thanh toán hoặc hết thời gian giữ ghế.`;
+
+=======
     if (!state.selectedSeatIds.length) {
       holdStatusBox.innerHTML = 'Bạn chưa chọn ghế nào.';
       stopHoldCountdown();
       return;
     }
     holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Sau <strong>${holdMinutes} phút</strong> không thanh toán, ghế sẽ tự nhả cho khách khác.`;
-    if (!state.selectedSeatIds.length) {
-      holdStatusBox.innerHTML = 'Bạn chưa chọn ghế nào.';
-      stopHoldCountdown();
-      return;
-    }
-    holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Sau <strong>${holdMinutes} phút</strong> không thanh toán, ghế sẽ tự nhả cho khách khác.`;
+
 
   };
 
@@ -2229,6 +2280,14 @@
       loyaltyPreview.textContent = '';
     }
 
+    const invalidRows = findSingleGapRows(state.selectedSeatIds);
+    if (invalidRows.length) {
+      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
+    } else {
+      clearAlert('seat-gap');
+    }
+
+
     syncHiddenInputs();
     updateHoldBox();
   };
@@ -2275,7 +2334,15 @@
 
       applySeatPayload(payload.seats || [], payload.selected_seat_ids || []);
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
+      if (state.holdDeadlineAt) {
+        startHoldCountdown();
+      } else {
+        stopHoldCountdown();
+        state.holdDeadlineAt = null;
+      }
+=======
       startHoldCountdown();
+
       if (!silent) {
         clearAlert('seat-sync');
       }
@@ -2310,17 +2377,18 @@
 
       const previousSelection = new Set(state.selectedSeatIds.map(Number));
       applySeatPayload(payload.seats || []);
-      if (state.selectedSeatIds.length) {
+      if (state.holdDeadlineAt) {
         startHoldCountdown();
       } else {
         stopHoldCountdown();
+        state.holdDeadlineAt = null;
       }
       const removedSeats = Array.from(previousSelection).filter((seatId) => !state.selectedSeatIds.includes(Number(seatId)));
       if (removedSeats.length) {
-        showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`);
+        showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`, 'Sơ đồ ghế vừa được cập nhật');
       } else {
-        clearAlert();
-        clearAlert();
+        clearAlert('seat-sync');
+=======
 
       }
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
@@ -2345,7 +2413,7 @@
       }
     } else {
       if (candidateSeatIds.length >= maxSeats) {
-        window.alert(`Bạn chỉ có thể chọn tối đa ${maxSeats} ghế trong một booking.`);
+        showAlert(`Bạn chỉ có thể chọn tối đa ${maxSeats} ghế trong một booking.`, 'info', 'max-seats', 'Đã đạt giới hạn ghế');
         return;
       }
 
@@ -2373,9 +2441,12 @@
     candidateSeatIds = Array.from(new Set(candidateSeatIds.map(Number))).filter(Boolean);
 
     const invalidRows = findSingleGapRows(candidateSeatIds);
+    if (!alreadySelected && invalidRows.length) {
+      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
     if (invalidRows.length) {
       window.alert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`);
       showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`, 'error', 'seat-gap');
+
 
       return;
     }
@@ -2408,8 +2479,11 @@
     const invalidRows = findSingleGapRows(state.selectedSeatIds);
     if (invalidRows.length) {
       event.preventDefault();
+      showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Vui lòng điều chỉnh trước khi sang bước thanh toán.`, 'error', 'submit-gap', 'Chưa thể sang bước thanh toán');
+
+
       showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại.`, 'error', 'submit-gap');
-      showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại.`, 'error', 'submit-gap');
+
 
       return;
     }
@@ -2433,13 +2507,18 @@
 
   window.addEventListener('beforeunload', releaseSeatsOnLeave);
 
+  applyHoldExpiry(bookingConfig.owner_hold_expires_at || null);
   applySeatPayload(state.seats, state.selectedSeatIds);
   syncHiddenInputs();
-  if (state.selectedSeatIds.length) {
+  if (state.holdDeadlineAt) {
+
+=======
   applySeatPayload(state.seats, state.selectedSeatIds);
   renderProducts();
   syncHiddenInputs();
   if (state.selectedSeatIds.length) {
+
+
 
     startHoldCountdown();
   }
