@@ -54,7 +54,7 @@ class PromotionService
         if (! $coupon) {
             return ['error' => 'Mã voucher không tồn tại.'];
         }
-        if (! in_array($coupon->status, ['ISSUED', 'ACTIVE'], true)) {
+        if ($coupon->status !== 'ISSUED') {
             return ['error' => 'Voucher đã được sử dụng hoặc không còn hiệu lực.'];
         }
         if ($coupon->expires_at && $coupon->expires_at->isPast()) {
