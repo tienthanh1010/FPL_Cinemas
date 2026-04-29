@@ -70,6 +70,7 @@
     }
     .chip-active { background: #dcfce7; color: #15803d; }
     .chip-maintenance { background: #dbeafe; color: #1d4ed8; }
+    .chip-blocked { background: #fef3c7; color: #b45309; }
 
     .seat-section {
         margin-top: 18px;
@@ -163,6 +164,9 @@
     }
     .seat-active { background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); }
     .seat-maintenance { background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); }
+    .seat-blocked { background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%); box-shadow: inset 0 -8px 0 rgba(180, 83, 9, .12), 0 10px 20px rgba(245, 158, 11, .18); }
+    .seat-form { display:block; width:100%; }
+    .seat-form button { width:100%; background:transparent; border:0; padding:0; color:inherit; }
     .section-regular .seat-section-subtitle { color: #86efac; }
     .section-vip .seat-section-subtitle { color: #fbbf24; }
     .section-couple .seat-section-subtitle { color: #f9a8d4; }
@@ -222,6 +226,7 @@
 <div class="row g-3 mb-4">
     <div class="col-md-3"><div class="card"><div class="card-body"><div class="fw-semibold">Tổng ghế</div><div class="display-6">{{ $seatStats['total'] ?? $seats->count() }}</div></div></div></div>
     <div class="col-md-3"><div class="card"><div class="card-body"><div class="fw-semibold">Ghế hoạt động</div><div class="display-6">{{ $seatStats['active'] ?? $seats->where('is_active', 1)->count() }}</div></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><div class="fw-semibold">Ghế đang khoá</div><div class="display-6">{{ $seatStats['blocked'] ?? 0 }}</div></div></div></div>
     <div class="col-md-3"><div class="card"><div class="card-body"><div class="fw-semibold">Ghế bảo trì</div><div class="display-6">{{ $seatStats['maintenance'] ?? $seats->where('is_active', 0)->count() }}</div></div></div></div>
     <div class="col-md-3"><div class="card"><div class="card-body"><div class="fw-semibold">Seat map version</div><div class="display-6">{{ $auditorium->seat_map_version }}</div></div></div></div>
 </div>
@@ -230,10 +235,11 @@
     <div class="card-body">
         <div class="seatmap-shell">
             <div class="screen-arc"><span>Màn hình</span></div>
-            <p class="seatmap-note">Sơ đồ được trình bày giống chuẩn rạp thực tế: ghế thường phía trước, ghế VIP ở giữa và ghế đôi ở cuối phòng để bạn dễ kiểm tra bố cục ghế.</p>
+            <p class="seatmap-note">Bạn có thể khoá ghế trực tiếp ở cấp phòng chiếu. Khi một ghế bị khoá tại đây, mọi suất chiếu thuộc phòng này sẽ tự động xem ghế đó là không khả dụng.</p>
 
             <div class="legend-wrap">
                 <span class="legend-chip chip-active">Ghế hoạt động</span>
+                <span class="legend-chip chip-blocked">Ghế đang khoá toàn phòng</span>
                 <span class="legend-chip chip-maintenance">Ghế hỏng / bảo trì</span>
             </div>
 
@@ -260,24 +266,78 @@
                             <div class="seat-row-banks">
                                 <div class="seat-bank">
                                     @foreach($leftBank as $seat)
-                                        @php $typeClass = $typeDetector($seat->seat_type_name); @endphp
-                                        <div class="seat-tile {{ (int) $seat->is_active === 1 ? 'seat-active' : 'seat-maintenance' }} {{ $typeClass === 'couple' ? 'couple' : '' }} {{ $typeClass === 'vip' ? 'vip' : '' }}" title="{{ $seat->seat_type_name ?? 'Ghế' }}">
-                                            <div>
-                                                <span class="seat-code">{{ $seat->seat_code }}</span>
-                                                <span class="seat-meta">{{ $seat->seat_type_name ?? 'Ghế' }}</span>
-                                            </div>
+                                        @php
+                                            $typeClass = $typeDetector($seat->seat_type_name);
+                                            $statusClass = match($seat->status ?? 'active') {
+                                                'blocked' => 'seat-blocked',
+                                                'maintenance' => 'seat-maintenance',
+                                                default => 'seat-active',
+                                            };
+                                        @endphp
+                                        <div class="seat-tile {{ $statusClass }} {{ $typeClass === 'couple' ? 'couple' : '' }} {{ $typeClass === 'vip' ? 'vip' : '' }}" title="{{ $seat->block_reason ?: ($seat->seat_type_name ?? 'Ghế') }}">
+                                            @if(($seat->status ?? 'active') === 'active')
+                                                <form method="POST" action="{{ route('admin.auditoriums.seats.block', $auditorium) }}" class="seat-form">
+                                                    @csrf
+                                                    <input type="hidden" name="seat_id" value="{{ $seat->id }}">
+                                                    <input type="hidden" name="reason" value="Khoá ghế toàn phòng từ quản trị phòng chiếu">
+                                                    <button type="submit">
+                                                        <span class="seat-code">{{ $seat->seat_code }}</span>
+                                                        <span class="seat-meta">{{ $seat->seat_type_name ?? 'Ghế' }}</span>
+                                                    </button>
+                                                </form>
+                                            @elseif(($seat->status ?? '') === 'blocked')
+                                                <form method="POST" action="{{ route('admin.auditoriums.seats.unblock', [$auditorium, $seat->block_id]) }}" class="seat-form">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit">
+                                                        <span class="seat-code">{{ $seat->seat_code }}</span>
+                                                        <span class="seat-meta">Mở khoá</span>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <div>
+                                                    <span class="seat-code">{{ $seat->seat_code }}</span>
+                                                    <span class="seat-meta">{{ $seat->seat_type_name ?? 'Ghế' }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
                                 @if($rightBank->isNotEmpty())
                                     <div class="seat-bank">
                                         @foreach($rightBank as $seat)
-                                            @php $typeClass = $typeDetector($seat->seat_type_name); @endphp
-                                            <div class="seat-tile {{ (int) $seat->is_active === 1 ? 'seat-active' : 'seat-maintenance' }} {{ $typeClass === 'couple' ? 'couple' : '' }} {{ $typeClass === 'vip' ? 'vip' : '' }}" title="{{ $seat->seat_type_name ?? 'Ghế' }}">
-                                                <div>
-                                                    <span class="seat-code">{{ $seat->seat_code }}</span>
-                                                    <span class="seat-meta">{{ $seat->seat_type_name ?? 'Ghế' }}</span>
-                                                </div>
+                                            @php
+                                                $typeClass = $typeDetector($seat->seat_type_name);
+                                                $statusClass = match($seat->status ?? 'active') {
+                                                    'blocked' => 'seat-blocked',
+                                                    'maintenance' => 'seat-maintenance',
+                                                    default => 'seat-active',
+                                                };
+                                            @endphp
+                                            <div class="seat-tile {{ $statusClass }} {{ $typeClass === 'couple' ? 'couple' : '' }} {{ $typeClass === 'vip' ? 'vip' : '' }}" title="{{ $seat->block_reason ?: ($seat->seat_type_name ?? 'Ghế') }}">
+                                                @if(($seat->status ?? 'active') === 'active')
+                                                    <form method="POST" action="{{ route('admin.auditoriums.seats.block', $auditorium) }}" class="seat-form">
+                                                        @csrf
+                                                        <input type="hidden" name="seat_id" value="{{ $seat->id }}">
+                                                        <input type="hidden" name="reason" value="Khoá ghế toàn phòng từ quản trị phòng chiếu">
+                                                        <button type="submit">
+                                                            <span class="seat-code">{{ $seat->seat_code }}</span>
+                                                            <span class="seat-meta">{{ $seat->seat_type_name ?? 'Ghế' }}</span>
+                                                        </button>
+                                                    </form>
+                                                @elseif(($seat->status ?? '') === 'blocked')
+                                                    <form method="POST" action="{{ route('admin.auditoriums.seats.unblock', [$auditorium, $seat->block_id]) }}" class="seat-form">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit">
+                                                            <span class="seat-code">{{ $seat->seat_code }}</span>
+                                                            <span class="seat-meta">Mở khoá</span>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <div>
+                                                        <span class="seat-code">{{ $seat->seat_code }}</span>
+                                                        <span class="seat-meta">{{ $seat->seat_type_name ?? 'Ghế' }}</span>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @endforeach
                                     </div>
@@ -295,7 +355,7 @@
     <div class="table-responsive"><table class="table table-hover mb-0">
         <thead><tr><th>Phim</th><th>Bắt đầu</th><th>Trạng thái</th><th></th></tr></thead>
         <tbody>
-        @forelse($auditorium->shows as $show)
+        @forelse($recentShows as $show)
             <tr>
                 <td>{{ $show->movieVersion?->movie?->title ?: '-' }}</td>
                 <td>{{ optional($show->start_time)->format('d/m/Y H:i') }}</td>
