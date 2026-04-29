@@ -222,7 +222,71 @@ if (! function_exists('ticket_barcode_image_url')) {
             return null;
         }
 
-        return 'https://bwipjs-api.metafloor.com/?bcid=code128&includetext=1&scale=2&height=' . max(36, $height) . '&text=' . rawurlencode($payload);
+        $value = strtoupper(trim((string) $payload));
+        if ($value === '') {
+            return null;
+        }
+
+        $patterns = [
+            '0' => 'nnnwwnwnn', '1' => 'wnnwnnnnw', '2' => 'nnwwnnnnw', '3' => 'wnwwnnnnn',
+            '4' => 'nnnwwnnnw', '5' => 'wnnwwnnnn', '6' => 'nnwwwnnnn', '7' => 'nnnwnnwnw',
+            '8' => 'wnnwnnwnn', '9' => 'nnwwnnwnn', 'A' => 'wnnnnwnnw', 'B' => 'nnwnnwnnw',
+            'C' => 'wnwnnwnnn', 'D' => 'nnnnwwnnw', 'E' => 'wnnnwwnnn', 'F' => 'nnwnwwnnn',
+            'G' => 'nnnnnwwnw', 'H' => 'wnnnnwwnn', 'I' => 'nnwnnwwnn', 'J' => 'nnnnwwwnn',
+            'K' => 'wnnnnnnww', 'L' => 'nnwnnnnww', 'M' => 'wnwnnnnwn', 'N' => 'nnnnwnnww',
+            'O' => 'wnnnwnnwn', 'P' => 'nnwnwnnwn', 'Q' => 'nnnnnnwww', 'R' => 'wnnnnnwwn',
+            'S' => 'nnwnnnwwn', 'T' => 'nnnnwnwwn', 'U' => 'wwnnnnnnw', 'V' => 'nwwnnnnnw',
+            'W' => 'wwwnnnnnn', 'X' => 'nwnnwnnnw', 'Y' => 'wwnnwnnnn', 'Z' => 'nwwnwnnnn',
+            '-' => 'nwnnnnwnw', '.' => 'wwnnnnwnn', ' ' => 'nwwnnnwnn', '$' => 'nwnwnwnnn',
+            '/' => 'nwnwnnnwn', '+' => 'nwnnnwnwn', '%' => 'nnnwnwnwn', '*' => 'nwnnwnwnn',
+        ];
+
+        $encoded = '*';
+        foreach (str_split($value) as $char) {
+            $encoded .= array_key_exists($char, $patterns) ? $char : '-';
+        }
+        $encoded .= '*';
+
+        $narrow = 2;
+        $wide = 5;
+        $gap = 2;
+        $quiet = 12;
+        $barHeight = max(36, $height);
+        $textHeight = 18;
+        $totalHeight = $barHeight + $textHeight;
+
+        $width = $quiet * 2;
+        foreach (str_split($encoded) as $char) {
+            foreach (str_split($patterns[$char]) as $stroke) {
+                $width += $stroke === 'w' ? $wide : $narrow;
+            }
+            $width += $gap;
+        }
+        $width = max($width, 180);
+
+        $x = $quiet;
+        $bars = [];
+        foreach (str_split($encoded) as $char) {
+            $sequence = str_split($patterns[$char]);
+            foreach ($sequence as $index => $stroke) {
+                $strokeWidth = $stroke === 'w' ? $wide : $narrow;
+                if ($index % 2 === 0) {
+                    $bars[] = '<rect x="' . $x . '" y="0" width="' . $strokeWidth . '" height="' . $barHeight . '" rx="0.4" ry="0.4" fill="#111827" />';
+                }
+                $x += $strokeWidth;
+            }
+            $x += $gap;
+        }
+
+        $labelY = $barHeight + 13;
+        $safeLabel = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $width . '" height="' . $totalHeight . '" viewBox="0 0 ' . $width . ' ' . $totalHeight . '" role="img" aria-label="Barcode ' . $safeLabel . '">'
+            . '<rect width="100%" height="100%" fill="#ffffff"/>'
+            . implode('', $bars)
+            . '<text x="50%" y="' . $labelY . '" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2" fill="#111827">' . $safeLabel . '</text>'
+            . '</svg>';
+
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 }
 

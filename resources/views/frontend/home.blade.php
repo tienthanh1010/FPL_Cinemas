@@ -1,6 +1,19 @@
 @extends('frontend.layout')
 
 @section('title', ($appBrand ?? config('app.name', 'FPL Cinema')) . ' | Trang chủ')
+@section('title', ($appBrand ?? config('app.name', 'FPL Cinema')) . ' | Trang chủ')
+
+@section('content')
+  @php
+    $brand = $appBrand ?? config('app.name', 'FPL Cinema');
+    $cinemaName = $primaryCinema?->name ?: $brand;
+    $pointAmount = (int) config('loyalty.amount_per_point', 10000);
+    $modalMovies = $heroMovies->concat($nowShowing)->concat($comingSoon)->concat($specialMovies)->unique('id')->values();
+  @endphp
+
+  <section class="hero-section section-space pt-4 pt-lg-5">
+    <div class="container-fluid app-container">
+      <div class="hero-shell hero-shell--compact">
 
 @section('content')
   @php
@@ -13,6 +26,7 @@
   <section class="hero-section section-space pt-4 pt-lg-5">
     <div class="container-fluid app-container">
       <div class="hero-shell hero-shell--compact">
+
         <div id="homeHeroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel">
           <div class="carousel-indicators hero-indicators">
             @foreach($sliderMovies as $index => $hero)
@@ -24,18 +38,27 @@
               <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
                 <div class="hero-card">
                   <div class="hero-card__backdrop" style="background-image: url('{{ $hero->poster_url ?: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80' }}')"></div>
+                  <div class="hero-card__backdrop" style="background-image: url('{{ $hero->poster_url ?: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80' }}')"></div>
                   <div class="row align-items-center g-4 position-relative">
                     <div class="col-lg-7">
                       <div class="hero-copy">
                         <span class="eyebrow"><i class="bi bi-stars me-2"></i>{{ $cinemaName }} · Một rạp, một luồng đặt vé gọn gàng</span>
                         <h1>{{ $hero->title }}</h1>
                         <p>{{ $hero->synopsis ? \Illuminate\Support\Str::limit($hero->synopsis, 190) : 'Luồng xem lịch chiếu, chọn ghế, thanh toán và quản lý tài khoản đã được tinh gọn để khách hàng thao tác nhanh, dễ hiểu và ít bị rối hơn.' }}</p>
+                  <div class="row align-items-center g-4 position-relative">
+                    <div class="col-lg-7">
+                      <div class="hero-copy">
+                        <span class="eyebrow"><i class="bi bi-stars me-2"></i>{{ $cinemaName }} · Một rạp, một luồng đặt vé gọn gàng</span>
+                        <h1>{{ $hero->title }}</h1>
+                        <p>{{ $hero->synopsis ? \Illuminate\Support\Str::limit($hero->synopsis, 190) : 'Luồng xem lịch chiếu, chọn ghế, thanh toán và quản lý tài khoản đã được tinh gọn để khách hàng thao tác nhanh, dễ hiểu và ít bị rối hơn.' }}</p>
+
                         <div class="hero-meta">
                           <span><i class="bi bi-clock-history me-2"></i>{{ $hero->duration_minutes }} phút</span>
                           <span><i class="bi bi-calendar-event me-2"></i>{{ optional($hero->release_date)->format('d.m.Y') ?: 'Đang cập nhật' }}</span>
                           <span><i class="bi bi-badge-hd me-2"></i>{{ $hero->versions->pluck('format')->filter()->unique()->implode(' / ') ?: '2D' }}</span>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mb-4">
+                          @forelse($hero->genres->take(3) as $genre)
                           @forelse($hero->genres->take(3) as $genre)
                             <span class="genre-chip">{{ $genre->name }}</span>
                           @empty
@@ -53,6 +76,23 @@
                           @else
                             <span class="hero-inline-note">Đăng nhập để lưu lịch sử booking và tích điểm tự động.</span>
                           @endif
+                            <span class="genre-chip">{{ $genre->name }}</span>
+                          @empty
+                            <span class="genre-chip">Phim nổi bật</span>
+                          @endforelse
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-3">
+                          <a href="{{ route('movies.showtimes', $hero) }}" class="btn btn-cinema-primary">
+                            <i class="bi bi-ticket-perforated me-2"></i>Xem lịch chiếu
+                          </a>
+                          @if($hero->trailer_url)
+                            <a href="{{ $hero->trailer_url }}" target="_blank" rel="noopener" class="section-link">
+                              Xem trailer <i class="bi bi-arrow-up-right"></i>
+                            </a>
+                          @else
+                            <span class="hero-inline-note">Đăng nhập để lưu lịch sử booking và tích điểm tự động.</span>
+                          @endif
+
                         </div>
                       </div>
                     </div>
@@ -67,6 +107,7 @@
                             </div>
                           @endif
                         </div>
+
                       </div>
                     </div>
                   </div>
@@ -80,6 +121,10 @@
                     <span class="eyebrow">{{ $brand }}</span>
                     <h1>Giao diện đặt vé đang được tối ưu lại cho FPL Cinema</h1>
                     <p>Thêm dữ liệu phim, poster và lịch chiếu để trang chủ hiển thị nổi bật hơn.</p>
+                    <span class="eyebrow">{{ $brand }}</span>
+                    <h1>Giao diện đặt vé đang được tối ưu lại cho FPL Cinema</h1>
+                    <p>Thêm dữ liệu phim, poster và lịch chiếu để trang chủ hiển thị nổi bật hơn.</p>
+
                   </div>
                 </div>
               </div>
@@ -88,6 +133,7 @@
         </div>
 
         <aside class="hero-sidebar" id="booking-widget">
+          <div class="glass-panel quick-panel quick-panel--compact h-100">
           <div class="glass-panel quick-panel quick-panel--compact h-100">
             <span class="panel-badge"><i class="bi bi-lightning-charge-fill"></i>Đặt vé nhanh</span>
             <h2>Đi thẳng tới thao tác bạn cần</h2>
@@ -112,6 +158,30 @@
                 <div>
                   <strong>Ưu đãi thành viên</strong>
                   <small>Cứ {{ number_format($pointAmount) }}đ thanh toán thành công = 1 điểm tích luỹ</small>
+            <span class="panel-badge"><i class="bi bi-lightning-charge-fill"></i>Đặt vé nhanh</span>
+            <h2>Đi thẳng tới thao tác bạn cần</h2>
+
+            <div class="quick-shortcuts">
+              <a href="#movie-sections" class="quick-shortcut">
+                <i class="bi bi-film"></i>
+                <div>
+                  <strong>Lịch chiếu hôm nay</strong>
+                  <small>{{ $stats['show_count'] }} suất đang mở bán tại {{ $cinemaName }}</small>
+                </div>
+              </a>
+              <a href="{{ route('booking.lookup') }}" class="quick-shortcut">
+                <i class="bi bi-search"></i>
+                <div>
+                  <strong>Tra cứu vé</strong>
+                  <small>Xem trạng thái booking hoặc tiếp tục thanh toán nếu đơn còn hiệu lực</small>
+                </div>
+              </a>
+              <a href="{{ route('offers.index') }}" class="quick-shortcut">
+                <i class="bi bi-gift"></i>
+                <div>
+                  <strong>Ưu đãi thành viên</strong>
+                  <small>Cứ {{ number_format($pointAmount) }}đ thanh toán thành công = 1 điểm tích luỹ</small>
+
                 </div>
               </a>
             </div>
@@ -121,6 +191,11 @@
             <div class="stats-card">
               <span>{{ $stats['movie_count'] }}</span>
               <small>Phim</small>
+          <div class="stats-strip stats-strip--compact">
+            <div class="stats-card">
+              <span>{{ $stats['movie_count'] }}</span>
+              <small>Phim</small>
+
             </div>
             <div class="stats-card">
               <span>{{ $stats['category_count'] }}</span>
@@ -129,6 +204,8 @@
             <div class="stats-card">
               <span>{{ $stats['show_count'] }}</span>
               <small>Suất chiếu</small>
+              <small>Suất chiếu</small>
+
             </div>
           </div>
         </aside>
