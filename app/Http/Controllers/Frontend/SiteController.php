@@ -171,4 +171,73 @@ class SiteController extends Controller
             'lookupError' => $lookupError,
         ]);
     }
+    const seatContainer = document.getElementById("seatContainer");
+    const summary = document.getElementById("summary");
+
+    let selectedSeats = [];
+
+    function createSeats() {
+        for (let i = 1; i <= 60; i++) {
+            const seat = document.createElement("div");
+            seat.classList.add("seat");
+
+            // loại ghế
+            if (i > 40) {
+                seat.classList.add("vip");
+                seat.dataset.price = 120000;
+            } else {
+                seat.classList.add("normal");
+                seat.dataset.price = 80000;
+            }
+
+            // giả lập ghế đã đặt
+            if (i % 9 === 0) {
+                seat.classList.add("booked");
+            }
+
+            seat.innerText = i;
+
+            seat.onclick = () => toggleSeat(seat, i);
+
+            seatContainer.appendChild(seat);
+        }
+    }
+
+    function toggleSeat(seat, number) {
+        if (seat.classList.contains("booked")) return;
+
+        seat.classList.toggle("selected");
+
+        if (selectedSeats.includes(number)) {
+            selectedSeats = selectedSeats.filter(s => s !== number);
+        } else {
+            selectedSeats.push(number);
+        }
+
+        updateSummary();
+    }
+
+    function updateSummary() {
+        let total = 0;
+
+        document.querySelectorAll(".seat.selected").forEach(s => {
+            total += parseInt(s.dataset.price);
+        });
+
+        summary.innerHTML = `
+            <p>Ghế đã chọn: ${selectedSeats.join(", ")}</p>
+            <p>Tổng tiền: ${total.toLocaleString()} VNĐ</p>
+        `;
+    }
+
+    function confirmBooking() {
+        if (selectedSeats.length === 0) {
+            alert("Vui lòng chọn ghế!");
+            return;
+        }
+
+        alert("Đặt vé thành công!\nGhế: " + selectedSeats.join(", "));
+    }
+
+    createSeats();
 }
