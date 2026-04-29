@@ -4,18 +4,10 @@
 
 @section('content')
   @php
-    $search = $search ?? '';
-    $genreFilter = $genreFilter ?? 0;
-    $sectionFilter = $sectionFilter ?? 'all';
-    $selectedGenre = $selectedGenre ?? null;
-    $ratingFilter = $ratingFilter ?? 0;
-    $selectedRating = $selectedRating ?? null;
-  @endphp
-  @php
     $brand = $appBrand ?? config('app.name', 'FPL Cinema');
     $cinemaName = $primaryCinema?->name ?: $brand;
     $pointAmount = (int) config('loyalty.amount_per_point', 10000);
-    $modalMovies = $sliderMovies->concat($hotMovies)->concat($nowShowing)->concat($comingSoon)->unique('id')->values();
+    $modalMovies = $sliderMovies->concat($nowShowing)->concat($comingSoon)->concat($hotMovies)->unique('id')->values();
   @endphp
 
   <section class="hero-section section-space pt-4 pt-lg-5">
@@ -108,14 +100,14 @@
                   <small>{{ $stats['show_count'] }} suất đang mở bán tại {{ $cinemaName }}</small>
                 </div>
               </a>
-              <a href="{{ auth()->check() ? route('member.account') : route('member.login') }}" class="quick-shortcut">
-                <i class="bi bi-person-circle"></i>
+              <a href="{{ route('booking.lookup') }}" class="quick-shortcut">
+                <i class="bi bi-search"></i>
                 <div>
-                  <strong>{{ auth()->check() ? 'Tài khoản của bạn' : 'Đăng nhập thành viên' }}</strong>
-                  <small>{{ auth()->check() ? 'Tra cứu vé, xem lịch sử booking và tiếp tục thanh toán trong một nơi.' : 'Đăng nhập để quản lý booking, tra cứu vé và nhận thông báo.' }}</small>
+                  <strong>Tra cứu vé</strong>
+                  <small>Xem trạng thái booking hoặc tiếp tục thanh toán nếu đơn còn hiệu lực</small>
                 </div>
               </a>
-              <a href="{{ route('content.hub') }}" class="quick-shortcut">
+              <a href="{{ route('offers.index') }}" class="quick-shortcut">
                 <i class="bi bi-gift"></i>
                 <div>
                   <strong>Ưu đãi thành viên</strong>
@@ -146,94 +138,220 @@
 
   <section class="section-space pt-0" id="movie-sections">
     <div class="container-fluid app-container">
-      <div class="section-heading section-heading--stacked">
+      <div class="section-heading">
         <div>
           <span class="section-eyebrow">Phim và lịch chiếu</span>
-          <h2>Khám phá phim theo từng nhóm rõ ràng hơn</h2>
-          <p>Trang chủ ưu tiên phim Hot trước, sau đó tới phim đang chiếu và cuối cùng là phim sắp chiếu.</p>
+          <h2>Chia phim rõ ràng hơn để khách dễ chọn</h2>
         </div>
-        @if($search !== '' || $genreFilter > 0 || $ratingFilter > 0 || $sectionFilter !== 'all')
-          <div class="movie-filter-summary">
-            <strong>Bộ lọc đang áp dụng</strong>
-            <div class="movie-filter-summary__chips">
-              @if($search !== '')
-                <span class="filter-chip"><i class="bi bi-search"></i>{{ $search }}</span>
-              @endif
-              @if($selectedGenre)
-                <span class="filter-chip"><i class="bi bi-tags"></i>{{ $selectedGenre->name }}</span>
-              @endif
-              @if($selectedRating)
-                <span class="filter-chip"><i class="bi bi-shield-check"></i>{{ $selectedRating->name }}</span>
-              @endif
-              @if($sectionFilter !== 'all')
-                <span class="filter-chip"><i class="bi bi-funnel"></i>{{ ['hot' => 'Phim Hot', 'now' => 'Đang chiếu', 'coming' => 'Sắp chiếu'][$sectionFilter] ?? 'Tất cả phim' }}</span>
-              @endif
-              <a href="{{ route('home') }}#movie-sections" class="filter-chip filter-chip--reset">Xoá lọc</a>
-            </div>
-          </div>
-        @endif
       </div>
 
-      @if($sectionFilter === 'all' || $sectionFilter === 'hot')
-        <div class="movie-section-block">
-          <div class="section-heading mb-3">
-            <div>
-              <span class="section-eyebrow">Admin gắn nổi bật</span>
-              <h3 class="h4 mb-0">Phim Hot</h3>
-            </div>
-          </div>
-          <div class="row g-4">
-            @forelse($hotMovies as $movie)
-              <div class="col-md-6 col-xl-4">
-                @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Hot', 'showtimesByMovie' => $showtimesByMovie])
-              </div>
-            @empty
-              <div class="col-12"><div class="glass-panel empty-panel">Không có phim Hot nào khớp với bộ lọc hiện tại.</div></div>
-            @endforelse
-          </div>
-        </div>
-      @endif
+      <div class="movie-shell movie-shell--full">
+        <div class="movie-center">
+          <ul class="nav movie-tabs" id="movieTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="now-showing-tab" data-bs-toggle="tab" data-bs-target="#now-showing-pane" type="button" role="tab">Phim đang chiếu</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="coming-soon-tab" data-bs-toggle="tab" data-bs-target="#coming-soon-pane" type="button" role="tab">Phim sắp chiếu</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="hot-movies-tab" data-bs-toggle="tab" data-bs-target="#hot-movies-pane" type="button" role="tab">Phim Hot</button>
+            </li>
+          </ul>
 
-      @if($sectionFilter === 'all' || $sectionFilter === 'now')
-        <div class="movie-section-block">
-          <div class="section-heading mb-3">
-            <div>
-              <span class="section-eyebrow">Đã có suất chiếu</span>
-              <h3 class="h4 mb-0">Phim đang chiếu</h3>
-            </div>
-          </div>
-          <div class="row g-4">
-            @forelse($nowShowing as $movie)
-              <div class="col-md-6 col-xl-4">
-                @include('frontend.partials.movie-card', ['movie' => $movie, 'showtimesByMovie' => $showtimesByMovie])
+          <div class="tab-content pt-4">
+            <div class="tab-pane fade show active" id="now-showing-pane" role="tabpanel" tabindex="0">
+              <div class="section-heading mb-3">
+                <div>
+                  <span class="section-eyebrow">Đã có suất chiếu</span>
+                  <h3 class="h4 mb-0">Những phim có thể mua vé ngay</h3>
+                </div>
               </div>
-            @empty
-              <div class="col-12"><div class="glass-panel empty-panel">Hiện chưa có phim đang chiếu nào khớp với bộ lọc hiện tại.</div></div>
-            @endforelse
-          </div>
-        </div>
-      @endif
+              <div class="row g-4">
+                @forelse($nowShowing as $movie)
+                  <div class="col-md-6 col-xl-4">
+                    @include('frontend.partials.movie-card', ['movie' => $movie, 'showtimesByMovie' => $showtimesByMovie])
+                  </div>
+                @empty
+                  <div class="col-12"><div class="glass-panel empty-panel">Hiện chưa có phim nào đang mở bán vé.</div></div>
+                @endforelse
+              </div>
+            </div>
 
-      @if($sectionFilter === 'all' || $sectionFilter === 'coming')
-        <div class="movie-section-block">
-          <div class="section-heading mb-3">
-            <div>
-              <span class="section-eyebrow">Đã có phim nhưng chưa có suất</span>
-              <h3 class="h4 mb-0">Phim sắp chiếu</h3>
+            <div class="tab-pane fade" id="coming-soon-pane" role="tabpanel" tabindex="0">
+              <div class="section-heading mb-3">
+                <div>
+                  <span class="section-eyebrow">Đã có phim nhưng chưa có suất</span>
+                  <h3 class="h4 mb-0">Phim sắp chiếu</h3>
+                </div>
+              </div>
+              <div class="row g-4">
+                @forelse($comingSoon as $movie)
+                  <div class="col-md-6 col-xl-4">
+                    @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Sắp chiếu', 'showtimesByMovie' => $showtimesByMovie])
+                  </div>
+                @empty
+                  <div class="col-12"><div class="glass-panel empty-panel">Tất cả phim hiện có đã được gắn suất chiếu hoặc chưa có dữ liệu phim sắp chiếu.</div></div>
+                @endforelse
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="hot-movies-pane" role="tabpanel" tabindex="0">
+              <div class="section-heading mb-3">
+                <div>
+                  <span class="section-eyebrow">Do admin gắn nổi bật</span>
+                  <h3 class="h4 mb-0">Danh sách phim Hot</h3>
+                </div>
+              </div>
+              <div class="row g-4">
+                @forelse($hotMovies as $movie)
+                  <div class="col-md-6 col-xl-4">
+                    @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Hot', 'showtimesByMovie' => $showtimesByMovie])
+                  </div>
+                @empty
+                  <div class="col-12"><div class="glass-panel empty-panel">Chưa có phim nào được admin gắn Hot.</div></div>
+                @endforelse
+              </div>
             </div>
           </div>
-          <div class="row g-4">
-            @forelse($comingSoon as $movie)
-              <div class="col-md-6 col-xl-4">
-                @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Sắp chiếu', 'showtimesByMovie' => $showtimesByMovie])
-              </div>
-            @empty
-              <div class="col-12"><div class="glass-panel empty-panel">Hiện chưa có phim sắp chiếu nào khớp với bộ lọc hiện tại.</div></div>
-            @endforelse
-          </div>
         </div>
-      @endif
+      </div>
     </div>
   </section>
 
+  <section class="section-space section-alt" id="member-benefits">
+    <div class="container-fluid app-container">
+      <div class="row g-4 align-items-stretch">
+        <div class="col-lg-6">
+          <div class="glass-panel feature-panel h-100">
+            {{-- <span class="section-eyebrow">Tài khoản thành viên</span> --}}
+            {{-- <h2>Đặt vé bằng tài khoản để theo dõi lịch sử và tích điểm</h2> --}}
+            {{-- <div class="feature-list mt-4">
+              <div>
+                <i class="bi bi-person-check"></i>
+                <div>
+                  <strong>Phân luồng đăng nhập rõ ràng</strong>
+                  <p>Tài khoản admin được chuyển thẳng sang quản trị. Tài khoản thành viên ở lại giao diện người dùng và trang cá nhân.</p>
+                </div>
+              </div>
+              <div>
+                <i class="bi bi-piggy-bank"></i>
+                <div>
+                  <strong>Tích điểm sau mỗi đơn thành công</strong>
+                  <p>Cứ {{ number_format($pointAmount) }}đ thanh toán thành công sẽ nhận 1 điểm. Ví dụ đơn 500.000đ sẽ nhận khoảng {{ number_format((int) floor(500000 / max(1, $pointAmount))) }} điểm.</p>
+                </div>
+              </div>
+              <div>
+                <i class="bi bi-receipt"></i>
+                <div>
+                  <strong>Lưu lịch sử booking tập trung</strong>
+                  <p>Người dùng có thể xem trạng thái booking, lịch sử thanh toán và điểm hiện có ngay trong mục tài khoản.</p>
+                </div>
+              </div>
+            </div> --}}
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="glass-panel compact-panel h-100">
+            <span class="section-eyebrow">Khám phá nhanh</span>
+            <h2>Thể loại đang có tại {{ $cinemaName }}</h2>
 
+            <div class="category-pill-grid mt-4">
+              @forelse($categories->take(8) as $category)
+                <a href="{{ route('category.show', $category) }}" class="category-pill">
+                  <span>{{ $category->name }}</span>
+                  <small>{{ $category->movies_count }} phim</small>
+                </a>
+              @empty
+                <div class="empty-panel w-100">Hiện chưa có thể loại nào để hiển thị.</div>
+              @endforelse
+            </div>
+
+            <div class="compact-note mt-4">
+              <i class="bi bi-info-circle"></i>
+              <span>Nếu cần xem thêm nội dung, bạn có thể chuyển sang mục Tin tức, Ưu đãi hoặc Tra cứu vé ở thanh điều hướng phía trên.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-space" id="offers">
+    <div class="container-fluid app-container">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">Ưu đãi đang áp dụng</span>
+          <h2>Khuyến mãi và quyền lợi dành cho khách hàng</h2>
+        </div>
+        <a href="{{ route('offers.index') }}" class="section-link">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+      </div>
+
+      <div class="content-grid">
+        @forelse($latestOfferPosts as $post)
+          <article class="content-card h-100">
+            <a href="{{ route('offers.show', $post) }}" class="content-card__cover">
+              @if($post->cover_image_url)
+                <img src="{{ $post->cover_image_url }}" alt="{{ $post->title }}">
+              @else
+                <div class="content-card__fallback"><i class="bi bi-gift"></i></div>
+              @endif
+            </a>
+            <div class="content-card__body">
+              <div class="content-card__meta">
+                <span class="content-tag">{{ $post->badge_label ?: 'Ưu đãi' }}</span>
+                <span>{{ optional($post->published_at ?: $post->created_at)->format('d/m/Y') }}</span>
+              </div>
+              <h3><a href="{{ route('offers.show', $post) }}">{{ $post->title }}</a></h3>
+              <p>{{ \Illuminate\Support\Str::limit($post->excerpt ?: strip_tags($post->content), 120) }}</p>
+              <a href="{{ route('offers.show', $post) }}" class="content-card__link">Xem chi tiết <i class="bi bi-arrow-right-short"></i></a>
+            </div>
+          </article>
+        @empty
+          <div class="glass-panel empty-panel w-100">Hiện chưa có ưu đãi nào được xuất bản. Bạn có thể thêm ở admin &gt; Tin tức &amp; ưu đãi.</div>
+        @endforelse
+      </div>
+    </div>
+  </section>
+
+  <section class="section-space pt-0" id="news">
+    <div class="container-fluid app-container">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">Tin tức mới nhất</span>
+          <h2>Cập nhật điện ảnh và thông báo từ rạp</h2>
+        </div>
+        <a href="{{ route('news.index') }}" class="section-link">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+      </div>
+
+      <div class="content-grid">
+        @forelse($latestNewsPosts as $post)
+          <article class="content-card h-100">
+            <a href="{{ route('news.show', $post) }}" class="content-card__cover">
+              @if($post->cover_image_url)
+                <img src="{{ $post->cover_image_url }}" alt="{{ $post->title }}">
+              @else
+                <div class="content-card__fallback"><i class="bi bi-newspaper"></i></div>
+              @endif
+            </a>
+            <div class="content-card__body">
+              <div class="content-card__meta">
+                <span class="content-tag">{{ $post->badge_label ?: 'Tin tức' }}</span>
+                <span>{{ optional($post->published_at ?: $post->created_at)->format('d/m/Y') }}</span>
+              </div>
+              <h3><a href="{{ route('news.show', $post) }}">{{ $post->title }}</a></h3>
+              <p>{{ \Illuminate\Support\Str::limit($post->excerpt ?: strip_tags($post->content), 130) }}</p>
+              <a href="{{ route('news.show', $post) }}" class="content-card__link">Đọc bài viết <i class="bi bi-arrow-right-short"></i></a>
+            </div>
+          </article>
+        @empty
+          <div class="glass-panel empty-panel w-100">Hiện chưa có bài viết nào được xuất bản.</div>
+        @endforelse
+      </div>
+    </div>
+  </section>
+
+  @foreach($modalMovies as $movie)
+    @include('frontend.partials.showtime-modal', ['movie' => $movie, 'showtimesByMovie' => $showtimesByMovie])
+  @endforeach
+@endsection

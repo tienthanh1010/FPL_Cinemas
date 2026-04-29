@@ -21,6 +21,8 @@
         <div><strong>Độ tuổi:</strong> {{ $movie->contentRating?->name ?: '—' }}</div>
         <div><strong>Thể loại:</strong> {{ $movie->genres->pluck('name')->implode(', ') ?: '—' }}</div>
         <div><strong>Đạo diễn:</strong> {{ $movie->directorCredits->pluck('full_name')->implode(', ') ?: '—' }}</div>
+        <div><strong>Hot:</strong> {{ $movie->is_hot ? 'Có' : 'Không' }}</div>
+        <div><strong>Hiển thị slide:</strong> {{ $movie->is_on_slider ? 'Có' : 'Không' }}</div>
         <div><strong>Diễn viên:</strong> {{ $movie->castCredits->pluck('full_name')->implode(', ') ?: '—' }}</div>
         <div class="mt-3">{{ $movie->synopsis ?: 'Chưa có mô tả.' }}</div>
     </div></div></div>

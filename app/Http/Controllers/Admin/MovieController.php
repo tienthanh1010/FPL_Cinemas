@@ -4,45 +4,22 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use App\Models\Category;
 use App\Models\ContentRating;
 use App\Models\Movie;
-use App\Models\MovieVersion;
-use App\Models\Person;
 use App\Models\MovieVersion;
 use App\Models\Person;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class MovieController extends Controller
 {
-    private const STATUSES = [
-        'ACTIVE' => 'Đang hiển thị',
-        'INACTIVE' => 'Tạm ẩn',
-    ];
-
-    private const TRAILER_HOSTS = [
-        'youtube.com',
-        'www.youtube.com',
-        'm.youtube.com',
-        'youtu.be',
-        'vimeo.com',
-        'www.vimeo.com',
-    ];
-
-    private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
-
     private const STATUSES = [
         'ACTIVE' => 'Đang hiển thị',
         'INACTIVE' => 'Tạm ẩn',
@@ -66,16 +43,7 @@ class MovieController extends Controller
         $movies = Movie::query()
             ->with(['contentRating', 'genres', 'directorCredits', 'versions'])
             ->withCount('versions')
-            ->with(['contentRating', 'genres', 'directorCredits', 'versions'])
-            ->withCount('versions')
             ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($subQuery) use ($q) {
-                    $subQuery->where('title', 'like', "%{$q}%")
-                        ->orWhere('original_title', 'like', "%{$q}%")
-                        ->orWhere('language_original', 'like', "%{$q}%")
-                        ->orWhereHas('genres', fn ($genreQuery) => $genreQuery->where('name', 'like', "%{$q}%"))
-                        ->orWhereHas('credits', fn ($personQuery) => $personQuery->where('full_name', 'like', "%{$q}%"));
-                });
                 $query->where(function ($subQuery) use ($q) {
                     $subQuery->where('title', 'like', "%{$q}%")
                         ->orWhere('original_title', 'like', "%{$q}%")
@@ -86,14 +54,8 @@ class MovieController extends Controller
             })
             ->orderByDesc('id')
             ->paginate(12)
-            ->paginate(12)
             ->withQueryString();
 
-        return view('admin.movies.index', [
-            'movies' => $movies,
-            'q' => $q,
-            'statusOptions' => self::STATUSES,
-        ]);
         return view('admin.movies.index', [
             'movies' => $movies,
             'q' => $q,
@@ -105,7 +67,6 @@ class MovieController extends Controller
     {
         $movie = new Movie();
 
-        return view('admin.movies.create', $this->formData($movie));
         return view('admin.movies.create', $this->formData($movie));
     }
 
@@ -119,32 +80,12 @@ class MovieController extends Controller
             $movie = Movie::create(array_merge($payload['movie'], [
                 'public_id' => (string) Str::ulid(),
             ]));
-        $payload = $this->validatePayload($request);
-
-        $movie = null;
-
-        DB::transaction(function () use ($payload, &$movie) {
-            $movie = Movie::create(array_merge($payload['movie'], [
-                'public_id' => (string) Str::ulid(),
-            ]));
 
             $this->syncGenres($movie, $payload['genre_ids']);
             $this->syncCredits($movie, $payload['credits']);
             $this->syncVersions($movie, $payload['versions']);
         });
-            $this->syncGenres($movie, $payload['genre_ids']);
-            $this->syncCredits($movie, $payload['credits']);
-            $this->syncVersions($movie, $payload['versions']);
-        });
 
-        return redirect()->route('admin.movies.show', $movie)->with('success', 'Đã tạo phim với đầy đủ dữ liệu liên kết.');
-    }
-
-    public function show(Movie $movie): View
-    {
-        $movie->load(['contentRating', 'genres', 'directorCredits', 'castCredits', 'versions', 'versions.shows.auditorium']);
-
-        return view('admin.movies.show', compact('movie'));
         return redirect()->route('admin.movies.show', $movie)->with('success', 'Đã tạo phim với đầy đủ dữ liệu liên kết.');
     }
 
@@ -158,16 +99,13 @@ class MovieController extends Controller
     public function edit(Movie $movie): View
     {
         $movie->load(['genres', 'credits', 'versions']);
-        $movie->load(['genres', 'credits', 'versions']);
 
-        return view('admin.movies.edit', $this->formData($movie));
         return view('admin.movies.edit', $this->formData($movie));
     }
 
     public function update(Request $request, Movie $movie): RedirectResponse
     {
         $payload = $this->validatePayload($request, $movie);
-        $payload = $this->validatePayload($request, $movie);
 
         DB::transaction(function () use ($movie, $payload) {
             $movie->update($payload['movie']);
@@ -175,14 +113,7 @@ class MovieController extends Controller
             $this->syncCredits($movie, $payload['credits']);
             $this->syncVersions($movie, $payload['versions']);
         });
-        DB::transaction(function () use ($movie, $payload) {
-            $movie->update($payload['movie']);
-            $this->syncGenres($movie, $payload['genre_ids']);
-            $this->syncCredits($movie, $payload['credits']);
-            $this->syncVersions($movie, $payload['versions']);
-        });
 
-        return redirect()->route('admin.movies.show', $movie)->with('success', 'Đã cập nhật phim.');
         return redirect()->route('admin.movies.show', $movie)->with('success', 'Đã cập nhật phim.');
     }
 
@@ -206,26 +137,8 @@ class MovieController extends Controller
                 DB::table('movie_people')->where('movie_id', $movie->id)->delete();
                 DB::table('movie_versions')->where('movie_id', $movie->id)->delete();
 
-                $versionIds = $movie->versions()->pluck('id');
-
-                $hasShows = $versionIds->isNotEmpty()
-                    && DB::table('shows')->whereIn('movie_version_id', $versionIds)->exists();
-
-                if ($hasShows) {
-                    throw ValidationException::withMessages([
-                        'movie' => 'Không thể xoá phim vì đã có suất chiếu tham chiếu tới một hoặc nhiều phiên bản của phim.',
-                    ]);
-                }
-
-                DB::table('promotion_movies')->where('movie_id', $movie->id)->delete();
-                DB::table('movie_genres')->where('movie_id', $movie->id)->delete();
-                DB::table('movie_people')->where('movie_id', $movie->id)->delete();
-                DB::table('movie_versions')->where('movie_id', $movie->id)->delete();
-
                 $movie->delete();
             });
-        } catch (ValidationException $e) {
-            return back()->with('error', $e->validator->errors()->first('movie'));
         } catch (ValidationException $e) {
             return back()->with('error', $e->validator->errors()->first('movie'));
         } catch (\Throwable $e) {
@@ -293,17 +206,15 @@ class MovieController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'original_title' => ['nullable', 'string', 'max:255'],
             'duration_minutes' => ['required', 'integer', 'min:1', 'max:600'],
-            'duration_minutes' => ['required', 'integer', 'min:1', 'max:600'],
             'release_date' => ['nullable', 'date'],
-            'language_original' => ['required', Rule::in($languageKeys)],
             'language_original' => ['required', Rule::in($languageKeys)],
             'synopsis' => ['nullable', 'string'],
             'poster_url' => ['nullable', 'url', 'max:512'],
             'trailer_url' => ['nullable', 'url', 'max:512'],
-            'poster_url' => ['nullable', 'url', 'max:512'],
-            'trailer_url' => ['nullable', 'url', 'max:512'],
             'censorship_license_no' => ['nullable', 'string', 'max:64'],
             'status' => ['required', Rule::in(array_keys(self::STATUSES))],
+            'is_hot' => ['nullable', 'boolean'],
+            'is_on_slider' => ['nullable', 'boolean'],
             'genre_ids' => ['nullable', 'array'],
             'genre_ids.*' => ['integer', 'exists:genres,id'],
             'credit_director_names' => ['nullable', 'string', 'max:1000'],
@@ -391,6 +302,8 @@ class MovieController extends Controller
                 'trailer_url' => $this->normalizeTrailerUrl($movieData['trailer_url'] ?? null),
                 'censorship_license_no' => $this->nullableString($movieData['censorship_license_no'] ?? null),
                 'status' => $movieData['status'],
+                'is_hot' => (bool) ($movieData['is_hot'] ?? false),
+                'is_on_slider' => (bool) ($movieData['is_on_slider'] ?? false),
             ],
             'genre_ids' => array_values(array_unique(array_map('intval', $movieData['genre_ids'] ?? []))),
             'credits' => [
