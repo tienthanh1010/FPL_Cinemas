@@ -11,6 +11,7 @@ use App\Models\Movie;
 use App\Models\Seat;
 use App\Models\Show;
 use App\Services\TicketLifecycleService;
+use App\Services\LoyaltyPointService;
 use App\Models\StockLocation;
 use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
@@ -34,7 +35,8 @@ class BookingController extends Controller
 
     private const TERMINAL_STATUSES = ['CANCELLED', 'EXPIRED'];
 
-    public function __construct(private readonly TicketLifecycleService $ticketLifecycleService)
+    public function __construct(private readonly TicketLifecycleService $ticketLifecycleService,
+        private readonly LoyaltyPointService $loyaltyPointService)
     {
     }
 
@@ -216,7 +218,9 @@ class BookingController extends Controller
                         ->update(['status' => $ticketStatus]);
                 }
 
-                $this->ticketLifecycleService->syncForBooking($lockedBooking->fresh(['tickets.ticket', 'payments.refunds']));
+                $freshBooking = $lockedBooking->fresh(['customer.loyaltyAccount', 'tickets.ticket', 'payments.refunds']);
+                $this->ticketLifecycleService->syncForBooking($freshBooking);
+                $this->loyaltyPointService->syncForBooking($freshBooking);
                 $this->refreshShowSaleStatus($lockedBooking->show);
             }, 3);
         } catch (\Throwable $e) {
@@ -265,7 +269,9 @@ class BookingController extends Controller
             ->whereIn('status', ['RESERVED', 'ISSUED'])
             ->update(['status' => $status]);
 
-        $this->ticketLifecycleService->syncForBooking($booking->fresh(['tickets.ticket', 'payments.refunds']));
+        $freshBooking = $booking->fresh(['customer.loyaltyAccount', 'tickets.ticket', 'payments.refunds']);
+        $this->ticketLifecycleService->syncForBooking($freshBooking);
+        $this->loyaltyPointService->syncForBooking($freshBooking);
 
         foreach ($booking->bookingProducts as $item) {
             $this->restoreInventory($booking, $item);
@@ -274,7 +280,7 @@ class BookingController extends Controller
         foreach ($booking->discounts as $discount) {
             if ($discount->coupon instanceof Coupon && $discount->coupon->status === 'REDEEMED') {
                 $discount->coupon->update([
-                    'status' => $discount->coupon->expires_at && $discount->coupon->expires_at->isPast() ? 'EXPIRED' : 'ACTIVE',
+                    'status' => $discount->coupon->expires_at && $discount->coupon->expires_at->isPast() ? 'EXPIRED' : 'ISSUED',
                     'redeemed_at' => null,
                 ]);
             }

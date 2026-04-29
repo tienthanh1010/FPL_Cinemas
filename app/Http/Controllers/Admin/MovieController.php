@@ -304,6 +304,8 @@ class MovieController extends Controller
             'trailer_url' => ['nullable', 'url', 'max:512'],
             'censorship_license_no' => ['nullable', 'string', 'max:64'],
             'status' => ['required', Rule::in(array_keys(self::STATUSES))],
+            'is_hot' => ['nullable', 'boolean'],
+            'is_on_slider' => ['nullable', 'boolean'],
             'genre_ids' => ['nullable', 'array'],
             'genre_ids.*' => ['integer', 'exists:genres,id'],
             'credit_director_names' => ['nullable', 'string', 'max:1000'],
@@ -391,6 +393,8 @@ class MovieController extends Controller
                 'trailer_url' => $this->normalizeTrailerUrl($movieData['trailer_url'] ?? null),
                 'censorship_license_no' => $this->nullableString($movieData['censorship_license_no'] ?? null),
                 'status' => $movieData['status'],
+                'is_hot' => (bool) ($movieData['is_hot'] ?? false),
+                'is_on_slider' => (bool) ($movieData['is_on_slider'] ?? false),
             ],
             'genre_ids' => array_values(array_unique(array_map('intval', $movieData['genre_ids'] ?? []))),
             'credits' => [

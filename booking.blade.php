@@ -20,7 +20,6 @@
 @push('styles')
 <style>
   .booking-hero {
-
     display: grid;
     grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
     gap: 1.4rem;
@@ -689,726 +688,6 @@
       border-top: 1px solid rgba(15, 23, 42, .08);
     }
   }
-    overflow: hidden;
-    min-height: 360px;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    box-shadow: 0 24px 60px rgba(15, 23, 42, .12);
-  }
-  .booking-hero__poster img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .booking-hero__copy h1 {
-    font-size: clamp(1.9rem, 4vw, 2.8rem);
-    margin-bottom: .75rem;
-  }
-  .booking-hero__copy p {
-    color: var(--muted);
-    max-width: 760px;
-  }
-  .booking-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: .9rem;
-    margin-top: 1.15rem;
-  }
-  .booking-meta-card {
-    padding: 1rem 1.05rem;
-    border-radius: 20px;
-    background: var(--panel-light);
-    border: 1px solid var(--line);
-  }
-  .booking-meta-card span {
-    display: block;
-    font-size: .78rem;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: var(--muted);
-    margin-bottom: .35rem;
-  }
-  .booking-meta-card strong {
-    color: var(--text);
-    font-size: .98rem;
-  }
-  .booking-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.72fr) minmax(330px, .7fr);
-    gap: 1.35rem;
-    align-items: start;
-  }
-  .booking-sticky {
-    position: sticky;
-    top: 98px;
-  }
-  .booking-card {
-    background: var(--panel-light);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 1rem;
-    box-shadow: 0 16px 32px rgba(15, 23, 42, .08);
-  }
-  .booking-card + .booking-card {
-    margin-top: 1rem;
-  }
-  .booking-card__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: .85rem;
-    margin-bottom: .85rem;
-    flex-wrap: wrap;
-  }
-  .booking-card__header h2,
-  .booking-card__header h3 {
-    margin: 0;
-    color: var(--text);
-  }
-  .booking-card__header p {
-    margin: .3rem 0 0;
-    color: var(--muted);
-  }
-  .booking-live-chip,
-  .booking-info-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    padding: .48rem .78rem;
-    border-radius: 999px;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-size: .8rem;
-    font-weight: 700;
-  }
-  .booking-live-chip__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #22c55e;
-    box-shadow: 0 0 0 6px rgba(34, 197, 94, .16);
-  }
-  .booking-seat-panel {
-    border-radius: 22px;
-    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-    border: 1px solid rgba(15, 23, 42, .08);
-    padding: .85rem;
-    overflow: hidden;
-  }
-  .booking-seat-panel__toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .75rem;
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: .8rem;
-  }
-  .booking-seat-panel__legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .55rem .9rem;
-    align-items: center;
-  }
-  .seat-inline-legend {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    color: #334155;
-    font-size: .82rem;
-    font-weight: 700;
-  }
-  .seat-inline-legend__chip {
-    width: 26px;
-    height: 16px;
-    border-radius: 999px 999px 10px 10px;
-    display: inline-block;
-    border: 1px solid rgba(15, 23, 42, .12);
-    box-shadow: inset 0 -4px 0 rgba(15, 23, 42, .10);
-  }
-  .seat-board-wrap {
-    border-radius: 20px;
-    background: rgba(255, 255, 255, .88);
-    border: 1px solid rgba(15, 23, 42, .08);
-    padding: .8rem .85rem 0;
-  }
-  .screen-arc {
-    position: relative;
-    text-align: center;
-    padding-top: .8rem;
-    margin: 0 auto 1rem;
-    width: min(860px, 95%);
-  }
-  .screen-arc::before {
-    content: '';
-    display: block;
-    height: 20px;
-    border-radius: 999px 999px 22px 22px;
-    border: 4px solid #7c8aa3;
-    border-bottom-width: 0;
-    background: linear-gradient(180deg, #dce7f4 0%, #f8fbff 100%);
-    box-shadow: 0 10px 18px rgba(124, 138, 163, .22);
-  }
-  .screen-arc span {
-    display: inline-block;
-    margin-top: .45rem;
-    font-weight: 800;
-    letter-spacing: .14em;
-    color: #9aa5b5;
-    text-transform: uppercase;
-    font-size: .95rem;
-  }
-  .seat-map-grid {
-    display: grid;
-    gap: .45rem;
-    padding: .25rem 0 .85rem;
-  }
-  .seat-row {
-    display: grid;
-    grid-template-columns: 34px minmax(0, 1fr);
-    gap: .55rem;
-    align-items: center;
-  }
-  .seat-row__label {
-    width: 30px;
-    height: 30px;
-    display: grid;
-    place-items: center;
-    color: #64748b;
-    font-weight: 800;
-    font-size: .95rem;
-  }
-  .seat-row__banks {
-    display: flex;
-    justify-content: center;
-    gap: 1.3rem;
-    flex-wrap: nowrap;
-  }
-  .seat-bank {
-    display: flex;
-    gap: .35rem;
-    justify-content: center;
-    flex-wrap: nowrap;
-  }
-  .seat-tile {
-    min-width: 38px;
-    height: 32px;
-    border: 0;
-    border-radius: 999px 999px 12px 12px;
-    box-shadow: inset 0 -5px 0 rgba(15, 23, 42, .11);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 .35rem;
-    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-    color: #475569;
-    position: relative;
-    background: linear-gradient(180deg, #e5e7eb 0%, #c7cdd6 100%);
-  }
-  .seat-tile:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: inset 0 -5px 0 rgba(15, 23, 42, .13), 0 8px 14px rgba(15, 23, 42, .10);
-  }
-  .seat-tile:disabled {
-    cursor: not-allowed;
-    opacity: .96;
-  }
-  .seat-tile--pair {
-    min-width: 78px;
-  }
-  .seat-tile__code {
-    font-size: .72rem;
-    font-weight: 900;
-    line-height: 1;
-  }
-  .seat-tile__meta {
-    display: none;
-  }
-  .seat-tile--AVAILABLE { background: linear-gradient(180deg, #e5e7eb 0%, #c7cdd6 100%); color: #475569; }
-  .seat-tile--VIP { background: linear-gradient(180deg, #d9dde5 0%, #b8c0cc 100%); color: #475569; }
-  .seat-tile--COUPLE { background: linear-gradient(180deg, #d9dde5 0%, #b8c0cc 100%); color: #475569; }
-  .seat-tile--HOLD_SELF { background: linear-gradient(180deg, #7cc7ff 0%, #4ca8f1 100%); color: #fff; }
-  .seat-tile--HOLD_OTHER { background: linear-gradient(180deg, #74bfff 0%, #5aa8f7 100%); color: #fff; }
-  .seat-tile--RESERVED { background: linear-gradient(180deg, #ff6b57 0%, #f44336 100%); color: #fff; }
-  .seat-tile--BOOKED { background: linear-gradient(180deg, #ff6b57 0%, #f44336 100%); color: #fff; }
-  .seat-tile--BLOCKED { background: linear-gradient(180deg, #f7d84d 0%, #f0b90b 100%); color: #714f00; }
-  .seat-board-footer {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr;
-    align-items: stretch;
-    border-top: 1px solid rgba(15, 23, 42, .08);
-    margin-top: .7rem;
-  }
-  .seat-board-footer__item {
-    padding: .85rem .8rem;
-    min-height: 78px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: .35rem;
-  }
-  .seat-board-footer__item + .seat-board-footer__item {
-    border-left: 1px solid rgba(15, 23, 42, .08);
-  }
-  .seat-board-footer__item small {
-    color: #64748b;
-    font-weight: 700;
-    font-size: .78rem;
-  }
-  .seat-board-footer__item strong {
-    color: #0f172a;
-    font-size: .98rem;
-  }
-  .seat-board-footer__item--total strong,
-  .seat-board-footer__item--countdown strong {
-    font-size: clamp(1.1rem, 1.6vw, 1.8rem);
-    font-weight: 900;
-    color: #0f172a;
-  }
-  .seat-board-footer__seat {
-    display: inline-flex;
-    align-items: center;
-    gap: .55rem;
-    color: #334155;
-    font-weight: 700;
-  }
-  .seat-board-footer__status {
-    margin-top: .2rem;
-    color: #64748b;
-    line-height: 1.45;
-    font-size: .82rem;
-  }
-  .seat-type-inline-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .45rem;
-    align-items: center;
-  }
-  .seat-type-inline-list .seat-inline-legend {
-    padding: .22rem .48rem;
-    background: rgba(15, 23, 42, .04);
-    border-radius: 999px;
-  }
-  .seat-board-footer__status strong { font-size: .95rem; }
-  .seat-legend-card {
-    border-radius: 22px;
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    padding: 1rem;
-  }
-  .seat-legend-card h3 {
-    font-size: 1rem;
-    margin-bottom: .8rem;
-    color: var(--text);
-  }
-  .seat-legend-list {
-    display: grid;
-    gap: .7rem;
-  }
-  .seat-legend-item {
-    display: flex;
-    gap: .75rem;
-    align-items: flex-start;
-    color: var(--text);
-  }
-  .seat-legend-swatch {
-    width: 22px;
-    height: 22px;
-    border-radius: 8px;
-    flex: 0 0 auto;
-    border: 1px solid rgba(15, 23, 42, .08);
-    box-shadow: inset 0 -5px 0 rgba(15, 23, 42, .08);
-  }
-  .swatch-regular { background: linear-gradient(180deg, #e5e7eb 0%, #c7cdd6 100%); }
-  .swatch-vip { background: linear-gradient(180deg, #d9dde5 0%, #b8c0cc 100%); }
-  .swatch-couple { background: linear-gradient(180deg, #d9dde5 0%, #b8c0cc 100%); }
-  .swatch-hold-self { background: linear-gradient(180deg, #7cc7ff 0%, #4ca8f1 100%); }
-  .swatch-hold-other { background: linear-gradient(180deg, #74bfff 0%, #5aa8f7 100%); }
-  .swatch-reserved { background: linear-gradient(180deg, #ff6b57 0%, #f44336 100%); }
-  .swatch-booked { background: linear-gradient(180deg, #ff6b57 0%, #f44336 100%); }
-  .swatch-blocked { background: linear-gradient(180deg, #f7d84d 0%, #f0b90b 100%); }
-  .seat-legend-item strong {
-    display: block;
-    font-size: .9rem;
-    margin-bottom: .1rem;
-  }
-  .seat-legend-item span {
-    color: var(--muted);
-    font-size: .82rem;
-    line-height: 1.45;
-  }
-  .seat-selection-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: .9rem;
-  }
-  .seat-selection-card {
-    border-radius: 22px;
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    padding: .95rem;
-  }
-  .seat-selection-card__head {
-    display: flex;
-    justify-content: space-between;
-    gap: .75rem;
-    align-items: start;
-    margin-bottom: .75rem;
-  }
-  .seat-selection-card__head strong {
-    display: block;
-    color: var(--text);
-  }
-  .seat-selection-card__head span {
-    color: var(--muted);
-    font-size: .82rem;
-  }
-  .seat-selection-card__price {
-    font-size: .82rem;
-    color: var(--muted);
-    margin-top: .5rem;
-  }
-  .ticket-type-pill-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
-    margin-top: .9rem;
-  }
-  .ticket-type-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .45rem .75rem;
-    border-radius: 999px;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-size: .82rem;
-    font-weight: 700;
-  }
-  .ticket-type-pill small {
-    color: var(--muted);
-    font-weight: 500;
-  }
-  .booking-note-box {
-    border-radius: 22px;
-    border: 1px dashed color-mix(in srgb, var(--primary) 38%, var(--line));
-    background: color-mix(in srgb, var(--primary) 8%, var(--panel-light));
-    padding: .95rem 1rem;
-    color: var(--text);
-  }
-  .booking-note-box p {
-    margin: 0;
-    color: var(--muted);
-  }
-  .booking-status-box {
-    border-radius: 20px;
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    padding: .95rem 1rem;
-    color: var(--text);
-    font-size: .9rem;
-  }
-  .booking-status-box strong { color: var(--text); }
-  .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-  }
-  .product-card {
-    border-radius: 24px;
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-  }
-  .product-card.is-disabled { opacity: .55; }
-  .product-card__media {
-    aspect-ratio: 16 / 10;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 14%, #fff), var(--surface-2));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    font-size: .95rem;
-    overflow: hidden;
-  }
-  .product-card__media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .product-card__body {
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: .85rem;
-    height: 100%;
-  }
-  .product-card__badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
-  }
-  .product-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: .35rem;
-    padding: .34rem .7rem;
-    border-radius: 999px;
-    background: var(--panel-light);
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-size: .74rem;
-    font-weight: 700;
-  }
-  .product-badge--combo {
-    background: color-mix(in srgb, var(--primary) 14%, var(--panel-light));
-  }
-  .product-card__title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text);
-  }
-  .product-card__description {
-    color: var(--muted);
-    font-size: .9rem;
-    min-height: 44px;
-  }
-  .product-card__footer {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: .9rem;
-    margin-top: auto;
-  }
-  .product-price {
-    font-size: 1.05rem;
-    font-weight: 900;
-    color: var(--text);
-  }
-  .product-stock {
-    color: var(--muted);
-    font-size: .82rem;
-  }
-  .product-qty-control {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    border-radius: 999px;
-    padding: .35rem;
-    border: 1px solid var(--line);
-    background: var(--panel-light);
-  }
-  .product-qty-button {
-    width: 34px;
-    height: 34px;
-    border: 0;
-    border-radius: 50%;
-    background: var(--surface-2);
-    color: var(--text);
-    font-weight: 800;
-  }
-  .product-qty-button:disabled {
-    opacity: .45;
-    cursor: not-allowed;
-  }
-  .product-qty-input {
-    width: 52px;
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    text-align: center;
-    font-weight: 800;
-    outline: none;
-  }
-  .summary-breakdown {
-    display: grid;
-    gap: .7rem;
-  }
-  .summary-breakdown__row {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    color: var(--muted);
-    font-size: .92rem;
-  }
-  .summary-breakdown__row strong { color: var(--text); }
-  .summary-separator {
-    border-top: 1px solid var(--line);
-    margin: .2rem 0;
-  }
-  .summary-total {
-    font-size: 1.9rem;
-    font-weight: 900;
-    line-height: 1.1;
-    color: var(--text);
-  }
-  .selected-seat-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .55rem;
-  }
-  .selected-seat-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .48rem .78rem;
-    border-radius: 999px;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-size: .84rem;
-    font-weight: 700;
-  }
-  .form-field label {
-    display: block;
-    margin-bottom: .45rem;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .booking-submit-note {
-    margin-top: .95rem;
-    color: var(--muted);
-    font-size: .88rem;
-    line-height: 1.65;
-  }
-  .booking-empty {
-    border-radius: 20px;
-    border: 1px dashed var(--line);
-    padding: 1rem;
-    color: var(--muted);
-    text-align: center;
-  }
-  .booking-alert-inline {
-    display: none;
-    margin-bottom: .9rem;
-    padding: .9rem 1rem;
-    border-radius: 18px;
-    border: 1px solid transparent;
-    box-shadow: 0 14px 34px rgba(15, 23, 42, .10);
-  }
-  .booking-alert-inline.is-visible {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: .85rem;
-    align-items: start;
-  }
-  .booking-alert-inline__icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 1rem;
-    box-shadow: inset 0 -3px 0 rgba(15, 23, 42, .08);
-  }
-  .booking-alert-inline__body strong {
-    display: block;
-    margin-bottom: .2rem;
-    font-size: .95rem;
-  }
-  .booking-alert-inline__body span {
-    display: block;
-    line-height: 1.55;
-    font-size: .9rem;
-  }
-  .booking-alert-inline__close {
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font-size: 1.1rem;
-    line-height: 1;
-    padding: .15rem;
-    opacity: .72;
-  }
-  .booking-alert-inline__close:hover { opacity: 1; }
-  .booking-alert-inline.is-visible[data-level="error"] {
-    background: rgba(239, 68, 68, .10);
-    border-color: rgba(239, 68, 68, .26);
-    color: #dc2626;
-  }
-  .booking-alert-inline.is-visible[data-level="error"] .booking-alert-inline__icon {
-    background: rgba(239, 68, 68, .14);
-  }
-  .booking-alert-inline.is-visible[data-level="info"] {
-    background: rgba(59, 130, 246, .10);
-    border-color: rgba(59, 130, 246, .24);
-    color: #2563eb;
-  }
-  .booking-alert-inline.is-visible[data-level="info"] .booking-alert-inline__icon {
-    background: rgba(59, 130, 246, .14);
-  }
-  .booking-alert-inline.is-visible[data-level="success"] {
-    background: rgba(34, 197, 94, .10);
-    border-color: rgba(34, 197, 94, .24);
-    color: #16a34a;
-  }
-  .booking-alert-inline.is-visible[data-level="success"] .booking-alert-inline__icon {
-    background: rgba(34, 197, 94, .14);
-  }
-  @media (max-width: 1199.98px) {
-    .booking-layout {
-      grid-template-columns: 1fr;
-    }
-    .booking-sticky {
-      position: static;
-    }
-    .seat-board-footer {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .seat-board-footer__item:nth-child(odd) {
-      border-left: 0;
-    }
-  }
-  @media (max-width: 991.98px) {
-    .booking-hero {
-      grid-template-columns: 1fr;
-    }
-    .booking-hero__poster {
-      max-width: 300px;
-      min-height: 320px;
-    }
-    .booking-meta-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .booking-seat-panel__toolbar {
-      align-items: flex-start;
-    }
-    .seat-row__banks {
-      gap: 1rem;
-    }
-  }
-  @media (max-width: 767.98px) {
-    .booking-meta-grid {
-      grid-template-columns: 1fr;
-    }
-    .seat-row {
-      grid-template-columns: 1fr;
-      justify-items: center;
-    }
-    .seat-row__banks {
-      gap: .8rem;
-      width: 100%;
-      overflow-x: auto;
-      justify-content: flex-start;
-      padding-bottom: .25rem;
-    }
-    .seat-board-footer {
-      grid-template-columns: 1fr;
-    }
-    .seat-board-footer__item + .seat-board-footer__item {
-      border-left: 0;
-      border-top: 1px solid rgba(15, 23, 42, .08);
-    }
-  }
-
 </style>
 @endpush
 
@@ -1432,22 +711,6 @@
               Trang này đã được tách riêng để bạn chọn ghế trên sơ đồ lớn, theo dõi trạng thái ghế theo thời gian thực,
               gán loại vé cho từng ghế, thêm combo bắp nước và chuyển sang bước thanh toán QR.
             </p>
-
-            @if($movie->poster_url)
-              <img src="{{ $movie->poster_url }}" alt="{{ $movie->title }}">
-            @else
-              <div class="poster-fallback poster-fallback--showtime h-100"><span>{{ $movie->title }}</span></div>
-            @endif
-          </div>
-          <div class="booking-hero__copy">
-            <span class="section-eyebrow">Trang đặt ghế riêng</span>
-            <h1>{{ $movie->title }}</h1>
-            <p>
-              Suất chiếu bạn chọn: <strong class="text-white">{{ $show->start_time->translatedFormat('l, d/m/Y H:i') }}</strong>.
-              Trang này đã được tách riêng để bạn chọn ghế trên sơ đồ lớn, theo dõi trạng thái ghế theo thời gian thực,
-              gán loại vé cho từng ghế, thêm combo bắp nước và chuyển sang bước thanh toán QR.
-            </p>
-
 
             <div class="hero-meta hero-meta--compact">
               <span><i class="bi bi-clock me-2"></i>{{ $movie->duration_minutes }} phút</span>
@@ -1482,35 +745,6 @@
               @endif
               @if($bookingConfig['child_ticket_blocked'])
                 <span class="booking-info-chip"><i class="bi bi-shield-exclamation"></i>Phim {{ $movie->contentRating?->code }} không cho chọn vé trẻ em</span>
-            </div>
-
-            <div class="booking-meta-grid">
-              <div class="booking-meta-card">
-                <span>Rạp chiếu</span>
-                <strong>{{ $show->auditorium?->cinema?->name ?: 'FPL Cinema' }}</strong>
-              </div>
-              <div class="booking-meta-card">
-                <span>Khung giờ</span>
-                <strong>{{ $show->start_time->format('H:i') }} → {{ optional($show->end_time)->format('H:i') }}</strong>
-              </div>
-              <div class="booking-meta-card">
-                <span>Trạng thái</span>
-                <strong>{{ $show->frontendStatusLabel() }}</strong>
-              </div>
-              <div class="booking-meta-card">
-                <span>Giữ ghế</span>
-                <strong>{{ $bookingConfig['hold_minutes'] }} phút / lần giữ</strong>
-              </div>
-            </div>
-
-            <div class="d-flex flex-wrap gap-2 mt-3">
-              <a href="{{ route('movies.showtimes', $movie) }}" class="btn btn-cinema-secondary"><i class="bi bi-arrow-left me-2"></i>Quay lại lịch chiếu</a>
-              @if($relatedShows->isNotEmpty())
-                <span class="booking-info-chip"><i class="bi bi-calendar2-week"></i>Còn {{ $relatedShows->count() }} suất khác của phim này</span>
-              @endif
-              @if($bookingConfig['child_ticket_blocked'])
-                <span class="booking-info-chip"><i class="bi bi-shield-exclamation"></i>Phim {{ $movie->contentRating?->code }} không cho chọn vé trẻ em</span>
-
               @endif
             </div>
           </div>
@@ -1524,7 +758,6 @@
         <div id="seatInputs"></div>
 
         <div class="booking-layout">
-
           <div>
             @if($errors->any())
               <div class="app-alert app-alert--error mb-4">
@@ -1554,12 +787,6 @@
                 </div>
               </div>
 
-              <div class="booking-note-box mb-3">
-                <p>
-                  Quy tắc hợp lệ: ghế đôi phải chọn theo cặp liền nhau, hệ thống không cho để lại 1 ghế lẻ trong cùng dãy,
-                  và mỗi ghế có thể gán một loại vé riêng như 2 vé người lớn + 1 vé trẻ em nếu phim cho phép.
-                </p>
-              </div>
 
               <div class="booking-seat-panel">
                 <div class="booking-seat-panel__toolbar">
@@ -1586,6 +813,10 @@
                     </div>
                     <div class="seat-board-footer__item">
                       <small>Loại ghế</small>
+                      <div class="seat-board-footer__seat"><span class="seat-inline-legend__chip swatch-vip"></span>Ghế VIP</div>
+                    </div>
+                    <div class="seat-board-footer__item">
+                      <small>Loại ghế</small>
                       <div class="seat-board-footer__seat"><span class="seat-inline-legend__chip swatch-couple"></span>Ghế đôi</div>
                     </div>
                     <div class="seat-board-footer__item">
@@ -1602,7 +833,6 @@
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -1638,7 +868,6 @@
               <div class="form-field mb-3">
                 <label>Họ và tên</label>
                 <input class="form-control cinema-input" name="contact_name" value="{{ old('contact_name', $authCustomer?->full_name ?: auth()->user()?->name) }}" placeholder="Nguyễn Văn A" required>
-
               </div>
               <div class="form-field mb-3">
                 <label>Điện thoại</label>
@@ -1694,7 +923,6 @@
               Sau khi xác nhận, ghế sẽ được chuyển sang bước thanh toán và chỉ giữ tối đa {{ $bookingConfig['hold_minutes'] }} phút.
               Nếu quá thời gian mà chưa thanh toán, booking sẽ tự động hết hạn và ghế được mở lại cho khách khác.
             </p>
-
           </div>
         </div>
       </form>
@@ -1709,7 +937,6 @@
   const seatStatusUrl = @json(route('shows.seats.status', $show));
   const seatSyncUrl = @json(route('shows.seats.sync', $show));
   const ticketTypes = @json($ticketTypePayload);
-
   const oldState = {
     seatIds: @json($oldSeatIdsPayload),
     seatTicketTypes: @json($oldSeatTicketTypesPayload),
@@ -1724,7 +951,8 @@
   const selectedSeatPills = document.getElementById('selectedSeatPills');
   const selectedSeatAssignments = document.getElementById('selectedSeatAssignments');
   const selectedSeatEmpty = document.getElementById('selectedSeatEmpty');
-
+  const productCatalog = document.getElementById('productCatalog');
+  const selectedProductCount = document.getElementById('selectedProductCount');
   const summaryBreakdown = document.getElementById('summaryBreakdown');
   const bookingTotalValue = document.getElementById('bookingTotalValue');
   const loyaltyPreview = document.getElementById('loyaltyPreview');
@@ -1759,9 +987,6 @@
     lastAlertKey: null,
     holdDeadlineAt: null,
     holdCountdownTimer: null,
-    serverTimeOffsetMs: 0,
-    alertTimer: null,
-
   };
 
   const initialSeatIds = new Set([
@@ -1772,60 +997,24 @@
 
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
   const ticketTypeMap = Object.fromEntries(ticketTypes.map((ticketType) => [String(ticketType.id), ticketType]));
-  const productMap = {};
-  const showAlert = (message, level = 'info', key = null, title = null) => {
-    if (key && state.lastAlertKey === key && inlineAlert.classList.contains('is-visible')) {
   const productMap = Object.fromEntries((bookingConfig.products || []).map((product) => [String(product.id), product]));
   const showAlert = (message, level = 'info', key = null) => {
     if (key && state.lastAlertKey === key) {
-
       return;
     }
-
-    if (state.alertTimer) {
-      window.clearTimeout(state.alertTimer);
-      state.alertTimer = null;
-    }
-
     state.lastAlertKey = key || null;
-    const iconMap = { error: '!', info: 'i', success: '✓' };
-    const titleMap = { error: 'Chưa thể chọn ghế này', info: 'Thông báo', success: 'Đã cập nhật' };
+    inlineAlert.textContent = message;
     inlineAlert.dataset.level = level;
-    inlineAlert.innerHTML = `
-      <div class="booking-alert-inline__icon">${iconMap[level] || 'i'}</div>
-      <div class="booking-alert-inline__body">
-        <strong>${title || titleMap[level] || 'Thông báo'}</strong>
-        <span>${message}</span>
-      </div>
-      <button type="button" class="booking-alert-inline__close" aria-label="Đóng">×</button>
-    `;
     inlineAlert.classList.add('is-visible');
-    inlineAlert.querySelector('.booking-alert-inline__close')?.addEventListener('click', () => clearAlert(key));
-
-    if (level !== 'error') {
-      state.alertTimer = window.setTimeout(() => clearAlert(key), 4500);
-    }
-
   };
 
   const clearAlert = (key = null) => {
     if (key && state.lastAlertKey && state.lastAlertKey !== key) {
       return;
     }
-    if (state.alertTimer) {
-      window.clearTimeout(state.alertTimer);
-      state.alertTimer = null;
-    }
-    state.lastAlertKey = null;
-    inlineAlert.classList.remove('is-visible');
-    inlineAlert.innerHTML = '';
-
-
     state.lastAlertKey = null;
     inlineAlert.classList.remove('is-visible');
     inlineAlert.textContent = '';
-
-
   };
 
   const seatMapById = () => Object.fromEntries(state.seats.map((seat) => [String(seat.id), seat]));
@@ -1890,7 +1079,6 @@
       seats: seats.sort((left, right) => Number(left.col_number) - Number(right.col_number)),
     }));
 
-
   const renderSeatMap = () => {
     if (!state.seats.length) {
       seatMap.innerHTML = '<div class="booking-empty">Suất chiếu này chưa có sơ đồ ghế khả dụng.</div>';
@@ -1934,9 +1122,6 @@
     });
   };
 
-
-  const humanizeRowList = (rows) => rows.length === 1 ? `dãy ${rows[0]}` : `các dãy ${rows.join(', ')}`;
-
   const formatCountdown = (totalSeconds) => {
     const safeSeconds = Math.max(0, Number(totalSeconds || 0));
     const minutes = Math.floor(safeSeconds / 60).toString().padStart(2, '0');
@@ -1948,16 +1133,15 @@
     if (state.holdCountdownTimer) {
       window.clearInterval(state.holdCountdownTimer);
       state.holdCountdownTimer = null;
-   
-
+    }
+    state.holdDeadlineAt = null;
     if (holdCountdownValue) {
       holdCountdownValue.textContent = '00:00';
     }
   };
 
   const startHoldCountdown = () => {
-    if (!state.holdDeadlineAt) {
-
+    if (!state.selectedSeatIds.length) {
       stopHoldCountdown();
       return;
     }
@@ -1975,8 +1159,6 @@
       if (secondsLeft <= 0) {
         window.clearInterval(state.holdCountdownTimer);
         state.holdCountdownTimer = null;
-        state.holdDeadlineAt = null;
-
         setLiveMessage('Phiên giữ ghế đã hết hạn, đang làm mới trạng thái...');
         fetchSeatStatus();
       }
@@ -2021,7 +1203,6 @@
               <span>${seat.seat_type_name} · ${seat.state_label}</span>
             </div>
             <button type="button" class="btn btn-sm btn-cinema-secondary" data-remove-seat="${seat.id}">Bỏ</button>
-
           </div>
           <label class="form-label small text-muted mb-2">Loại vé cho ghế này</label>
           <select class="form-select cinema-select" data-seat-ticket-type="${seat.id}">${options}</select>
@@ -2211,29 +1392,12 @@
   };
 
   const updateHoldBox = () => {
-    if (!state.holdDeadlineAt) {
-      holdStatusBox.innerHTML = 'Bộ đếm sẽ bắt đầu ngay khi bạn chọn ghế đầu tiên.';
-      stopHoldCountdown();
-      return;
-    }
-
-    if (!state.selectedSeatIds.length) {
-      holdStatusBox.innerHTML = 'Phiên giữ ghế vẫn đang chạy. Bạn có thể chọn lại ghế khác mà đồng hồ sẽ không bị đặt lại từ đầu.';
-      startHoldCountdown();
-      return;
-    }
-
-    holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Đồng hồ sẽ tiếp tục chạy đến khi bạn thanh toán hoặc hết thời gian giữ ghế.`;
-
-=======
     if (!state.selectedSeatIds.length) {
       holdStatusBox.innerHTML = 'Bạn chưa chọn ghế nào.';
       stopHoldCountdown();
       return;
     }
     holdStatusBox.innerHTML = `Bạn đang giữ tạm <strong>${state.selectedSeatIds.length} ghế</strong>. Sau <strong>${holdMinutes} phút</strong> không thanh toán, ghế sẽ tự nhả cho khách khác.`;
-
-
   };
 
   const renderSummary = () => {
@@ -2279,14 +1443,6 @@
     } else {
       loyaltyPreview.textContent = '';
     }
-
-    const invalidRows = findSingleGapRows(state.selectedSeatIds);
-    if (invalidRows.length) {
-      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
-    } else {
-      clearAlert('seat-gap');
-    }
-
 
     syncHiddenInputs();
     updateHoldBox();
@@ -2334,15 +1490,7 @@
 
       applySeatPayload(payload.seats || [], payload.selected_seat_ids || []);
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
-      if (state.holdDeadlineAt) {
-        startHoldCountdown();
-      } else {
-        stopHoldCountdown();
-        state.holdDeadlineAt = null;
-      }
-=======
       startHoldCountdown();
-
       if (!silent) {
         clearAlert('seat-sync');
       }
@@ -2377,19 +1525,16 @@
 
       const previousSelection = new Set(state.selectedSeatIds.map(Number));
       applySeatPayload(payload.seats || []);
-      if (state.holdDeadlineAt) {
+      if (state.selectedSeatIds.length) {
         startHoldCountdown();
       } else {
         stopHoldCountdown();
-        state.holdDeadlineAt = null;
       }
       const removedSeats = Array.from(previousSelection).filter((seatId) => !state.selectedSeatIds.includes(Number(seatId)));
       if (removedSeats.length) {
-        showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`, 'Sơ đồ ghế vừa được cập nhật');
+        showAlert('Có ghế bạn chọn vừa bị thay đổi trạng thái. Danh sách ghế đã được làm mới theo thời gian thực.', 'info', `status-${removedSeats.join('-')}`);
       } else {
-        clearAlert('seat-sync');
-=======
-
+        clearAlert();
       }
       setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
     } catch (error) {
@@ -2413,7 +1558,7 @@
       }
     } else {
       if (candidateSeatIds.length >= maxSeats) {
-        showAlert(`Bạn chỉ có thể chọn tối đa ${maxSeats} ghế trong một booking.`, 'info', 'max-seats', 'Đã đạt giới hạn ghế');
+        window.alert(`Bạn chỉ có thể chọn tối đa ${maxSeats} ghế trong một booking.`);
         return;
       }
 
@@ -2441,13 +1586,8 @@
     candidateSeatIds = Array.from(new Set(candidateSeatIds.map(Number))).filter(Boolean);
 
     const invalidRows = findSingleGapRows(candidateSeatIds);
-    if (!alreadySelected && invalidRows.length) {
-      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Hãy chọn thêm 1 ghế liền kề hoặc bỏ bớt để sơ đồ ngồi gọn hơn.`, 'error', 'seat-gap', 'Sắp xếp ghế chưa tối ưu');
     if (invalidRows.length) {
       window.alert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`);
-      showAlert(`Cách chọn hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại để không chừa ghế đơn.`, 'error', 'seat-gap');
-
-
       return;
     }
 
@@ -2458,7 +1598,6 @@
     renderSummary();
     scheduleSeatSync();
   };
-
 
   const releaseSeatsOnLeave = () => {
     if (!state.selectedSeatIds.length || !navigator.sendBeacon || !csrfToken) {
@@ -2479,12 +1618,7 @@
     const invalidRows = findSingleGapRows(state.selectedSeatIds);
     if (invalidRows.length) {
       event.preventDefault();
-      showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở ${humanizeRowList(invalidRows)}. Vui lòng điều chỉnh trước khi sang bước thanh toán.`, 'error', 'submit-gap', 'Chưa thể sang bước thanh toán');
-
-
       showAlert(`Cách chọn ghế hiện tại để lại 1 ghế lẻ ở dãy ${invalidRows.join(', ')}. Vui lòng chọn lại.`, 'error', 'submit-gap');
-
-
       return;
     }
 
@@ -2507,19 +1641,10 @@
 
   window.addEventListener('beforeunload', releaseSeatsOnLeave);
 
-  applyHoldExpiry(bookingConfig.owner_hold_expires_at || null);
-  applySeatPayload(state.seats, state.selectedSeatIds);
-  syncHiddenInputs();
-  if (state.holdDeadlineAt) {
-
-=======
   applySeatPayload(state.seats, state.selectedSeatIds);
   renderProducts();
   syncHiddenInputs();
   if (state.selectedSeatIds.length) {
-
-
-
     startHoldCountdown();
   }
   setLiveMessage(`Ghế đang được đồng bộ realtime mỗi ${seatPollSeconds} giây`);
@@ -2528,7 +1653,6 @@
     scheduleSeatSync({ silent: true });
   }
   state.pollTimer = window.setInterval(fetchSeatStatus, seatPollSeconds * 1000);
-
 })();
 </script>
 @endpush
