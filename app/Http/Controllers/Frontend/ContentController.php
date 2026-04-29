@@ -9,6 +9,27 @@ use Illuminate\View\View;
 
 class ContentController extends Controller
 {
+
+    public function hub(): View
+    {
+        $featuredOffers = ContentPost::query()
+            ->offers()
+            ->visibleOnHome()
+            ->limit(6)
+            ->get();
+
+        $featuredNews = ContentPost::query()
+            ->news()
+            ->visibleOnHome()
+            ->limit(6)
+            ->get();
+
+        return view('frontend.content.hub', [
+            'featuredOffers' => $featuredOffers,
+            'featuredNews' => $featuredNews,
+        ]);
+    }
+
     public function news(): View
     {
         return $this->indexByType('NEWS', 'Tin tức', 'news.index');
