@@ -62,6 +62,14 @@
                                 <div>
                                     <div class="list-primary">{{ $movie->title }}</div>
                                     <div class="list-secondary">{{ $movie->original_title ?: 'Chưa có tên gốc' }}</div>
+                                    <div class="mt-2 d-flex gap-1 flex-wrap">
+                                        @if($movie->is_hot)
+                                            <span class="badge badge-soft-danger">Hot</span>
+                                        @endif
+                                        @if($movie->is_on_slider)
+                                            <span class="badge badge-soft-warning">Slide</span>
+                                        @endif
+                                    </div>
                                     @if($movie->genres->isNotEmpty())
                                         <div class="mt-2 d-flex gap-1 flex-wrap">
                                             @foreach($movie->genres->take(3) as $genre)
