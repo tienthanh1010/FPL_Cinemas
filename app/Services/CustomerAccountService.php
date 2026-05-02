@@ -19,7 +19,7 @@ class CustomerAccountService
         }
 
         return Customer::query()
-            ->with('loyaltyAccount.tier')
+            ->with('loyaltyAccount')
             ->where('user_id', $user->id)
             ->first();
     }
@@ -30,29 +30,12 @@ class CustomerAccountService
         $phone = $attributes['phone'] ?? null;
         $name = $attributes['full_name'] ?? $attributes['name'] ?? $user->name;
 
-        $existingCustomer = $this->customerForUser($user);
-
-        if ($existingCustomer) {
-            $customer = $existingCustomer;
-        } else {
-            $customerQuery = Customer::query();
-
-            $customerQuery->where(function ($query) use ($user, $email, $phone) {
-                $query->where('user_id', $user->id);
-
-                if ($email) {
-                    $query->orWhere('email', $email);
-                }
-
-                if ($phone) {
-                    $query->orWhere('phone', $phone);
-                }
-            });
-
-            $customer = $customerQuery
-                ->orderByDesc('id')
-                ->first();
-        }
+        $customer = Customer::query()
+            ->when($user->relationLoaded('customer') && $user->customer, fn ($query) => $query->whereKey($user->customer->getKey()))
+            ->when(! isset($user->customer) && $email, fn ($query) => $query->orWhere('email', $email))
+            ->when(! isset($user->customer) && $phone, fn ($query) => $query->orWhere('phone', $phone))
+            ->orderByDesc('id')
+            ->first();
 
         if (! $customer) {
             $customer = Customer::create([
@@ -75,6 +58,6 @@ class CustomerAccountService
 
         $this->loyaltyPointService->ensureAccount($customer->fresh());
 
-        return $customer->fresh(['loyaltyAccount.tier']);
+        return $customer->fresh(['loyaltyAccount']);
     }
 }
