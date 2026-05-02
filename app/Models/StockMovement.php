@@ -28,4 +28,10 @@ class StockMovement extends Model
     {
         return $this->belongsTo(StockLocation::class, 'stock_location_id');
     }
+
+    public function purchaseOrder(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'reference_id')
+            ->where('reference_type', 'PURCHASE_ORDER');
+    }
 }

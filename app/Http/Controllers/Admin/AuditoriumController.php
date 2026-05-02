@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Auditorium;
 use App\Models\Cinema;
-use App\Models\Seat;
-use App\Models\SeatBlock;
-use App\Models\Show;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -65,45 +62,13 @@ class AuditoriumController extends Controller
             ->orderBy('s.col_number')
             ->get(['s.*', 'st.name as seat_type_name']);
 
-        $activeBlocks = SeatBlock::query()
-            ->where('auditorium_id', $auditorium->id)
-            ->where('end_at', '>', now())
-            ->orderByDesc('end_at')
-            ->get()
-            ->unique('seat_id')
-            ->keyBy('seat_id');
-
-        $seatRows = $seats->map(function ($seat) use ($activeBlocks) {
-            $block = $activeBlocks->get($seat->id);
-            $seat->status = (int) $seat->is_active !== 1
-                ? 'maintenance'
-                : ($block ? 'blocked' : 'active');
-            $seat->block_id = $block?->id;
-            $seat->block_reason = $block?->reason;
-            $seat->block_until = $block?->end_at;
-
-            return $seat;
-        });
-
         $seatStats = [
-            'total' => $seatRows->count(),
-            'active' => $seatRows->where('status', 'active')->count(),
-            'blocked' => $seatRows->where('status', 'blocked')->count(),
-            'maintenance' => $seatRows->where('status', 'maintenance')->count(),
+            'total' => $seats->count(),
+            'active' => $seats->where('is_active', 1)->count(),
+            'maintenance' => $seats->where('is_active', 0)->count(),
         ];
 
-        $recentShows = $auditorium->shows()
-            ->with(['movieVersion.movie'])
-            ->orderByDesc('start_time')
-            ->limit(12)
-            ->get();
-
-        return view('admin.auditoriums.show', [
-            'auditorium' => $auditorium,
-            'seats' => $seatRows,
-            'seatStats' => $seatStats,
-            'recentShows' => $recentShows,
-        ]);
+        return view('admin.auditoriums.show', compact('auditorium', 'seats', 'seatStats'));
     }
 
     public function edit(Auditorium $auditorium): View
@@ -111,51 +76,6 @@ class AuditoriumController extends Controller
         $screenTypes = self::SCREEN_TYPES;
 
         return view('admin.auditoriums.edit', compact('auditorium', 'screenTypes'));
-    }
-
-    public function blockSeat(Request $request, Auditorium $auditorium): RedirectResponse
-    {
-        $data = $request->validate([
-            'seat_id' => ['required', 'integer', 'exists:seats,id'],
-            'reason' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $seat = Seat::query()->where('auditorium_id', $auditorium->id)->findOrFail((int) $data['seat_id']);
-
-        $existingBlock = SeatBlock::query()
-            ->where('auditorium_id', $auditorium->id)
-            ->where('seat_id', $seat->id)
-            ->where('end_at', '>', now())
-            ->exists();
-
-        if ($existingBlock) {
-            return back()->with('error', 'Ghế ' . $seat->seat_code . ' đã bị khoá ở cấp phòng chiếu.');
-        }
-
-        SeatBlock::create([
-            'auditorium_id' => $auditorium->id,
-            'seat_id' => $seat->id,
-            'reason' => $data['reason'] ?: 'Khoá ghế từ quản lý phòng chiếu',
-            'start_at' => now()->startOfMinute(),
-            'end_at' => now()->addYears(5)->endOfDay(),
-        ]);
-
-        $affectedShows = Show::query()
-            ->where('auditorium_id', $auditorium->id)
-            ->where('end_time', '>', now())
-            ->count();
-
-        return back()->with('success', 'Đã khoá ghế ' . $seat->seat_code . ' ở cấp phòng chiếu. Tất cả suất chiếu thuộc phòng này sẽ bị ảnh hưởng (' . $affectedShows . ' suất còn hiệu lực).');
-    }
-
-    public function unblockSeat(Auditorium $auditorium, SeatBlock $seatBlock): RedirectResponse
-    {
-        abort_if((int) $seatBlock->auditorium_id !== (int) $auditorium->id, 404);
-
-        $seatCode = optional($seatBlock->seat)->seat_code ?: 'ghế';
-        $seatBlock->delete();
-
-        return back()->with('success', 'Đã mở khoá ' . $seatCode . ' ở cấp phòng chiếu.');
     }
 
     public function update(Request $request, Auditorium $auditorium): RedirectResponse

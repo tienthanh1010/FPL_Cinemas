@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductPrice;
 use App\Models\StockLocation;
+use App\Models\StockMovement;
 use App\Services\ProductPricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -73,12 +74,34 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
-        $product->load(['category', 'prices.cinema', 'bookingProducts.booking', 'inventoryBalances.stockLocation']);
+        $product->load([
+            'category',
+            'prices.cinema',
+            'bookingProducts.booking',
+            'inventoryBalances.stockLocation.cinema',
+            'stockMovements' => fn ($query) => $query->with('stockLocation.cinema')->latest('id')->limit(15),
+        ]);
+
         $currentPrice = $this->pricingService->currentPrice($product, (int) (Cinema::query()->value('id') ?? 0));
         $soldQty = (int) $product->bookingProducts()->sum('qty');
         $revenue = (int) $product->bookingProducts()->sum('final_amount');
 
-        return view('admin.products.show', compact('product', 'currentPrice', 'soldQty', 'revenue'));
+        $purchaseStats = [
+            'latest_cost' => StockMovement::query()
+                ->where('product_id', $product->id)
+                ->where('qty_delta', '>', 0)
+                ->whereNotNull('unit_cost_amount')
+                ->latest('id')
+                ->value('unit_cost_amount'),
+            'avg_cost' => $this->averageInboundCost($product->id),
+            'last_received_at' => StockMovement::query()
+                ->where('product_id', $product->id)
+                ->where('qty_delta', '>', 0)
+                ->latest('id')
+                ->value('created_at'),
+        ];
+
+        return view('admin.products.show', compact('product', 'currentPrice', 'soldQty', 'revenue', 'purchaseStats'));
     }
 
     public function edit(Product $product): View
@@ -179,5 +202,23 @@ class ProductController extends Controller
                 ['qty_on_hand' => 0, 'reorder_level' => 5]
             );
         }
+    }
+
+    private function averageInboundCost(int $productId): ?int
+    {
+        $rows = StockMovement::query()
+            ->where('product_id', $productId)
+            ->where('qty_delta', '>', 0)
+            ->whereNotNull('unit_cost_amount')
+            ->get(['qty_delta', 'unit_cost_amount']);
+
+        if ($rows->isEmpty()) {
+            return null;
+        }
+
+        $weightedQty = max(1, (int) $rows->sum('qty_delta'));
+        $weightedCost = (int) $rows->sum(fn (StockMovement $row) => (int) $row->qty_delta * (int) $row->unit_cost_amount);
+
+        return (int) round($weightedCost / $weightedQty);
     }
 }

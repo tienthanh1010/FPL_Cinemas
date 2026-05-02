@@ -4,36 +4,36 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\BookingProduct;
 use App\Models\BookingTicket;
 use App\Models\Customer;
+use App\Models\InventoryBalance;
+use App\Models\Product;
 use App\Models\Seat;
 use App\Models\SeatBlock;
-use App\Models\SeatHold;
 use App\Models\Show;
 use App\Models\ShowPrice;
+use App\Models\StockLocation;
+use App\Models\StockMovement;
 use App\Models\TicketType;
-use App\Services\BookingGuardService;
-use App\Services\BookingLifecycleService;
+use Illuminate\View\View;
 use App\Services\CustomerAccountService;
+use App\Services\ProductPricingService;
 use App\Services\PromotionService;
-use App\Services\SeatHoldService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
 
 class BookingController extends Controller
 {
     public function __construct(
+        private readonly ProductPricingService $productPricingService,
         private readonly PromotionService $promotionService,
         private readonly CustomerAccountService $customerAccountService,
-        private readonly SeatHoldService $seatHoldService,
-        private readonly BookingGuardService $bookingGuardService,
-        private readonly BookingLifecycleService $bookingLifecycleService,
     ) {
     }
+
 
     public function create(Show $show): View|RedirectResponse
     {
@@ -55,11 +55,8 @@ class BookingController extends Controller
                 ->with('error', 'Suất chiếu này hiện chưa mở bán để đặt vé trực tiếp.');
         }
 
-        $ownerToken = $this->seatHoldService->ownerToken(session('seat_hold_owner_token'));
-        $editableBooking = $this->restoreEditablePendingBookingIfNeeded($show, $ownerToken);
-        $authCustomer = member_customer();
-        $ticketTypes = $this->availableTicketTypes($movie);
-        $bookingConfig = $this->buildBookingConfig($show, $ownerToken);
+        $ticketTypes = TicketType::query()->orderBy('id')->get(['id', 'code', 'name', 'description']);
+        $bookingConfig = $this->buildBookingConfig($show);
 
         $relatedShows = Show::query()
             ->frontendVisible()
@@ -76,8 +73,41 @@ class BookingController extends Controller
 
     private function buildBookingConfig(Show $show, ?string $ownerToken = null): array
     {
-        $movie = $show->movieVersion?->movie;
-        $seatPayload = $this->seatHoldService->seatPayload($show, $ownerToken);
+        $auditoriumId = (int) $show->auditorium_id;
+        $cinemaId = (int) $show->auditorium?->cinema_id;
+
+        $seats = Seat::query()
+            ->with('seatType:id,code,name')
+            ->where('auditorium_id', $auditoriumId)
+            ->where('is_active', 1)
+            ->orderBy('row_label')
+            ->orderBy('col_number')
+            ->get(['id', 'seat_type_id', 'seat_code', 'row_label', 'col_number']);
+
+        $reservedSeatIds = BookingTicket::query()
+            ->where('show_id', $show->id)
+            ->whereIn('status', ['RESERVED', 'ISSUED'])
+            ->pluck('seat_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $heldSeatIds = DB::table('seat_holds')
+            ->where('show_id', $show->id)
+            ->whereIn('status', ['HELD', 'CONFIRMED'])
+            ->where('expires_at', '>', now())
+            ->pluck('seat_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $blockedSeatIds = SeatBlock::query()
+            ->where('auditorium_id', $auditoriumId)
+            ->where('start_at', '<', $show->end_time)
+            ->where('end_at', '>', $show->start_time)
+            ->pluck('seat_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $unavailableSeatIds = array_fill_keys(array_unique(array_merge($reservedSeatIds, $heldSeatIds, $blockedSeatIds)), true);
 
         $prices = ShowPrice::query()
             ->where('show_id', $show->id)
@@ -87,6 +117,26 @@ class BookingController extends Controller
         $priceMap = [];
         foreach ($prices as $price) {
             $priceMap[(int) $price->seat_type_id][(string) $price->ticket_type_id] = (int) $price->price_amount;
+        }
+
+        $products = Product::query()
+            ->where('is_active', 1)
+            ->with('category:id,name')
+            ->orderByDesc('is_combo')
+            ->orderBy('name')
+            ->get(['id', 'category_id', 'name', 'sku', 'unit', 'is_combo', 'attributes']);
+
+        $inventoryRows = InventoryBalance::query()
+            ->selectRaw('inventory_balances.product_id, stock_locations.cinema_id, SUM(inventory_balances.qty_on_hand) as qty_on_hand')
+            ->join('stock_locations', 'stock_locations.id', '=', 'inventory_balances.stock_location_id')
+            ->where('stock_locations.cinema_id', $cinemaId)
+            ->where('stock_locations.is_active', 1)
+            ->groupBy('inventory_balances.product_id', 'stock_locations.cinema_id')
+            ->get();
+
+        $inventoryByProduct = [];
+        foreach ($inventoryRows as $row) {
+            $inventoryByProduct[(int) $row->product_id] = (int) $row->qty_on_hand;
         }
 
         return [
@@ -101,14 +151,35 @@ class BookingController extends Controller
             'status_label' => $show->frontendStatusLabel(),
             'status' => $show->status,
             'on_sale' => $show->isOnSaleNow(),
-            'hold_minutes' => booking_hold_minutes(),
-            'seat_poll_seconds' => max(3, (int) config('cinema_booking.seat_poll_seconds', 5)),
-            'max_seats_per_booking' => max(1, (int) config('cinema_booking.max_seats_per_booking', 10)),
-            'child_ticket_blocked' => movie_blocks_child_tickets($movie),
-            'owner_hold_expires_at' => $ownerToken ? $this->seatHoldService->ownerHoldExpiresAt($show, $ownerToken) : null,
-            'seats' => $seatPayload,
+            'seats' => $seats->map(fn ($seat) => [
+                'id' => (int) $seat->id,
+                'seat_type_id' => (int) $seat->seat_type_id,
+                'seat_code' => $seat->seat_code,
+                'row_label' => $seat->row_label,
+                'col_number' => (int) $seat->col_number,
+                'seat_type_code' => strtoupper((string) ($seat->seatType?->code ?? 'REG')),
+                'seat_type_name' => $seat->seatType?->name ?? 'Ghế thường',
+                'available' => ! isset($unavailableSeatIds[(int) $seat->id]),
+            ])->values()->all(),
             'prices' => $priceMap,
-            'products' => [],
+            'products' => $products->map(function ($product) use ($cinemaId, $inventoryByProduct) {
+                $price = $this->productPricingService->currentPrice($product, $cinemaId);
+                $qtyOnHand = max(0, (int) ($inventoryByProduct[(int) $product->id] ?? 0));
+
+                return [
+                    'id' => (int) $product->id,
+                    'name' => $product->name,
+                    'category' => $product->category?->name ?? 'F&B',
+                    'unit' => $product->unit,
+                    'is_combo' => (bool) $product->is_combo,
+                    'description' => data_get($product->attributes ?? [], 'description')
+                        ?: data_get($product->attributes ?? [], 'summary')
+                        ?: null,
+                    'price_amount' => (int) ($price?->price_amount ?? 0),
+                    'qty_on_hand' => $qtyOnHand,
+                    'available' => $price !== null && $qtyOnHand > 0,
+                ];
+            })->values()->all(),
         ];
     }
 
@@ -116,36 +187,34 @@ class BookingController extends Controller
     {
         $data = $request->validate([
             'show_id' => ['required', 'integer'],
-            'qty' => ['nullable', 'integer', 'min:1', 'max:' . max(1, (int) config('cinema_booking.max_seats_per_booking', 10))],
-            'seat_ids' => ['required', 'array', 'min:1'],
+            'qty' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'seat_ids' => ['nullable', 'array'],
             'seat_ids.*' => ['integer', 'exists:seats,id'],
-            'seat_ticket_types' => ['nullable', 'array'],
-            'seat_ticket_types.*' => ['nullable', 'integer', 'exists:ticket_types,id'],
-            'ticket_type_id' => ['nullable', 'integer', 'exists:ticket_types,id'],
+            'ticket_type_id' => ['required', 'integer', 'exists:ticket_types,id'],
             'contact_name' => ['required', 'string', 'max:255'],
             'contact_phone' => ['required', 'string', 'max:32'],
             'contact_email' => ['nullable', 'email', 'max:255'],
+            'product_qty' => ['nullable', 'array'],
+            'product_qty.*' => ['nullable', 'integer', 'min:0', 'max:20'],
             'coupon_code' => ['nullable', 'string', 'max:64'],
         ]);
 
         $bookingCode = null;
         $memberUser = auth()->user();
-        $holdOwnerToken = $this->seatHoldService->ownerToken($request->session()->get('seat_hold_owner_token'));
 
         if ($memberUser && empty($data['contact_email'])) {
             $data['contact_email'] = $memberUser->email;
         }
 
         try {
-            DB::transaction(function () use ($request, $data, $memberUser, $holdOwnerToken, &$bookingCode) {
-                /** @var Show $show */
+            DB::transaction(function () use ($data, $memberUser, &$bookingCode) {
                 $show = Show::query()
-                    ->with(['auditorium.cinema', 'movieVersion.movie.contentRating'])
+                    ->with(['auditorium.cinema', 'movieVersion.movie'])
                     ->lockForUpdate()
                     ->findOrFail($data['show_id']);
 
                 $currentCinemaId = current_cinema_id();
-                if ($currentCinemaId && (int) $show->auditorium?->cinema_id !== (int) $currentCinemaId) {
+                if ($currentCinemaId && (int) $show->auditorium->cinema_id !== (int) $currentCinemaId) {
                     abort(404);
                 }
 
@@ -156,45 +225,39 @@ class BookingController extends Controller
                     abort(422, 'Suất chiếu đã bắt đầu hoặc đã kết thúc.');
                 }
 
-                $movie = $show->movieVersion?->movie;
-                $availableTicketTypes = $this->availableTicketTypes($movie)->keyBy('id');
-                if ($availableTicketTypes->isEmpty()) {
-                    abort(422, 'Suất chiếu này hiện chưa cấu hình loại vé hợp lệ.');
-                }
-
-                $customer = $this->resolveCustomer($memberUser, $data);
-                $cinemaId = (int) $show->auditorium?->cinema_id;
-                $auditoriumId = (int) $show->auditorium_id;
+                $auditoriumId = $show->auditorium_id;
+                $cinemaId = $show->auditorium->cinema_id;
+                $ticketTypeId = (int) $data['ticket_type_id'];
                 $requestedSeatIds = collect($data['seat_ids'] ?? [])->filter()->map(fn ($value) => (int) $value)->unique()->values();
+                $requestedQty = $requestedSeatIds->isEmpty() ? max(1, (int) ($data['qty'] ?? 1)) : $requestedSeatIds->count();
+
+                if ($requestedQty > 10) {
+                    abort(422, 'Bạn chỉ có thể chọn tối đa 10 ghế trong một lần đặt vé.');
+                }
+
+                $reservedSeatIds = BookingTicket::query()->where('show_id', $show->id)->whereIn('status', ['RESERVED', 'ISSUED'])->pluck('seat_id');
+                $heldSeatIds = DB::table('seat_holds')->where('show_id', $show->id)->whereIn('status', ['HELD', 'CONFIRMED'])->where('expires_at', '>', now())->pluck('seat_id');
+                $blockedSeatIds = SeatBlock::query()->where('auditorium_id', $auditoriumId)->where('start_at', '<', $show->end_time)->where('end_at', '>', $show->start_time)->pluck('seat_id');
+
                 if ($requestedSeatIds->isEmpty()) {
-                    abort(422, 'Bạn cần chọn ít nhất một ghế.');
-                }
+                    $requestedSeatIds = Seat::query()
+                        ->where('auditorium_id', $auditoriumId)
+                        ->where('is_active', 1)
+                        ->whereNotIn('id', $reservedSeatIds)
+                        ->whereNotIn('id', $heldSeatIds)
+                        ->whereNotIn('id', $blockedSeatIds)
+                        ->orderBy('row_label')
+                        ->orderBy('col_number')
+                        ->limit($requestedQty)
+                        ->lockForUpdate()
+                        ->pluck('id');
 
-                $maxSeats = max(1, (int) config('cinema_booking.max_seats_per_booking', 10));
-                if ($requestedSeatIds->count() > $maxSeats) {
-                    abort(422, 'Bạn chỉ có thể chọn tối đa ' . $maxSeats . ' ghế trong một booking.');
-                }
-
-                $defaultTicketTypeId = (int) ($data['ticket_type_id'] ?? $availableTicketTypes->keys()->first());
-                $seatTicketTypes = collect($data['seat_ticket_types'] ?? [])
-                    ->mapWithKeys(fn ($ticketTypeId, $seatId) => [(int) $seatId => (int) $ticketTypeId]);
-
-                foreach ($requestedSeatIds as $seatId) {
-                    if (! $seatTicketTypes->has($seatId)) {
-                        $seatTicketTypes->put($seatId, $defaultTicketTypeId);
+                    if ($requestedSeatIds->count() !== $requestedQty) {
+                        abort(422, 'Không còn đủ ghế trống cho số lượng bạn chọn.');
                     }
                 }
 
-                if ($seatTicketTypes->keys()->diff($requestedSeatIds)->isNotEmpty()) {
-                    $seatTicketTypes = $seatTicketTypes->only($requestedSeatIds->all());
-                }
-
-                if ($seatTicketTypes->count() !== $requestedSeatIds->count()) {
-                    abort(422, 'Bạn cần chọn loại vé cho từng ghế.');
-                }
-
                 $seats = Seat::query()
-                    ->with('seatType:id,code,name')
                     ->where('auditorium_id', $auditoriumId)
                     ->where('is_active', 1)
                     ->whereIn('id', $requestedSeatIds)
@@ -204,145 +267,124 @@ class BookingController extends Controller
                 if ($seats->count() !== $requestedSeatIds->count()) {
                     abort(422, 'Có ghế không thuộc phòng chiếu của suất này hoặc đang bảo trì.');
                 }
-
-                $blockedSeatIds = SeatBlock::query()
-                    ->where('auditorium_id', $auditoriumId)
-                    ->where('start_at', '<', $show->end_time)
-                    ->where('end_at', '>', $show->start_time)
-                    ->pluck('seat_id')
-                    ->map(fn ($seatId) => (int) $seatId)
-                    ->values();
-
-                $reservedSeatIds = BookingTicket::query()
-                    ->where('show_id', $show->id)
-                    ->whereIn('status', ['RESERVED', 'ISSUED'])
-                    ->pluck('seat_id')
-                    ->map(fn ($seatId) => (int) $seatId)
-                    ->values();
-
-                $otherHeldSeatIds = SeatHold::query()
-                    ->where('show_id', $show->id)
-                    ->whereIn('status', ['HELD', 'CONFIRMED'])
-                    ->where('expires_at', '>', now())
-                    ->where('owner_token', '!=', $holdOwnerToken)
-                    ->pluck('seat_id')
-                    ->map(fn ($seatId) => (int) $seatId)
-                    ->values();
-
                 if ($blockedSeatIds->intersect($requestedSeatIds)->isNotEmpty()) {
-                    abort(422, 'Một hoặc nhiều ghế đang bị khóa thủ công / bảo trì.');
+                    abort(422, 'Một hoặc nhiều ghế đang bị khoá thủ công / bảo trì.');
                 }
-                if ($reservedSeatIds->merge($otherHeldSeatIds)->intersect($requestedSeatIds)->isNotEmpty()) {
-                    abort(422, 'Một hoặc nhiều ghế đã được giữ hoặc đang nằm ở bước thanh toán. Vui lòng chọn ghế khác.');
-                }
-
-                $this->validateSeatSelectionRules($show, $seats, array_unique(array_merge(
-                    $reservedSeatIds->all(),
-                    $otherHeldSeatIds->all(),
-                    $blockedSeatIds->all(),
-                )));
-
-                $selectedTicketTypeIds = [];
-                foreach ($requestedSeatIds as $seatId) {
-                    $ticketTypeId = (int) $seatTicketTypes->get($seatId);
-                    $ticketType = $availableTicketTypes->get($ticketTypeId);
-                    if (! $ticketType) {
-                        abort(422, 'Có loại vé không hợp lệ cho suất chiếu này.');
-                    }
-
-                    if (movie_blocks_child_tickets($movie) && strtoupper((string) $ticketType->code) === 'CHILD') {
-                        abort(422, 'Phim T18 không cho phép áp dụng vé trẻ em.');
-                    }
-
-                    $selectedTicketTypeIds[] = $ticketTypeId;
+                if ($reservedSeatIds->merge($heldSeatIds)->intersect($requestedSeatIds)->isNotEmpty()) {
+                    abort(422, 'Một hoặc nhiều ghế đã được giữ/đặt, vui lòng chọn ghế khác.');
                 }
 
-                $priceRows = ShowPrice::query()
+                $priceBySeatType = ShowPrice::query()
                     ->where('show_id', $show->id)
-                    ->whereIn('ticket_type_id', array_values(array_unique($selectedTicketTypeIds)))
+                    ->where('ticket_type_id', $ticketTypeId)
                     ->where('is_active', 1)
-                    ->get(['seat_type_id', 'ticket_type_id', 'price_amount']);
+                    ->get()
+                    ->keyBy('seat_type_id');
 
-                $priceMatrix = [];
-                foreach ($priceRows as $price) {
-                    $priceMatrix[(int) $price->seat_type_id][(int) $price->ticket_type_id] = (int) $price->price_amount;
-                }
-
-                $ticketRows = [];
                 $ticketSubtotal = 0;
-                foreach ($seats->sortBy(fn (Seat $seat) => $seat->row_label . '-' . str_pad((string) $seat->col_number, 3, '0', STR_PAD_LEFT)) as $seat) {
-                    $ticketTypeId = (int) $seatTicketTypes->get((int) $seat->id, $defaultTicketTypeId);
-                    $unitPrice = (int) ($priceMatrix[(int) $seat->seat_type_id][$ticketTypeId] ?? 120000);
-                    $ticketRows[] = [
-                        'seat' => $seat,
-                        'ticket_type_id' => $ticketTypeId,
-                        'unit_price_amount' => $unitPrice,
-                    ];
-                    $ticketSubtotal += $unitPrice;
+                foreach ($seats as $seat) {
+                    $ticketSubtotal += (int) (($priceBySeatType[$seat->seat_type_id]->price_amount ?? null) ?? 120000);
                 }
 
-                $editableBooking = $this->lockEditablePendingBooking($show);
-                $expiresAt = $editableBooking?->expires_at;
-                if (! $expiresAt || now()->gte($expiresAt)) {
-                    $expiresAt = $this->seatHoldService->currentHoldDeadline($show, $holdOwnerToken)
-                        ?? now()->addMinutes(booking_hold_minutes());
+                $productRows = [];
+                $productSubtotal = 0;
+                foreach (collect($data['product_qty'] ?? [])->filter(fn ($qty) => (int) $qty > 0) as $productId => $qty) {
+                    $product = Product::query()->where('is_active', 1)->find($productId);
+                    if (! $product) {
+                        continue;
+                    }
+                    $price = $this->productPricingService->currentPrice($product, $cinemaId);
+                    if (! $price) {
+                        continue;
+                    }
+
+                    $qty = (int) $qty;
+                    $lineAmount = $qty * (int) $price->price_amount;
+                    $productRows[] = compact('product', 'qty', 'lineAmount') + ['unitPrice' => (int) $price->price_amount];
+                    $productSubtotal += $lineAmount;
                 }
 
-                if ($editableBooking) {
-                    $editableBooking->tickets()->delete();
-                    $editableBooking->discounts()->delete();
-                    $editableBooking->update([
-                        'show_id' => $show->id,
-                        'cinema_id' => $cinemaId,
-                        'customer_id' => $customer->id,
-                        'sales_channel_id' => 1,
-                        'status' => 'PENDING',
-                        'contact_name' => $data['contact_name'],
-                        'contact_phone' => $data['contact_phone'],
-                        'contact_email' => $data['contact_email'] ?? null,
-                        'subtotal_amount' => $ticketSubtotal,
-                        'discount_amount' => 0,
-                        'total_amount' => $ticketSubtotal,
-                        'paid_amount' => 0,
-                        'currency' => 'VND',
-                        'expires_at' => $expiresAt,
+                $bookingCode = 'BK' . now()->format('Ymd') . strtoupper(Str::random(6));
+                $subtotal = $ticketSubtotal + $productSubtotal;
+
+                if ($memberUser) {
+                    $customer = $this->customerAccountService->syncCustomerForUser($memberUser, [
+                        'full_name' => $data['contact_name'],
+                        'phone' => $data['contact_phone'],
+                        'email' => $data['contact_email'] ?? $memberUser->email,
                     ]);
-                    $booking = $editableBooking;
-                    $bookingCode = $booking->booking_code;
                 } else {
-                    $bookingCode = 'BK' . now()->format('Ymd') . strtoupper(Str::random(6));
-                    $booking = Booking::create([
-                        'public_id' => (string) Str::ulid(),
-                        'booking_code' => $bookingCode,
-                        'show_id' => $show->id,
-                        'cinema_id' => $cinemaId,
-                        'customer_id' => $customer->id,
-                        'sales_channel_id' => 1,
-                        'status' => 'PENDING',
-                        'contact_name' => $data['contact_name'],
-                        'contact_phone' => $data['contact_phone'],
-                        'contact_email' => $data['contact_email'] ?? null,
-                        'subtotal_amount' => $ticketSubtotal,
-                        'discount_amount' => 0,
-                        'total_amount' => $ticketSubtotal,
-                        'paid_amount' => 0,
-                        'currency' => 'VND',
-                        'expires_at' => $expiresAt,
-                    ]);
+                    $customer = Customer::query()
+                        ->when(! empty($data['contact_email']), function ($query) use ($data) {
+                            $query->where('email', $data['contact_email'])
+                                ->orWhere('phone', $data['contact_phone']);
+                        }, function ($query) use ($data) {
+                            $query->where('phone', $data['contact_phone']);
+                        })
+                        ->first();
+
+                    if ($customer) {
+                        $customer->update([
+                            'full_name' => $data['contact_name'],
+                            'email' => $data['contact_email'] ?? $customer->email,
+                            'phone' => $data['contact_phone'],
+                            'account_status' => $customer->account_status ?: 'ACTIVE',
+                        ]);
+                    } else {
+                        $customer = Customer::create([
+                            'public_id' => (string) Str::ulid(),
+                            'full_name' => $data['contact_name'],
+                            'phone' => $data['contact_phone'],
+                            'email' => $data['contact_email'] ?? null,
+                            'account_status' => 'ACTIVE',
+                        ]);
+                    }
                 }
 
-                foreach ($ticketRows as $row) {
+                $booking = Booking::create([
+                    'public_id' => (string) Str::ulid(),
+                    'booking_code' => $bookingCode,
+                    'show_id' => $show->id,
+                    'cinema_id' => $cinemaId,
+                    'customer_id' => $customer->id,
+                    'sales_channel_id' => 1,
+                    'status' => 'PENDING',
+                    'contact_name' => $data['contact_name'],
+                    'contact_phone' => $data['contact_phone'],
+                    'contact_email' => $data['contact_email'] ?? null,
+                    'subtotal_amount' => $subtotal,
+                    'discount_amount' => 0,
+                    'total_amount' => $subtotal,
+                    'paid_amount' => 0,
+                    'currency' => 'VND',
+                    'expires_at' => now()->addMinutes(15),
+                ]);
+
+                foreach ($seats as $seat) {
+                    $unitPrice = (int) (($priceBySeatType[$seat->seat_type_id]->price_amount ?? null) ?? 120000);
                     BookingTicket::create([
                         'booking_id' => $booking->id,
                         'show_id' => $show->id,
-                        'seat_id' => $row['seat']->id,
-                        'ticket_type_id' => $row['ticket_type_id'],
-                        'seat_type_id' => $row['seat']->seat_type_id,
-                        'unit_price_amount' => $row['unit_price_amount'],
+                        'seat_id' => $seat->id,
+                        'ticket_type_id' => $ticketTypeId,
+                        'seat_type_id' => $seat->seat_type_id,
+                        'unit_price_amount' => $unitPrice,
                         'discount_amount' => 0,
-                        'final_price_amount' => $row['unit_price_amount'],
+                        'final_price_amount' => $unitPrice,
                         'status' => 'RESERVED',
                     ]);
+                }
+
+                foreach ($productRows as $row) {
+                    BookingProduct::create([
+                        'booking_id' => $booking->id,
+                        'product_id' => $row['product']->id,
+                        'qty' => $row['qty'],
+                        'unit_price_amount' => $row['unitPrice'],
+                        'discount_amount' => 0,
+                        'final_amount' => $row['lineAmount'],
+                    ]);
+                    $this->decreaseInventory($cinemaId, $row['product']->id, $row['qty'], $booking->id, $row['product']->name);
                 }
 
                 $discountTotal = 0;
@@ -374,35 +416,25 @@ class BookingController extends Controller
                     'expires_at' => $expiresAt,
                 ]);
 
-                $this->seatHoldService->releaseOwnerSeats($show, $holdOwnerToken, true);
-                $this->bookingLifecycleService->refreshShowSaleStatus($show);
-                session(['editable_booking_code' => $booking->booking_code]);
+                $totalSeats = Seat::query()->where('auditorium_id', $show->auditorium_id)->where('is_active', 1)->count();
+                $sold = BookingTicket::query()->where('show_id', $show->id)->whereIn('status', ['RESERVED', 'ISSUED'])->count();
+                if ($totalSeats > 0 && $sold >= $totalSeats) {
+                    $show->update(['status' => 'SOLD_OUT']);
+                }
             }, 3);
         } catch (\Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
 
         return redirect()->route('booking.payment', ['booking_code' => $bookingCode])
-            ->with('success', 'Đặt vé thành công. Vui lòng hoàn tất thanh toán trong ' . booking_hold_minutes() . ' phút để giữ chỗ.');
+            ->with('success', 'Đặt vé thành công. Vui lòng hoàn tất thanh toán trong 15 phút để giữ chỗ.');
     }
 
-    public function success(string $booking_code): View
+    public function success(string $booking_code)
     {
         $booking = Booking::query()
             ->where('booking_code', $booking_code)
-            ->with([
-                'customer.loyaltyAccount.tier',
-                'tickets.seat',
-                'tickets.ticket',
-                'tickets.ticketType',
-                'tickets.seatType',
-                'show.movieVersion.movie.contentRating',
-                'show.auditorium.cinema',
-                'discounts.promotion',
-                'discounts.coupon',
-                'payments.refunds',
-                'feedback',
-            ])
+            ->with(['customer.loyaltyAccount.tier', 'tickets.seat', 'tickets.ticket', 'tickets.ticketType', 'tickets.seatType', 'show.movieVersion.movie', 'show.auditorium.cinema', 'bookingProducts.product.category', 'discounts.promotion', 'discounts.coupon', 'payments.refunds'])
             ->firstOrFail();
 
         $currentCinemaId = current_cinema_id();
@@ -417,197 +449,32 @@ class BookingController extends Controller
         return view('frontend.booking_success', compact('booking', 'earnedPoints'));
     }
 
-    private function availableTicketTypes($movie): Collection
+    private function decreaseInventory(int $cinemaId, int $productId, int $qty, int $bookingId, string $productName): void
     {
-        return TicketType::query()
-            ->when(movie_blocks_child_tickets($movie), fn ($query) => $query->whereRaw('UPPER(code) <> ?', ['CHILD']))
-            ->orderBy('id')
-            ->get(['id', 'code', 'name', 'description']);
-    }
-
-    private function validateSeatSelectionRules(Show $show, Collection $selectedSeats, array $busySeatIds): void
-    {
-        $this->validateNoSingleGap(
-            $show,
-            $selectedSeats->pluck('id')->map(fn ($id) => (int) $id)->all(),
-            $busySeatIds
+        $location = StockLocation::query()->firstOrCreate(
+            ['cinema_id' => $cinemaId, 'code' => 'KIOSK1'],
+            ['name' => 'Quầy F&B chính', 'location_type' => 'KIOSK', 'is_active' => 1]
         );
-    }
 
-    private function validateNoSingleGap(Show $show, array $selectedSeatIds, array $busySeatIds): void
-    {
-        $unavailableMap = array_fill_keys(array_unique(array_merge($selectedSeatIds, $busySeatIds)), true);
+        $balance = InventoryBalance::query()->lockForUpdate()->firstOrCreate(
+            ['stock_location_id' => $location->id, 'product_id' => $productId],
+            ['qty_on_hand' => 0, 'reorder_level' => 5]
+        );
 
-        $allSeats = Seat::query()
-            ->where('auditorium_id', $show->auditorium_id)
-            ->where('is_active', 1)
-            ->orderBy('row_label')
-            ->orderBy('col_number')
-            ->get(['id', 'row_label', 'col_number']);
-
-        foreach ($allSeats->groupBy('row_label') as $rowLabel => $rowSeats) {
-            $segments = [];
-            $current = [];
-            $previousCol = null;
-
-            foreach ($rowSeats as $seat) {
-                if ($previousCol !== null && ((int) $seat->col_number - (int) $previousCol) > 1) {
-                    $segments[] = collect($current);
-                    $current = [];
-                }
-
-                $current[] = $seat;
-                $previousCol = (int) $seat->col_number;
-            }
-
-            if ($current !== []) {
-                $segments[] = collect($current);
-            }
-
-            foreach ($segments as $segment) {
-                $availableRun = 0;
-                foreach ($segment as $seat) {
-                    if (isset($unavailableMap[(int) $seat->id])) {
-                        if ($availableRun === 1) {
-                            abort(422, 'Lựa chọn ghế hiện tại để lại 1 ghế lẻ ở hàng ' . $rowLabel . '. Vui lòng chọn lại để không chừa ghế đơn.');
-                        }
-                        $availableRun = 0;
-                        continue;
-                    }
-
-                    $availableRun++;
-                }
-
-                if ($availableRun === 1) {
-                    abort(422, 'Lựa chọn ghế hiện tại để lại 1 ghế lẻ ở hàng ' . $rowLabel . '. Vui lòng chọn lại để không chừa ghế đơn.');
-                }
-            }
-        }
-    }
-
-    public function print(string $booking_code): View
-    {
-        $booking = Booking::query()
-            ->where('booking_code', $booking_code)
-            ->with([
-                'tickets.seat',
-                'tickets.ticket',
-                'tickets.ticketType',
-                'tickets.seatType',
-                'show.movieVersion.movie.contentRating',
-                'show.auditorium.cinema',
-            ])
-            ->firstOrFail();
-
-        $currentCinemaId = current_cinema_id();
-        if ($currentCinemaId && (int) $booking->cinema_id !== (int) $currentCinemaId) {
-            abort(404);
+        if ($balance->qty_on_hand < $qty) {
+            abort(422, 'Sản phẩm F&B "' . $productName . '" không đủ tồn kho.');
         }
 
-        return view('frontend.print_ticket', compact('booking'));
-    }
-
-    private function resolveCustomer($memberUser, array $data): Customer
-    {
-        if ($memberUser) {
-            return $this->customerAccountService->syncCustomerForUser($memberUser, [
-                'full_name' => $data['contact_name'],
-                'phone' => $data['contact_phone'],
-                'email' => $data['contact_email'] ?? $memberUser->email,
-            ]);
-        }
-
-        $query = Customer::query();
-        if (! empty($data['contact_email']) || ! empty($data['contact_phone'])) {
-            $query->where(function ($builder) use ($data) {
-                if (! empty($data['contact_email'])) {
-                    $builder->orWhere('email', $data['contact_email']);
-                }
-                if (! empty($data['contact_phone'])) {
-                    $builder->orWhere('phone', $data['contact_phone']);
-                }
-            });
-        }
-
-        $customer = $query->orderByDesc('id')->first();
-        if ($customer) {
-            $customer->update([
-                'full_name' => $data['contact_name'],
-                'phone' => $data['contact_phone'],
-                'email' => $data['contact_email'] ?? $customer->email,
-                'account_status' => 'ACTIVE',
-            ]);
-
-            return $customer->fresh();
-        }
-
-        return Customer::create([
-            'public_id' => (string) Str::ulid(),
-            'full_name' => $data['contact_name'],
-            'phone' => $data['contact_phone'],
-            'email' => $data['contact_email'] ?? null,
-            'account_status' => 'ACTIVE',
+        $balance->update(['qty_on_hand' => $balance->qty_on_hand - $qty]);
+        StockMovement::create([
+            'stock_location_id' => $location->id,
+            'product_id' => $productId,
+            'movement_type' => 'OUT',
+            'qty_delta' => -$qty,
+            'reference_type' => 'BOOKING',
+            'reference_id' => $bookingId,
+            'note' => 'Bán kèm theo booking',
+            'created_at' => now(),
         ]);
-    }
-
-    private function restoreEditablePendingBookingIfNeeded(Show $show, string $ownerToken): ?Booking
-    {
-        $bookingCode = (string) session('editable_booking_code', '');
-        if ($bookingCode === '') {
-            return null;
-        }
-
-        /** @var Booking|null $booking */
-        $booking = Booking::query()
-            ->where('booking_code', $bookingCode)
-            ->with(['show', 'tickets'])
-            ->first();
-
-        if (! $booking || (int) $booking->show_id !== (int) $show->id || (string) $booking->status !== 'PENDING') {
-            session()->forget('editable_booking_code');
-
-            return null;
-        }
-
-        if ($booking->expires_at && now()->gte($booking->expires_at)) {
-            $this->bookingLifecycleService->expirePendingBooking($booking);
-            session()->forget('editable_booking_code');
-
-            return null;
-        }
-
-        $restored = $this->seatHoldService->restorePendingBookingForEditing($booking, $ownerToken);
-        session(['editable_booking_code' => $restored->booking_code]);
-
-        return $restored->fresh(['show', 'tickets']);
-    }
-
-    private function lockEditablePendingBooking(Show $show): ?Booking
-    {
-        $bookingCode = (string) session('editable_booking_code', '');
-        if ($bookingCode === '') {
-            return null;
-        }
-
-        $booking = Booking::query()
-            ->where('booking_code', $bookingCode)
-            ->where('show_id', $show->id)
-            ->where('status', 'PENDING')
-            ->lockForUpdate()
-            ->first();
-
-        if (! $booking) {
-            session()->forget('editable_booking_code');
-
-            return null;
-        }
-
-        if ($booking->expires_at && now()->gte($booking->expires_at)) {
-            session()->forget('editable_booking_code');
-
-            return null;
-        }
-
-        return $booking;
     }
 }

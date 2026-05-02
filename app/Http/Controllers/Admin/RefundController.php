@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\Show;
 use App\Services\TicketLifecycleService;
+use App\Services\LoyaltyPointService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,8 @@ class RefundController extends Controller
     private const BOOKING_TERMINAL_STATUSES = ['CANCELLED', 'EXPIRED'];
     private const COMMITTED_REFUND_STATUSES = ['PENDING', 'SUCCESS'];
 
-    public function __construct(private readonly TicketLifecycleService $ticketLifecycleService)
+    public function __construct(private readonly TicketLifecycleService $ticketLifecycleService,
+        private readonly LoyaltyPointService $loyaltyPointService)
     {
     }
 
@@ -384,7 +386,9 @@ class RefundController extends Controller
                 ->update(['status' => $paidAmount > 0 ? 'ISSUED' : 'RESERVED']);
         }
 
-        $this->ticketLifecycleService->syncForBooking($booking->fresh(['tickets.ticket', 'payments.refunds']));
+        $freshBooking = $booking->fresh(['customer.loyaltyAccount', 'tickets.ticket', 'payments.refunds']);
+        $this->ticketLifecycleService->syncForBooking($freshBooking);
+        $this->loyaltyPointService->syncForBooking($freshBooking);
     }
 
     private function netCapturedAmount(Payment $payment): int
