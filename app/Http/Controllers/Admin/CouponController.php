@@ -43,7 +43,7 @@ class CouponController extends Controller
             'promotion_id' => ['required', 'integer', 'exists:promotions,id'],
             'code' => ['nullable', 'string', 'max:64', Rule::unique('coupons', 'code')],
             'expires_at' => ['nullable', 'date'],
-            'status' => ['nullable', 'in:ISSUED,ACTIVE,REDEEMED,EXPIRED'],
+            'status' => ['nullable', 'in:ISSUED,REDEEMED,EXPIRED,CANCELLED'],
         ]);
 
         Coupon::create([

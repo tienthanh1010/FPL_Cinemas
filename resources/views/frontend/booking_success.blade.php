@@ -25,6 +25,7 @@
           @endif
         </p>
 
+
         <div class="success-grid">
           <div class="success-card">
             <span>Trạng thái</span>
@@ -37,7 +38,9 @@
           <div class="success-card">
             <span>Đã thanh toán</span>
             <strong>{{ number_format($booking->paid_amount) }}đ</strong>
-          </div>
+            <span>Đã thanh toán</span>
+            <strong>{{ number_format($booking->paid_amount) }}đ</strong>
+         </div>
           <div class="success-card">
             <span>Hết hạn</span>
             <strong>{{ optional($booking->expires_at)->format('d/m/Y H:i') }}</strong>
@@ -81,6 +84,7 @@
         </div>
 
         <div class="tickets-panel mt-4">
+
           <h2>Danh sách vé</h2>
           <div class="table-responsive">
             <table class="table app-table align-middle mb-0">
@@ -90,12 +94,29 @@
                   <th>Ghế</th>
                   <th>Loại vé</th>
                   <th>Mã vé điện tử</th>
+                  <th>Loại vé</th>
+                  <th>Mã vé điện tử</th>
+
                   <th>Giá</th>
                   <th>Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
                 @forelse($booking->tickets as $ticket)
+                @forelse($booking->tickets as $ticket)
+                  <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $ticket->seat?->seat_code ?: ('#'.$ticket->seat_id) }}</td>
+                    <td>{{ $ticket->ticketType?->name ?: ('#'.$ticket->ticket_type_id) }}</td>
+                    <td>{{ $ticket->ticket?->ticket_code ?: 'Chưa phát hành' }}</td>
+                    <td>{{ number_format($ticket->final_price_amount) }}đ</td>
+                    <td><span class="status-badge">{{ $ticket->ticket?->status ?: $ticket->status }}</span></td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Chưa có vé nào trong booking này.</td>
+                  </tr>
+                @endforelse
                   <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $ticket->seat?->seat_code ?: ('#'.$ticket->seat_id) }}</td>
@@ -113,6 +134,117 @@
             </table>
           </div>
         </div>
+
+        <div class="tickets-panel mt-4">
+          <h2>Lịch sử thanh toán</h2>
+          <div class="table-responsive">
+            <table class="table app-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Provider</th>
+                  <th>Method</th>
+                  <th>Mã giao dịch</th>
+                  <th>Số tiền</th>
+                  <th>Trạng thái</th>
+                  <th>Thời gian</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse($booking->payments->sortByDesc('created_at') as $payment)
+                  <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $payment->provider }}</td>
+                    <td>{{ $payment->method }}</td>
+                    <td>{{ $payment->external_txn_ref ?: 'Mô phỏng' }}</td>
+                    <td>{{ number_format($payment->amount) }}đ</td>
+                    <td><span class="status-badge">{{ $payment->status }}</span></td>
+                    <td>{{ optional($payment->paid_at ?: $payment->created_at)->format('d/m/Y H:i') }}</td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="7" class="text-center text-muted">Chưa phát sinh giao dịch thanh toán nào.</td>
+                  </tr>
+                @endforelse
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tickets-panel mt-4">
+          <h2>Combo &amp; đồ ăn kèm</h2>
+          <div class="table-responsive">
+            <table class="table app-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Sản phẩm</th>
+                  <th>Phân loại</th>
+                  <th>SL</th>
+                  <th>Đơn giá</th>
+                  <th>Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse($booking->bookingProducts as $item)
+                  <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $item->product?->name ?: ('#'.$item->product_id) }}</td>
+                    <td>{{ $item->product?->category?->name ?: ($item->product?->is_combo ? 'Combo' : 'F&B') }}</td>
+                    <td>{{ $item->qty }}</td>
+                    <td>{{ number_format($item->unit_price_amount) }}đ</td>
+                    <td>{{ number_format($item->final_amount) }}đ</td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Bạn chưa chọn combo hoặc đồ ăn kèm.</td>
+                  </tr>
+                @endforelse
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        @if($booking->tickets->isNotEmpty())
+          <div class="tickets-panel mt-4">
+            <h2>QR code / barcode check-in</h2>
+            <div class="row g-3">
+              @foreach($booking->tickets as $bookingTicket)
+                @php
+                  $electronicTicket = $bookingTicket->ticket;
+                  $scanPayload = ticket_scan_payload($electronicTicket);
+                @endphp
+                <div class="col-lg-6">
+                  <div class="glass-panel h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                      <div>
+                        <div class="section-eyebrow">{{ $bookingTicket->seat?->seat_code ?: ('Ghế #'.$bookingTicket->seat_id) }}</div>
+                        <h3 class="h5 mb-1">{{ $electronicTicket?->ticket_code ?: 'Chưa phát hành vé điện tử' }}</h3>
+                        <p class="mb-0 text-light-emphasis">{{ $bookingTicket->ticketType?->name ?: 'Vé xem phim' }} · {{ $bookingTicket->seatType?->name ?: 'Ghế tiêu chuẩn' }}</p>
+                      </div>
+                      <span class="status-badge">{{ $electronicTicket?->status ?: $bookingTicket->status }}</span>
+                    </div>
+                    @if($scanPayload)
+                      <div class="row g-3 align-items-center">
+                        <div class="col-sm-5 text-center">
+                          <img src="{{ ticket_qr_image_url($scanPayload, 220) }}" alt="QR {{ $electronicTicket?->ticket_code }}" class="img-fluid rounded-4 bg-white p-2">
+                        </div>
+                        <div class="col-sm-7 text-center text-sm-start">
+                          <img src="{{ ticket_barcode_image_url($electronicTicket?->ticket_code, 58) }}" alt="Barcode {{ $electronicTicket?->ticket_code }}" class="img-fluid rounded-3 bg-white p-2 mb-2">
+                          <div class="small text-light-emphasis">Mang mã này đến quầy hoặc cổng soát vé để scan check-in.</div>
+                          <div class="small text-break mt-2">{{ $scanPayload }}</div>
+                        </div>
+                      </div>
+                    @else
+                      <div class="text-light-emphasis">Vé điện tử sẽ hiển thị mã quét sau khi thanh toán thành công.</div>
+                    @endif
+                  </div>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        @endif
 
         <div class="tickets-panel mt-4">
           <h2>Lịch sử thanh toán</h2>
@@ -240,9 +372,11 @@
             <a class="btn btn-cinema-primary" href="{{ route('booking.payment', $booking->booking_code) }}"><i class="bi bi-credit-card me-2"></i>Thanh toán ngay {{ number_format($amountDue) }}đ</a>
           @endif
           <a class="btn btn-cinema-secondary" href="{{ route('home') }}"><i class="bi bi-house-door me-2"></i>Về trang chủ</a>
+
           <a class="btn btn-cinema-secondary" href="javascript:history.back()"><i class="bi bi-arrow-counterclockwise me-2"></i>Quay lại</a>
         </div>
       </div>
     </div>
   </section>
+
 @endsection

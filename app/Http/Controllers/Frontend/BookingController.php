@@ -68,10 +68,10 @@ class BookingController extends Controller
             ->limit(8)
             ->get();
 
-        return view('frontend.booking', compact('movie', 'show', 'ticketTypes', 'bookingConfig', 'relatedShows'));
+        return view('frontend.booking', compact('movie', 'show', 'ticketTypes', 'bookingConfig', 'relatedShows', 'editableBooking', 'authCustomer'));
     }
 
-    private function buildBookingConfig(Show $show): array
+    private function buildBookingConfig(Show $show, ?string $ownerToken = null): array
     {
         $auditoriumId = (int) $show->auditorium_id;
         $cinemaId = (int) $show->auditorium?->cinema_id;
@@ -388,12 +388,9 @@ class BookingController extends Controller
                 }
 
                 $discountTotal = 0;
-                $autoPromotions = $this->promotionService->eligiblePromotions($show, $booking, ['subtotal' => $subtotal]);
+                $autoPromotions = $this->promotionService->eligiblePromotions($show, $booking, ['subtotal' => $ticketSubtotal]);
                 foreach ($autoPromotions as $promotion) {
-                    $base = $promotion->applies_to === 'PRODUCT'
-                        ? $productSubtotal
-                        : ($promotion->applies_to === 'TICKET' ? $ticketSubtotal : ($subtotal - $discountTotal));
-                    $amount = $this->promotionService->discountAmount($promotion, $base);
+                    $amount = $this->promotionService->discountAmount($promotion, $ticketSubtotal - $discountTotal);
                     $discountTotal += $amount;
                     $this->promotionService->persistDiscount($booking, $promotion, $amount, null, ['mode' => 'AUTO']);
                     if (! $promotion->is_stackable) {
@@ -402,23 +399,21 @@ class BookingController extends Controller
                 }
 
                 if (! empty($data['coupon_code'])) {
-                    $couponResult = $this->promotionService->couponPromotion($data['coupon_code'], $show, $booking, $subtotal - $discountTotal);
+                    $couponResult = $this->promotionService->couponPromotion($data['coupon_code'], $show, $booking, $ticketSubtotal - $discountTotal);
                     if (! empty($couponResult['error'])) {
                         abort(422, $couponResult['error']);
                     }
                     $promotion = $couponResult['promotion'];
                     $coupon = $couponResult['coupon'];
-                    $base = $promotion->applies_to === 'PRODUCT'
-                        ? $productSubtotal
-                        : ($promotion->applies_to === 'TICKET' ? $ticketSubtotal : ($subtotal - $discountTotal));
-                    $amount = $this->promotionService->discountAmount($promotion, $base);
+                    $amount = $this->promotionService->discountAmount($promotion, $ticketSubtotal - $discountTotal);
                     $discountTotal += $amount;
                     $this->promotionService->persistDiscount($booking, $promotion, $amount, $coupon, ['mode' => 'COUPON', 'code' => $coupon->code]);
                 }
 
                 $booking->update([
                     'discount_amount' => $discountTotal,
-                    'total_amount' => max(0, $subtotal - $discountTotal),
+                    'total_amount' => max(0, $ticketSubtotal - $discountTotal),
+                    'expires_at' => $expiresAt,
                 ]);
 
                 $totalSeats = Seat::query()->where('auditorium_id', $show->auditorium_id)->where('is_active', 1)->count();

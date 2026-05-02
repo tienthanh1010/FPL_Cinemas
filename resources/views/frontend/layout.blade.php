@@ -19,6 +19,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title', $brand)</title>
+  <title>@yield('title', $brand)</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,6 +38,7 @@
       }
     })();
   </script>
+
   @stack('styles')
 </head>
 <body>
@@ -149,6 +152,7 @@
           <div class="alert app-alert app-alert--error">{{ $errors->first() }}</div>
         </div>
       @endif
+
       @yield('content')
     </main>
 
@@ -161,6 +165,33 @@
               <span>
                 <strong>{{ $brand }}</strong>
                 <small>{{ $cinemaName }}</small>
+                <strong>{{ $brand }}</strong>
+                <small>{{ $cinemaName }}</small>
+              </span>
+            </div>
+            <div class="footer-socials d-flex gap-2 mt-3">
+              <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+              <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+              <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+              <a href="#" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+            </div>
+          </div>
+          <div>
+            <h3>Đi nhanh</h3>
+            <ul>
+              <li><a href="{{ $scheduleLink }}">Lịch chiếu hôm nay</a></li>
+              <li><a href="{{ route('booking.lookup') }}">Tra cứu booking</a></li>
+              <li><a href="{{ route('offers.index') }}">Ưu đãi thành viên</a></li>
+              <li><a href="{{ route('news.index') }}">Tin tức điện ảnh</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>Khách hàng</h3>
+            <ul>
+              <li><a href="{{ route('login') }}">Đăng nhập tài khoản</a></li>
+              <li><a href="{{ route('member.register') }}">Đăng ký thành viên</a></li>
+              <li><a href="{{ route('cinema.info') }}">Thông tin FPL Cinema</a></li>
+              <li><a href="{{ route('support.index') }}">FAQ & hỗ trợ</a></li>
               </span>
             </div>
             <p class="footer-copy">Trải nghiệm đặt vé một rạp tập trung, rõ ràng, dễ thao tác hơn cho cả khách hàng và quản trị viên.</p>
@@ -197,6 +228,10 @@
               <li><i class="bi bi-geo-alt me-2"></i>{{ $cinemaAddress }}</li>
               <li><i class="bi bi-telephone me-2"></i>{{ $cinemaHotline }}</li>
               <li><i class="bi bi-envelope me-2"></i>{{ $cinemaEmail }}</li>
+              <li><i class="bi bi-geo-alt me-2"></i>{{ $cinemaAddress }}</li>
+              <li><i class="bi bi-telephone me-2"></i>{{ $cinemaHotline }}</li>
+              <li><i class="bi bi-envelope me-2"></i>{{ $cinemaEmail }}</li>
+
               <li><i class="bi bi-clock me-2"></i>07:00 - 23:00 mỗi ngày</li>
               <li><a href="{{ route('support.index') }}">Xem FAQ & chính sách hỗ trợ</a></li>
             </ul>
@@ -233,6 +268,7 @@
       });
     })();
   </script>
+
   @stack('scripts')
 </body>
 </html>

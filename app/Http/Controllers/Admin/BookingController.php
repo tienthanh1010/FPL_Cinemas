@@ -280,7 +280,7 @@ class BookingController extends Controller
         foreach ($booking->discounts as $discount) {
             if ($discount->coupon instanceof Coupon && $discount->coupon->status === 'REDEEMED') {
                 $discount->coupon->update([
-                    'status' => $discount->coupon->expires_at && $discount->coupon->expires_at->isPast() ? 'EXPIRED' : 'ACTIVE',
+                    'status' => $discount->coupon->expires_at && $discount->coupon->expires_at->isPast() ? 'EXPIRED' : 'ISSUED',
                     'redeemed_at' => null,
                 ]);
             }
