@@ -136,13 +136,6 @@
                   <span>Xem nhanh khuyến mãi và bài viết mới nhất</span>
                 </div>
               </a>
-              <a href="{{ route('booking.lookup') }}" class="quick-action-card">
-                <i class="bi bi-search"></i>
-                <div>
-                  <strong>Tra cứu booking</strong>
-                  <span>Xem lại đơn vé và tiếp tục thanh toán nếu booking còn hiệu lực</span>
-                </div>
-              </a>
             </div>
           </div>
 

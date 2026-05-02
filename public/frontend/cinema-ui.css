@@ -1839,33 +1839,3 @@ html[data-theme='light'] .checkout-badge {
     padding: 1rem;
   }
 }
-.site-info-list > div {
-  gap: 1rem;
-}
-.site-info-list strong {
-  max-width: 62%;
-  text-align: right;
-}
-.accordion-button,
-.accordion-button:not(.collapsed) {
-  background: transparent;
-  color: var(--text);
-  box-shadow: none;
-}
-.accordion-button::after {
-  filter: none;
-}
-.empty-panel {
-  min-height: 220px;
-  border-radius: 24px;
-  border: 1px dashed var(--line);
-  background: color-mix(in srgb, var(--panel-light) 85%, transparent);
-  color: var(--muted);
-  padding: 1.5rem;
-}
-@media (max-width: 767.98px) {
-  .site-info-list strong {
-    max-width: 100%;
-    text-align: left;
-  }
-}
