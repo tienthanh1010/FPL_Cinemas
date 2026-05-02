@@ -30,7 +30,7 @@ class ReviewController extends Controller
             ->route('movies.showtimes', $movie)
             ->with('success', 'Cảm ơn bạn đã gửi đánh giá cho bộ phim.');
     }
-    <h2>🎟️ Nhập mã giảm giá</h2>
+
 
 <div class="box">
     <input type="text" id="voucherInput" placeholder="Nhập mã (VD: GIAM50)">
