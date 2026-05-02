@@ -1,7 +1,6 @@
 @extends('admin.layout')
 
 @section('title', 'Tổng quan vận hành')
-@section('title', 'Tổng quan vận hành')
 
 @section('content')
     <section class="page-header">
@@ -44,6 +43,41 @@
                 <div class="metric-value">{{ $stats['occupancy_today'] }}%</div>
                 <div class="metric-caption">Tính theo toàn bộ sức chứa của các suất trong ngày</div>
             </div></div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-4">
+            <div class="soft-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <div class="metric-label">Rạp đang vận hành</div>
+                            <div class="fw-bold fs-5 mt-2">{{ current_cinema()?->name ?? 'Rạp mặc định' }}</div>
+                            <div class="metric-caption">Mọi luồng đặt vé frontend hiện được ưu tiên theo rạp này.</div>
+                        </div>
+                        <span class="badge badge-soft-success align-self-start">1 rạp</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <a href="{{ route('admin.content_posts.index') }}" class="soft-card h-100 d-block">
+                <div class="card-body">
+                    <div class="metric-label">Tin tức & ưu đãi</div>
+                    <div class="fw-bold fs-5 mt-2">Quản lý bài viết marketing</div>
+                    <div class="metric-caption">Đăng tin, bài ưu đãi, lịch công chiếu hoặc nội dung truyền thông ngay từ admin.</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="soft-card h-100">
+                <div class="card-body">
+                    <div class="metric-label">Điểm thành viên</div>
+                    <div class="fw-bold fs-5 mt-2">Tự cộng / trừ theo booking</div>
+                    <div class="metric-caption">Booking thanh toán thành công sẽ cộng điểm, huỷ / hoàn tiền sẽ tự đồng bộ lại số điểm.</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -126,7 +160,7 @@
                         @endforelse
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
     </div>
 

@@ -5,12 +5,12 @@
 @section('content')
     <section class="page-header">
         <div>
-            <p class="eyebrow">Edit Cinema</p>
-            <h2>Chỉnh sửa rạp #{{ $cinema->id }}</h2>
-            <p>Cập nhật thông tin địa điểm, timezone và giờ mở cửa chuẩn hoá.</p>
+            <p class="eyebrow">Edit single cinema</p>
+            <h2>Cập nhật {{ $cinema->name ?: 'FPL Cinema' }}</h2>
+            <p>Chỉnh sửa thông tin rạp duy nhất đang được website và toàn bộ hệ thống quản trị sử dụng.</p>
         </div>
         <div>
-            <a href="{{ route('admin.cinemas.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+            <a href="{{ route('admin.cinemas.show', $cinema) }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại thông tin rạp</a>
         </div>
     </section>
 

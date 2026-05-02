@@ -6,8 +6,8 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CinemaController;
-use App\Http\Controllers\Admin\ContentPostController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\ContentPostController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EquipmentController;
@@ -19,12 +19,13 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PricingProfileController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ShowController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\StaffShiftController;
-use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Middleware\AdminAuth;
 use App\Http\Middleware\AdminGuest;
@@ -60,8 +61,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('admin.can:showtimes.manage')->group(function () {
             Route::resource('cinemas', CinemaController::class);
             Route::resource('auditoriums', AuditoriumController::class);
-            Route::post('auditoriums/{auditorium}/seats/block', [AuditoriumController::class, 'blockSeat'])->name('auditoriums.seats.block');
-            Route::delete('auditoriums/{auditorium}/seats/{seatBlock}/unblock', [AuditoriumController::class, 'unblockSeat'])->name('auditoriums.seats.unblock');
             Route::resource('shows', ShowController::class);
             Route::post('shows/{show}/seats/block', [ShowController::class, 'blockSeat'])->name('shows.seats.block');
             Route::delete('shows/{show}/seats/{seatBlock}/unblock', [ShowController::class, 'unblockSeat'])->name('shows.seats.unblock');
@@ -79,16 +78,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::resource('tickets', TicketController::class)->only(['index', 'show']);
             Route::post('tickets/quick-checkin', [TicketController::class, 'quickCheckIn'])->name('tickets.quick_checkin');
             Route::post('tickets/{ticket}/check-in', [TicketController::class, 'checkIn'])->name('tickets.checkin');
-            Route::post('tickets/{ticket}/print', [TicketController::class, 'print'])->name('tickets.print');
             Route::post('tickets/{ticket}/reopen', [TicketController::class, 'reopen'])->name('tickets.reopen');
         });
 
-        Route::post('tickets/{ticket}/compensate', [TicketController::class, 'compensate'])
-            ->middleware('admin.can:bookings.manage')
-            ->name('tickets.compensate');
-
         Route::middleware('admin.can:payments.manage')->group(function () {
             Route::resource('payments', PaymentController::class)->only(['index', 'show', 'update']);
+        });
+
+        Route::middleware('admin.can:refunds.manage')->group(function () {
+            Route::post('payments/{payment}/refunds', [RefundController::class, 'store'])->name('payments.refunds.store');
+            Route::resource('refunds', RefundController::class)->only(['index', 'show', 'update']);
         });
 
         Route::middleware('admin.can:fnb.manage')->group(function () {

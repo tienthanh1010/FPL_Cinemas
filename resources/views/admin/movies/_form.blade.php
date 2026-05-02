@@ -64,22 +64,6 @@
             <input name="censorship_license_no" value="{{ old('censorship_license_no', $movie->censorship_license_no) }}" class="form-control" placeholder="Ví dụ: 1234/QĐ-BVHTTDL">
         </div>
 
-        <div class="col-lg-6">
-            <div class="form-check form-switch mt-2">
-                <input class="form-check-input" type="checkbox" role="switch" id="is_hot" name="is_hot" value="1" @checked((bool) old('is_hot', $movie->is_hot))>
-                <label class="form-check-label" for="is_hot">Đánh dấu phim Hot</label>
-            </div>
-            <div class="form-text">Phim Hot sẽ hiển thị ở khu riêng trên trang chủ.</div>
-        </div>
-
-        <div class="col-lg-6">
-            <div class="form-check form-switch mt-2">
-                <input class="form-check-input" type="checkbox" role="switch" id="is_on_slider" name="is_on_slider" value="1" @checked((bool) old('is_on_slider', $movie->is_on_slider))>
-                <label class="form-check-label" for="is_on_slider">Đưa phim lên Slide trang chủ</label>
-            </div>
-            <div class="form-text">Chỉ các phim bật tuỳ chọn này mới xuất hiện trong slider chính.</div>
-        </div>
-
         <div class="col-12">
             <label class="form-label">Tóm tắt nội dung</label>
             <textarea name="synopsis" rows="5" class="form-control" placeholder="Mô tả ngắn gọn nội dung phim, điểm nhấn, bối cảnh...">{{ old('synopsis', $movie->synopsis) }}</textarea>

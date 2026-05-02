@@ -1,8 +1,8 @@
 @php
-  $brand = $appBrand ?? $primaryCinema?->name ?? config('app.name', 'FPL Cinema');
+  $brand = $appBrand ?? config('app.name', 'FPL Cinemas');
   $cinemaName = $primaryCinema?->name ?: $brand;
   $cinemaHotline = $primaryCinema?->phone ?: '1900 6868';
-  $cinemaEmail = $primaryCinema?->email ?: 'support@fplcinema.local';
+  $cinemaEmail = $primaryCinema?->email ?: 'support@fplcinemas.local';
   $cinemaAddress = collect([
       $primaryCinema?->address_line,
       $primaryCinema?->ward,
@@ -11,8 +11,7 @@
   ])->filter()->implode(', ');
   $cinemaAddress = $cinemaAddress !== '' ? $cinemaAddress : 'Hà Nội, Việt Nam';
   $memberPoints = (int) ($authCustomer?->loyaltyAccount?->points_balance ?? 0);
-  $scheduleLink = request()->routeIs('home') ? '#movie-sections' : route('home') . '#movie-sections';
-  $scheduleActive = request()->routeIs('home', 'movies.showtimes', 'shows.book', 'booking.payment', 'booking.success');
+  $navCategories = ($globalCategories ?? collect())->take(8);
 @endphp
 <!doctype html>
 <html lang="vi" data-theme="dark">
@@ -30,10 +29,7 @@
     (function () {
       try {
         var savedTheme = localStorage.getItem('fpl-theme');
-        var systemPrefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-        var theme = savedTheme === 'light' || savedTheme === 'dark'
-          ? savedTheme
-          : (systemPrefersLight ? 'light' : 'dark');
+        var theme = savedTheme === 'light' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', theme);
       } catch (e) {
         document.documentElement.setAttribute('data-theme', 'dark');
@@ -49,126 +45,88 @@
         <div class="d-flex align-items-center gap-3 small topbar-meta flex-wrap">
           <span><i class="bi bi-geo-alt me-1"></i>{{ $cinemaName }}</span>
           <span><i class="bi bi-telephone-outbound me-1"></i>{{ $cinemaHotline }}</span>
+          <span><i class="bi bi-stars me-1"></i>Tích điểm sau mỗi đơn thanh toán thành công</span>
         </div>
         <div class="d-flex align-items-center gap-3 small topbar-links flex-wrap">
-          <a href="{{ route('support.index') }}"><i class="bi bi-life-preserver me-1"></i>Hỗ trợ</a>
+          <a href="{{ route('booking.lookup') }}">Tra cứu booking</a>
+          <a href="{{ route('cinema.info') }}">FPL Cinema</a>
+          <a href="{{ route('support.index') }}">Hỗ trợ</a>
+          <a href="{{ route('admin.login') }}">Quản trị</a>
         </div>
       </div>
     </div>
 
     <header class="main-header sticky-top">
       <div class="container-fluid app-container">
-        <nav class="navbar navbar-expand-lg py-3">
-          <a class="navbar-brand brand-mark" href="{{ route('home') }}" aria-label="{{ $brand }}">
+        <nav class="navbar navbar-expand-xl py-3">
+          <a class="navbar-brand brand-mark" href="{{ route('home') }}">
             <span class="brand-mark__icon"><i class="bi bi-play-circle-fill"></i></span>
             <span>
               <strong>{{ $brand }}</strong>
-              {{-- <small>{{ $cinemaAddress }}</small> --}}
+              <small>{{ $cinemaName }}</small>
             </span>
           </a>
 
-          <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavbar" aria-controls="siteNavbar" aria-expanded="false" aria-label="Mở menu">
+          <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavbar" aria-controls="siteNavbar" aria-expanded="false" aria-label="Toggle navigation">
             <i class="bi bi-list fs-2"></i>
           </button>
 
           <div class="collapse navbar-collapse" id="siteNavbar">
-            @php
-              $headerSearch = trim((string) request('q', ''));
-              $headerFilter = request('filter', 'all');
-              $headerGenre = (int) request('genre', 0);
-              $headerRating = (int) request('rating', 0);
-            @endphp
-
-            <ul class="navbar-nav mx-auto align-items-lg-center gap-lg-2">
-              <li class="nav-item"><a class="nav-link {{ $scheduleActive ? 'active' : '' }}" href="{{ $scheduleLink }}">Lịch chiếu</a></li>
-              <li class="nav-item"><a class="nav-link {{ request()->routeIs('content.hub', 'news.*', 'offers.*') ? 'active' : '' }}" href="{{ route('content.hub') }}">Tin tức &amp; ưu đãi</a></li>
-              <li class="nav-item dropdown nav-genre-dropdown">
-                <a class="nav-link dropdown-toggle {{ $headerGenre > 0 || $headerRating > 0 ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Thể loại
-                </a>
-                <div class="dropdown-menu genre-dropdown-menu">
-                  <div class="genre-dropdown__header">
-                    <span class="section-eyebrow mb-0">Khám phá phim</span>
-                    {{-- <strong>Chọn theo thể loại hoặc giới hạn độ tuổi</strong> --}}
-                  </div>
-                  <div class="genre-dropdown__grid mb-3">
-                    <a class="genre-dropdown__item {{ $headerGenre === 0 ? 'is-active' : '' }}" href="{{ route('home', array_filter(['q' => $headerSearch ?: null, 'rating' => $headerRating > 0 ? $headerRating : null])) }}#movie-sections">
-                      <span>Tất cả thể loại</span>
-                      <small>{{ $globalCategories->sum('movies_count') }} phim</small>
-                    </a>
-                    @foreach($globalCategories as $category)
-                      <a class="genre-dropdown__item {{ $headerGenre === (int) $category->id ? 'is-active' : '' }}" href="{{ route('home', array_filter(['q' => $headerSearch ?: null, 'genre' => $category->id, 'rating' => $headerRating > 0 ? $headerRating : null])) }}#movie-sections">
-                        <span>{{ $category->name }}</span>
-                        <small>{{ $category->movies_count }} phim</small>
+            <ul class="navbar-nav mx-auto align-items-xl-center gap-xl-2">
+              <li class="nav-item"><a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Trang chủ</a></li>
+              <li class="nav-item"><a class="nav-link {{ request()->routeIs('home', 'movies.showtimes', 'shows.book') ? 'active' : '' }}" href="{{ request()->routeIs('home') ? '#movie-sections' : route('home') . '#movie-sections' }}">Phim &amp; lịch chiếu</a></li>
+              <li class="nav-item"><a class="nav-link {{ request()->routeIs('news.*') ? 'active' : '' }}" href="{{ route('news.index') }}">Tin tức</a></li>
+              <li class="nav-item"><a class="nav-link {{ request()->routeIs('offers.*') ? 'active' : '' }}" href="{{ route('offers.index') }}">Ưu đãi</a></li>
+              <li class="nav-item"><a class="nav-link {{ request()->routeIs('booking.lookup') ? 'active' : '' }}" href="{{ route('booking.lookup') }}">Tra cứu vé</a></li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle {{ request()->routeIs('cinema.info', 'support.index') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Thông tin rạp</a>
+                <ul class="dropdown-menu glass-dropdown border-0 shadow-lg mt-2">
+                  <li><a class="dropdown-item" href="{{ route('cinema.info') }}">FPL Cinema</a></li>
+                  <li><a class="dropdown-item" href="{{ route('support.index') }}">Hỗ trợ & FAQ</a></li>
+                </ul>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle {{ request()->routeIs('category.show') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Thể loại</a>
+                <ul class="dropdown-menu glass-dropdown border-0 shadow-lg mt-2">
+                  @forelse($navCategories as $navCategory)
+                    <li>
+                      <a class="dropdown-item d-flex justify-content-between align-items-center" href="{{ route('category.show', $navCategory) }}">
+                        <span>{{ $navCategory->name }}</span>
+                        <span class="badge rounded-pill category-count-badge">{{ $navCategory->movies_count ?? $navCategory->active_movies_count ?? 0 }}</span>
                       </a>
-                    @endforeach
-                  </div>
-                  <div class="genre-dropdown__header pt-0 border-0">
-                    <span class="section-eyebrow mb-0">Giới hạn độ tuổi</span>
-                    {{-- <strong>Lọc phim theo nhãn phân loại</strong> --}}
-                  </div>
-                  <div class="genre-dropdown__grid">
-                    <a class="genre-dropdown__item {{ $headerRating === 0 ? 'is-active' : '' }}" href="{{ route('home', array_filter(['q' => $headerSearch ?: null, 'genre' => $headerGenre > 0 ? $headerGenre : null])) }}#movie-sections">
-                      <span>Tất cả nhãn</span>
-                      <small>{{ $globalRatings->sum('movies_count') }} phim</small>
-                    </a>
-                    @foreach($globalRatings as $rating)
-                      <a class="genre-dropdown__item {{ $headerRating === (int) $rating->id ? 'is-active' : '' }}" href="{{ route('home', array_filter(['q' => $headerSearch ?: null, 'genre' => $headerGenre > 0 ? $headerGenre : null, 'rating' => $rating->id])) }}#movie-sections">
-                        <span>{{ $rating->name }}</span>
-                        <small>{{ $rating->description ?: ('Từ ' . ($rating->min_age ?? 'mọi') . ' tuổi') }}</small>
-                      </a>
-                    @endforeach
-                  </div>
-                </div>
+                    </li>
+                  @empty
+                    <li><span class="dropdown-item text-muted">Chưa có thể loại</span></li>
+                  @endforelse
+                </ul>
               </li>
             </ul>
 
-            <div class="header-catalog-tools">
-              <form class="header-search-form" action="{{ route('home') }}" method="GET">
-                @if($headerGenre > 0)
-                  <input type="hidden" name="genre" value="{{ $headerGenre }}">
-                @endif
-                @if($headerRating > 0)
-                  <input type="hidden" name="rating" value="{{ $headerRating }}">
-                @endif
-                <div class="header-search-box">
-                  <i class="bi bi-search"></i>
-                  <input type="search" name="q" value="{{ $headerSearch }}" placeholder="Tìm phim theo tên, thể loại, nội dung..." aria-label="Tìm phim">
-                </div>
-              </form>
-            </div>
-
-            <div class="header-actions d-flex flex-wrap gap-2 align-items-center justify-content-lg-end">
-              <button type="button"
-                      class="btn btn-theme-toggle"
-                      id="themeToggle"
-                      aria-label="Chuyển giao diện"
-                      aria-pressed="false"
-                      title="Chuyển giao diện">
-                <i class="bi bi-moon-stars-fill theme-icon-dark" aria-hidden="true"></i>
-                <i class="bi bi-brightness-high-fill theme-icon-light" aria-hidden="true"></i>
-                <span class="visually-hidden">Chuyển giao diện sáng tối</span>
+            <div class="header-actions d-flex flex-wrap gap-2 align-items-center justify-content-xl-end">
+              <button type="button" class="btn btn-theme-toggle" id="themeToggle" aria-label="Chuyển chế độ sáng tối" title="Chuyển chế độ sáng tối">
+                <i class="bi bi-moon-stars-fill theme-icon-dark"></i>
+                <i class="bi bi-sun-fill theme-icon-light"></i>
+                <span class="theme-toggle__label">Sáng/Tối</span>
               </button>
 
               @auth
                 <a class="account-chip" href="{{ route('member.account') }}">
                   <span class="account-chip__avatar">{{ strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
-                  <span class="account-chip__info">
+                  <span>
                     <strong>{{ auth()->user()->name }}</strong>
                     <small>{{ number_format($memberPoints) }} điểm</small>
                   </span>
                 </a>
                 <form method="POST" action="{{ route('member.logout') }}" class="m-0">
                   @csrf
-                  <button class="btn btn-ghost header-icon-btn" type="submit" title="Đăng xuất" aria-label="Đăng xuất">
-                    <i class="bi bi-box-arrow-right"></i>
-                  </button>
+                  <button class="btn btn-ghost" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</button>
                 </form>
               @else
-                <a class="btn btn-primary-soft header-account-btn" href="{{ route('member.login') }}">
-                  <i class="bi bi-person-circle me-2"></i>Tài khoản
-                </a>
+                <a class="btn btn-ghost" href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập</a>
+                <a class="btn btn-primary-soft" href="{{ route('member.register') }}"><i class="bi bi-person-plus me-2"></i>Đăng ký</a>
               @endauth
+
+              <a class="btn btn-cinema-primary" href="{{ request()->routeIs('home') ? '#booking-widget' : route('home') . '#booking-widget' }}"><i class="bi bi-ticket-detailed me-2"></i>Đặt vé nhanh</a>
             </div>
           </div>
         </nav>
@@ -205,29 +163,32 @@
                 <small>{{ $cinemaName }}</small>
               </span>
             </div>
+            <p class="footer-copy">Trải nghiệm đặt vé một rạp tập trung, rõ ràng, dễ thao tác hơn cho cả khách hàng và quản trị viên.</p>
             <div class="footer-socials d-flex gap-2 mt-3">
-              <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-              <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-              <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
-              <a href="#" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+              <a href="#"><i class="bi bi-facebook"></i></a>
+              <a href="#"><i class="bi bi-instagram"></i></a>
+              <a href="#"><i class="bi bi-youtube"></i></a>
+              <a href="#"><i class="bi bi-tiktok"></i></a>
             </div>
           </div>
           <div>
-            <h3>Đi nhanh</h3>
+            <h3>Khám phá</h3>
             <ul>
-              <li><a href="{{ $scheduleLink }}">Lịch chiếu hôm nay</a></li>
-              <li><a href="{{ route('booking.lookup') }}">Tra cứu booking</a></li>
-              <li><a href="{{ route('offers.index') }}">Ưu đãi thành viên</a></li>
+              <li><a href="{{ route('home') }}#movie-sections">Lịch chiếu nổi bật</a></li>
               <li><a href="{{ route('news.index') }}">Tin tức điện ảnh</a></li>
+              <li><a href="{{ route('offers.index') }}">Ưu đãi thành viên</a></li>
+              <li><a href="{{ route('booking.lookup') }}">Tra cứu booking</a></li>
+              <li><a href="{{ route('cinema.info') }}">Thông tin FPL Cinema</a></li>
             </ul>
           </div>
           <div>
-            <h3>Khách hàng</h3>
+            <h3>Khách hàng thành viên</h3>
             <ul>
-              <li><a href="{{ route('member.login') }}">Đăng nhập tài khoản</a></li>
-              <li><a href="{{ route('member.register') }}">Đăng ký thành viên</a></li>
-              <li><a href="{{ route('cinema.info') }}">Thông tin FPL Cinema</a></li>
-              <li><a href="{{ route('support.index') }}">FAQ & hỗ trợ</a></li>
+              <li>Tích điểm tự động sau khi thanh toán</li>
+              <li>Cứ {{ number_format((int) config('loyalty.amount_per_point', 10000)) }}đ = 1 điểm</li>
+              <li>Theo dõi lịch sử booking trong tài khoản</li>
+              <li>Tra cứu booking ngay cả khi chưa đăng nhập</li>
+              <li>Ưu đãi và tin tức được cập nhật tại một nơi</li>
             </ul>
           </div>
           <div>
@@ -237,6 +198,7 @@
               <li><i class="bi bi-telephone me-2"></i>{{ $cinemaHotline }}</li>
               <li><i class="bi bi-envelope me-2"></i>{{ $cinemaEmail }}</li>
               <li><i class="bi bi-clock me-2"></i>07:00 - 23:00 mỗi ngày</li>
+              <li><a href="{{ route('support.index') }}">Xem FAQ & chính sách hỗ trợ</a></li>
             </ul>
           </div>
         </div>
@@ -251,29 +213,23 @@
       if (!toggle) return;
 
       var root = document.documentElement;
+      var label = toggle.querySelector('.theme-toggle__label');
 
-      function setButtonState(theme) {
-        var nextThemeLabel = theme === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng';
-        toggle.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
-        toggle.setAttribute('title', nextThemeLabel);
-        toggle.setAttribute('aria-label', nextThemeLabel);
-      }
-
-      function applyTheme(theme, persist) {
+      function applyTheme(theme) {
         root.setAttribute('data-theme', theme);
-        setButtonState(theme);
-        if (persist) {
-          try {
-            localStorage.setItem('fpl-theme', theme);
-          } catch (e) {}
+        if (label) {
+          label.textContent = theme === 'light' ? 'Chế độ sáng' : 'Chế độ tối';
         }
       }
 
-      applyTheme(root.getAttribute('data-theme') === 'light' ? 'light' : 'dark', false);
+      applyTheme(root.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
 
       toggle.addEventListener('click', function () {
         var nextTheme = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        applyTheme(nextTheme, true);
+        applyTheme(nextTheme);
+        try {
+          localStorage.setItem('fpl-theme', nextTheme);
+        } catch (e) {}
       });
     })();
   </script>
