@@ -173,6 +173,7 @@
 </style>
 @endpush
 
+
 @section('content')
   <section class="section-space pt-4 pt-lg-5">
     <div class="container-fluid app-container">
@@ -250,7 +251,8 @@
         @else
           <div class="empty-panel">Chưa có suất chiếu nào cho phim này.</div>
         @endif
-      </div>
+     </div>
+
     </div>
   </section>
 @endsection

@@ -24,6 +24,13 @@
               <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
                 <div class="hero-card">
                   <div class="hero-card__backdrop" style="background-image: url('{{ $hero->poster_url ?: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80' }}')"></div>
+                  <div class="hero-card__backdrop" style="background-image: url('{{ $hero->poster_url ?: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80' }}')"></div>
+                  <div class="row align-items-center g-4 position-relative">
+                    <div class="col-lg-7">
+                      <div class="hero-copy">
+                        <span class="eyebrow"><i class="bi bi-stars me-2"></i>{{ $cinemaName }} · Một rạp, một luồng đặt vé gọn gàng</span>
+                        <h1>{{ $hero->title }}</h1>
+                        <p>{{ $hero->synopsis ? \Illuminate\Support\Str::limit($hero->synopsis, 190) : 'Luồng xem lịch chiếu, chọn ghế, thanh toán và quản lý tài khoản đã được tinh gọn để khách hàng thao tác nhanh, dễ hiểu và ít bị rối hơn.' }}</p>
                   <div class="row align-items-center g-4 position-relative">
                     <div class="col-lg-7">
                       <div class="hero-copy">
@@ -37,6 +44,23 @@
                         </div>
                         <div class="d-flex flex-wrap gap-2 mb-4">
                           @forelse($hero->genres->take(3) as $genre)
+                          @forelse($hero->genres->take(3) as $genre)
+                            <span class="genre-chip">{{ $genre->name }}</span>
+                          @empty
+                            <span class="genre-chip">Phim nổi bật</span>
+                          @endforelse
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-3">
+                          <a href="{{ route('movies.showtimes', $hero) }}" class="btn btn-cinema-primary">
+                            <i class="bi bi-ticket-perforated me-2"></i>Xem lịch chiếu
+                          </a>
+                          @if($hero->trailer_url)
+                            <a href="{{ $hero->trailer_url }}" target="_blank" rel="noopener" class="section-link">
+                              Xem trailer <i class="bi bi-arrow-up-right"></i>
+                            </a>
+                          @else
+                            <span class="hero-inline-note">Đăng nhập để lưu lịch sử booking và tích điểm tự động.</span>
+                          @endif
                             <span class="genre-chip">{{ $genre->name }}</span>
                           @empty
                             <span class="genre-chip">Phim nổi bật</span>
@@ -63,6 +87,7 @@
                             </div>
                           @endif
                         </div>
+
                       </div>
                     </div>
                   </div>

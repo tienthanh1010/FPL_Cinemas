@@ -462,7 +462,7 @@ class TicketController extends Controller
 
                 DB::table('audit_logs')->insert([
                     'actor_type' => 'admin_user',
-                    'actor_id' => (int) request()->session()->get('admin_user_id', 0) ?: null,
+                    'actor_id' => (int) auth('admin')->id(),
                     'action' => 'TICKET_COMPENSATION_VOUCHER',
                     'entity_type' => 'booking_tickets',
                     'entity_id' => $bookingTicket->id,
