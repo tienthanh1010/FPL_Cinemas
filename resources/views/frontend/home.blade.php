@@ -1,11 +1,10 @@
 @extends('frontend.layout')
 
-@section('title', ($appBrand ?? config('app.name', 'FPL Cinema')) . ' | Trang chủ')
-@section('title', ($appBrand ?? config('app.name', 'FPL Cinema')) . ' | Trang chủ')
+@section('title', ($appBrand ?? config('app.name', 'FPL Cinemas')) . ' | Trang chủ')
 
 @section('content')
   @php
-    $brand = $appBrand ?? config('app.name', 'FPL Cinema');
+    $brand = $appBrand ?? config('app.name', 'FPL Cinemas');
     $cinemaName = $primaryCinema?->name ?: $brand;
     $pointAmount = (int) config('loyalty.amount_per_point', 10000);
     $modalMovies = $heroMovies->concat($nowShowing)->concat($comingSoon)->concat($specialMovies)->unique('id')->values();
@@ -13,28 +12,15 @@
 
   <section class="hero-section section-space pt-4 pt-lg-5">
     <div class="container-fluid app-container">
-      <div class="hero-shell hero-shell--compact">
-
-@section('content')
-  @php
-    $brand = $appBrand ?? config('app.name', 'FPL Cinema');
-    $cinemaName = $primaryCinema?->name ?: $brand;
-    $pointAmount = (int) config('loyalty.amount_per_point', 10000);
-    $modalMovies = $sliderMovies->concat($nowShowing)->concat($comingSoon)->concat($hotMovies)->unique('id')->values();
-  @endphp
-
-  <section class="hero-section section-space pt-4 pt-lg-5">
-    <div class="container-fluid app-container">
-      <div class="hero-shell hero-shell--compact">
-
+      <div class="hero-shell">
         <div id="homeHeroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel">
           <div class="carousel-indicators hero-indicators">
-            @foreach($sliderMovies as $index => $hero)
+            @foreach($heroMovies as $index => $hero)
               <button type="button" data-bs-target="#homeHeroCarousel" data-bs-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}" aria-current="{{ $index === 0 ? 'true' : 'false' }}" aria-label="Slide {{ $index + 1 }}"></button>
             @endforeach
           </div>
           <div class="carousel-inner">
-            @forelse($sliderMovies as $index => $hero)
+            @forelse($heroMovies as $index => $hero)
               <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
                 <div class="hero-card">
                   <div class="hero-card__backdrop" style="background-image: url('{{ $hero->poster_url ?: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80' }}')"></div>
@@ -48,10 +34,9 @@
                   <div class="row align-items-center g-4 position-relative">
                     <div class="col-lg-7">
                       <div class="hero-copy">
-                        <span class="eyebrow"><i class="bi bi-stars me-2"></i>{{ $cinemaName }} · Một rạp, một luồng đặt vé gọn gàng</span>
+                        <span class="eyebrow"><i class="bi bi-stars me-2"></i>{{ $cinemaName }} · Trải nghiệm điện ảnh nổi bật</span>
                         <h1>{{ $hero->title }}</h1>
-                        <p>{{ $hero->synopsis ? \Illuminate\Support\Str::limit($hero->synopsis, 190) : 'Luồng xem lịch chiếu, chọn ghế, thanh toán và quản lý tài khoản đã được tinh gọn để khách hàng thao tác nhanh, dễ hiểu và ít bị rối hơn.' }}</p>
-
+                        <p>{{ $hero->synopsis ? \Illuminate\Support\Str::limit($hero->synopsis, 220) : 'Đặt vé gọn gàng hơn, thanh toán rõ ràng hơn, theo dõi lịch sử và điểm tích luỹ ngay trong một tài khoản thành viên.' }}</p>
                         <div class="hero-meta">
                           <span><i class="bi bi-clock-history me-2"></i>{{ $hero->duration_minutes }} phút</span>
                           <span><i class="bi bi-calendar-event me-2"></i>{{ optional($hero->release_date)->format('d.m.Y') ?: 'Đang cập nhật' }}</span>
@@ -81,18 +66,13 @@
                             <span class="genre-chip">Phim nổi bật</span>
                           @endforelse
                         </div>
-                        <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="d-flex flex-wrap gap-3">
                           <a href="{{ route('movies.showtimes', $hero) }}" class="btn btn-cinema-primary">
-                            <i class="bi bi-ticket-perforated me-2"></i>Xem lịch chiếu
+                            <i class="bi bi-ticket-perforated me-2"></i>Đặt vé ngay
                           </a>
-                          @if($hero->trailer_url)
-                            <a href="{{ $hero->trailer_url }}" target="_blank" rel="noopener" class="section-link">
-                              Xem trailer <i class="bi bi-arrow-up-right"></i>
-                            </a>
-                          @else
-                            <span class="hero-inline-note">Đăng nhập để lưu lịch sử booking và tích điểm tự động.</span>
-                          @endif
-
+                          <a href="{{ route('news.index') }}" class="btn btn-cinema-secondary">
+                            <i class="bi bi-newspaper me-2"></i>Xem tin mới
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -119,12 +99,8 @@
                   <div class="hero-card__backdrop"></div>
                   <div class="hero-copy position-relative">
                     <span class="eyebrow">{{ $brand }}</span>
-                    <h1>Giao diện đặt vé đang được tối ưu lại cho FPL Cinema</h1>
-                    <p>Thêm dữ liệu phim, poster và lịch chiếu để trang chủ hiển thị nổi bật hơn.</p>
-                    <span class="eyebrow">{{ $brand }}</span>
-                    <h1>Giao diện đặt vé đang được tối ưu lại cho FPL Cinema</h1>
-                    <p>Thêm dữ liệu phim, poster và lịch chiếu để trang chủ hiển thị nổi bật hơn.</p>
-
+                    <h1>Giao diện đặt vé tập trung cho một rạp duy nhất</h1>
+                    <p>Thêm dữ liệu phim, tin tức và ưu đãi để trang chủ hiển thị đầy đủ hơn.</p>
                   </div>
                 </div>
               </div>
@@ -133,69 +109,47 @@
         </div>
 
         <aside class="hero-sidebar" id="booking-widget">
-          <div class="glass-panel quick-panel quick-panel--compact h-100">
-          <div class="glass-panel quick-panel quick-panel--compact h-100">
+          <div class="glass-panel quick-panel h-100">
             <span class="panel-badge"><i class="bi bi-lightning-charge-fill"></i>Đặt vé nhanh</span>
-            <h2>Đi thẳng tới thao tác bạn cần</h2>
+            <h2>Chọn phim, giữ ghế, thanh toán và tích điểm</h2>
+            <p class="mb-4">Hệ thống hiện tối ưu cho mô hình một rạp, giúp khách hàng thao tác nhanh hơn và giảm nhầm lẫn địa điểm.</p>
 
-            <div class="quick-shortcuts">
-              <a href="#movie-sections" class="quick-shortcut">
+            <div class="quick-actions">
+              <a href="#movie-sections" class="quick-action-card">
                 <i class="bi bi-film"></i>
                 <div>
-                  <strong>Lịch chiếu hôm nay</strong>
-                  <small>{{ $stats['show_count'] }} suất đang mở bán tại {{ $cinemaName }}</small>
+                  <strong>Phim đang chiếu</strong>
+                  <span>{{ $stats['movie_count'] }} tựa phim khả dụng</span>
                 </div>
               </a>
-              <a href="{{ route('booking.lookup') }}" class="quick-shortcut">
-                <i class="bi bi-search"></i>
+              <a href="#member-benefits" class="quick-action-card">
+                <i class="bi bi-stars"></i>
                 <div>
-                  <strong>Tra cứu vé</strong>
-                  <small>Xem trạng thái booking hoặc tiếp tục thanh toán nếu đơn còn hiệu lực</small>
+                  <strong>Tài khoản thành viên</strong>
+                  <span>Cứ {{ number_format($pointAmount) }}đ = 1 điểm tích luỹ</span>
                 </div>
               </a>
-              <a href="{{ route('offers.index') }}" class="quick-shortcut">
+              <a href="#offers" class="quick-action-card">
                 <i class="bi bi-gift"></i>
                 <div>
-                  <strong>Ưu đãi thành viên</strong>
-                  <small>Cứ {{ number_format($pointAmount) }}đ thanh toán thành công = 1 điểm tích luỹ</small>
-            <span class="panel-badge"><i class="bi bi-lightning-charge-fill"></i>Đặt vé nhanh</span>
-            <h2>Đi thẳng tới thao tác bạn cần</h2>
-
-            <div class="quick-shortcuts">
-              <a href="#movie-sections" class="quick-shortcut">
-                <i class="bi bi-film"></i>
-                <div>
-                  <strong>Lịch chiếu hôm nay</strong>
-                  <small>{{ $stats['show_count'] }} suất đang mở bán tại {{ $cinemaName }}</small>
+                  <strong>Ưu đãi &amp; tin tức</strong>
+                  <span>Xem nhanh khuyến mãi và bài viết mới nhất</span>
                 </div>
               </a>
-              <a href="{{ route('booking.lookup') }}" class="quick-shortcut">
+              <a href="{{ route('booking.lookup') }}" class="quick-action-card">
                 <i class="bi bi-search"></i>
                 <div>
-                  <strong>Tra cứu vé</strong>
-                  <small>Xem trạng thái booking hoặc tiếp tục thanh toán nếu đơn còn hiệu lực</small>
-                </div>
-              </a>
-              <a href="{{ route('offers.index') }}" class="quick-shortcut">
-                <i class="bi bi-gift"></i>
-                <div>
-                  <strong>Ưu đãi thành viên</strong>
-                  <small>Cứ {{ number_format($pointAmount) }}đ thanh toán thành công = 1 điểm tích luỹ</small>
-
+                  <strong>Tra cứu booking</strong>
+                  <span>Xem lại đơn vé và tiếp tục thanh toán nếu booking còn hiệu lực</span>
                 </div>
               </a>
             </div>
           </div>
 
-          <div class="stats-strip stats-strip--compact">
+          <div class="stats-strip">
             <div class="stats-card">
               <span>{{ $stats['movie_count'] }}</span>
-              <small>Phim</small>
-          <div class="stats-strip stats-strip--compact">
-            <div class="stats-card">
-              <span>{{ $stats['movie_count'] }}</span>
-              <small>Phim</small>
-
+              <small>Phim đang hiển thị</small>
             </div>
             <div class="stats-card">
               <span>{{ $stats['category_count'] }}</span>
@@ -203,9 +157,7 @@
             </div>
             <div class="stats-card">
               <span>{{ $stats['show_count'] }}</span>
-              <small>Suất chiếu</small>
-              <small>Suất chiếu</small>
-
+              <small>Suất đang mở bán</small>
             </div>
           </div>
         </aside>
@@ -218,7 +170,8 @@
       <div class="section-heading">
         <div>
           <span class="section-eyebrow">Phim và lịch chiếu</span>
-          <h2>Chia phim rõ ràng hơn để khách dễ chọn</h2>
+          <h2>Danh sách phim nổi bật trong ngày</h2>
+          <p>Tập trung vào một rạp giúp lịch chiếu rõ ràng hơn, ít bước chọn rạp hơn và luồng đặt vé dễ hiểu hơn cho người dùng.</p>
         </div>
       </div>
 
@@ -226,67 +179,47 @@
         <div class="movie-center">
           <ul class="nav movie-tabs" id="movieTab" role="tablist">
             <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="now-showing-tab" data-bs-toggle="tab" data-bs-target="#now-showing-pane" type="button" role="tab">Phim đang chiếu</button>
+              <button class="nav-link active" id="now-showing-tab" data-bs-toggle="tab" data-bs-target="#now-showing-pane" type="button" role="tab">Đang chiếu nổi bật</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="coming-soon-tab" data-bs-toggle="tab" data-bs-target="#coming-soon-pane" type="button" role="tab">Phim sắp chiếu</button>
+              <button class="nav-link" id="coming-soon-tab" data-bs-toggle="tab" data-bs-target="#coming-soon-pane" type="button" role="tab">Sắp ra mắt</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="hot-movies-tab" data-bs-toggle="tab" data-bs-target="#hot-movies-pane" type="button" role="tab">Phim Hot</button>
+              <button class="nav-link" id="special-tab" data-bs-toggle="tab" data-bs-target="#special-pane" type="button" role="tab">Chọn lọc đặc biệt</button>
             </li>
           </ul>
 
           <div class="tab-content pt-4">
             <div class="tab-pane fade show active" id="now-showing-pane" role="tabpanel" tabindex="0">
-              <div class="section-heading mb-3">
-                <div>
-                  <span class="section-eyebrow">Đã có suất chiếu</span>
-                  <h3 class="h4 mb-0">Những phim có thể mua vé ngay</h3>
-                </div>
-              </div>
               <div class="row g-4">
                 @forelse($nowShowing as $movie)
                   <div class="col-md-6 col-xl-4">
                     @include('frontend.partials.movie-card', ['movie' => $movie, 'showtimesByMovie' => $showtimesByMovie])
                   </div>
                 @empty
-                  <div class="col-12"><div class="glass-panel empty-panel">Hiện chưa có phim nào đang mở bán vé.</div></div>
+                  <div class="col-12"><div class="glass-panel empty-panel">Hiện chưa có phim đang chiếu để hiển thị.</div></div>
                 @endforelse
               </div>
             </div>
-
             <div class="tab-pane fade" id="coming-soon-pane" role="tabpanel" tabindex="0">
-              <div class="section-heading mb-3">
-                <div>
-                  <span class="section-eyebrow">Đã có phim nhưng chưa có suất</span>
-                  <h3 class="h4 mb-0">Phim sắp chiếu</h3>
-                </div>
-              </div>
               <div class="row g-4">
                 @forelse($comingSoon as $movie)
                   <div class="col-md-6 col-xl-4">
-                    @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Sắp chiếu', 'showtimesByMovie' => $showtimesByMovie])
+                    @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Coming', 'showtimesByMovie' => $showtimesByMovie])
                   </div>
                 @empty
-                  <div class="col-12"><div class="glass-panel empty-panel">Tất cả phim hiện có đã được gắn suất chiếu hoặc chưa có dữ liệu phim sắp chiếu.</div></div>
+                  <div class="col-12"><div class="glass-panel empty-panel">Hiện chưa có phim sắp ra mắt. Bạn có thể thêm release date trong tương lai để phần này nổi bật hơn.</div></div>
                 @endforelse
               </div>
             </div>
-
-            <div class="tab-pane fade" id="hot-movies-pane" role="tabpanel" tabindex="0">
-              <div class="section-heading mb-3">
-                <div>
-                  <span class="section-eyebrow">Do admin gắn nổi bật</span>
-                  <h3 class="h4 mb-0">Danh sách phim Hot</h3>
-                </div>
-              </div>
+            <div class="tab-pane fade" id="special-pane" role="tabpanel" tabindex="0">
               <div class="row g-4">
-                @forelse($hotMovies as $movie)
+                @forelse($specialMovies as $movie)
                   <div class="col-md-6 col-xl-4">
-                    @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Hot', 'showtimesByMovie' => $showtimesByMovie])
+                    @include('frontend.partials.movie-card', ['movie' => $movie, 'badge' => 'Spotlight', 'showtimesByMovie' => $showtimesByMovie])
                   </div>
                 @empty
-                  <div class="col-12"><div class="glass-panel empty-panel">Chưa có phim nào được admin gắn Hot.</div></div>
+                  <div class="col-12"><div class="glass-panel empty-panel">Thêm phim có dữ liệu phong phú hơn để tạo mục chọn lọc đặc biệt.</div></div>
                 @endforelse
               </div>
             </div>
@@ -301,14 +234,14 @@
       <div class="row g-4 align-items-stretch">
         <div class="col-lg-6">
           <div class="glass-panel feature-panel h-100">
-            {{-- <span class="section-eyebrow">Tài khoản thành viên</span> --}}
-            {{-- <h2>Đặt vé bằng tài khoản để theo dõi lịch sử và tích điểm</h2> --}}
-            {{-- <div class="feature-list mt-4">
+            <span class="section-eyebrow">Tài khoản thành viên</span>
+            <h2>Đặt vé bằng tài khoản để theo dõi lịch sử và tích điểm</h2>
+            <div class="feature-list mt-4">
               <div>
                 <i class="bi bi-person-check"></i>
                 <div>
                   <strong>Phân luồng đăng nhập rõ ràng</strong>
-                  <p>Tài khoản admin được chuyển thẳng sang quản trị. Tài khoản thành viên ở lại giao diện người dùng và trang cá nhân.</p>
+                  <p>Tài khoản admin được chuyển thẳng vào trang quản trị. Tài khoản thành viên đi vào giao diện người dùng và trang tài khoản cá nhân.</p>
                 </div>
               </div>
               <div>
@@ -322,32 +255,27 @@
                 <i class="bi bi-receipt"></i>
                 <div>
                   <strong>Lưu lịch sử booking tập trung</strong>
-                  <p>Người dùng có thể xem trạng thái booking, lịch sử thanh toán và điểm hiện có ngay trong mục tài khoản.</p>
+                  <p>Người dùng có thể xem trạng thái booking, lịch sử thanh toán và số điểm hiện có ngay trong mục tài khoản.</p>
                 </div>
               </div>
-            </div> --}}
+            </div>
           </div>
         </div>
         <div class="col-lg-6">
-          <div class="glass-panel compact-panel h-100">
-            <span class="section-eyebrow">Khám phá nhanh</span>
-            <h2>Thể loại đang có tại {{ $cinemaName }}</h2>
-
-            <div class="category-pill-grid mt-4">
-              @forelse($categories->take(8) as $category)
-                <a href="{{ route('category.show', $category) }}" class="category-pill">
-                  <span>{{ $category->name }}</span>
-                  <small>{{ $category->movies_count }} phim</small>
-                </a>
-              @empty
-                <div class="empty-panel w-100">Hiện chưa có thể loại nào để hiển thị.</div>
-              @endforelse
-            </div>
-
-            <div class="compact-note mt-4">
-              <i class="bi bi-info-circle"></i>
-              <span>Nếu cần xem thêm nội dung, bạn có thể chuyển sang mục Tin tức, Ưu đãi hoặc Tra cứu vé ở thanh điều hướng phía trên.</span>
-            </div>
+          <div class="experience-grid h-100">
+            @forelse($categories->take(6) as $category)
+              <a href="{{ route('category.show', $category) }}" class="experience-card">
+                <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                <strong>{{ $category->name }}</strong>
+                <small>{{ $category->movies_count }} phim phù hợp</small>
+              </a>
+            @empty
+              <div class="experience-card">
+                <span>01</span>
+                <strong>Danh mục phim</strong>
+                <small>Bổ sung thể loại để tăng khả năng khám phá nội dung.</small>
+              </div>
+            @endforelse
           </div>
         </div>
       </div>
@@ -360,8 +288,9 @@
         <div>
           <span class="section-eyebrow">Ưu đãi đang áp dụng</span>
           <h2>Khuyến mãi và quyền lợi dành cho khách hàng</h2>
+          <p>Nội dung ưu đãi giờ có thể được quản lý riêng ở admin và hiển thị lại ngoài giao diện người dùng.</p>
         </div>
-        <a href="{{ route('offers.index') }}" class="section-link">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+        <a href="{{ route('offers.index') }}" class="btn btn-cinema-secondary">Xem tất cả ưu đãi</a>
       </div>
 
       <div class="content-grid">
@@ -397,8 +326,9 @@
         <div>
           <span class="section-eyebrow">Tin tức mới nhất</span>
           <h2>Cập nhật điện ảnh và thông báo từ rạp</h2>
+          <p>Phần tin tức được bổ sung để người dùng theo dõi các bài viết, thông báo và lịch hoạt động dễ dàng hơn.</p>
         </div>
-        <a href="{{ route('news.index') }}" class="section-link">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+        <a href="{{ route('news.index') }}" class="btn btn-cinema-secondary">Xem tất cả tin tức</a>
       </div>
 
       <div class="content-grid">

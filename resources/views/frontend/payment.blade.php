@@ -6,18 +6,15 @@
 <style>
   .checkout-shell {
     display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
     gap: 1.5rem;
   }
   .checkout-card,
   .payment-summary-card,
-  .payment-method-card,
-  .transfer-card,
-  .transfer-detail-card,
-  .mini-order-item {
+  .payment-method-card {
     border-radius: 28px;
-    border: 1px solid var(--line);
-    background: var(--panel-light);
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04);
     padding: 1.25rem;
   }
   .payment-method-grid {
@@ -27,9 +24,24 @@
   }
   .payment-method-card {
     position: relative;
-    min-height: 150px;
-    border-color: color-mix(in srgb, var(--primary) 34%, var(--line));
-    background: color-mix(in srgb, var(--primary) 7%, var(--panel-light));
+    cursor: pointer;
+    transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    min-height: 170px;
+  }
+  .payment-method-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 178, 71, .38);
+  }
+  .payment-method-card.is-active {
+    border-color: rgba(255, 122, 24, .58);
+    background: rgba(255, 122, 24, .08);
+    box-shadow: 0 16px 34px rgba(255, 122, 24, .12);
+  }
+  .payment-method-card input[type="radio"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
   }
   .payment-method-card__icon {
     width: 56px;
@@ -38,45 +50,40 @@
     display: grid;
     place-items: center;
     font-size: 1.4rem;
-    background: var(--surface-2);
-    color: var(--text);
+    background: rgba(255,255,255,.08);
+    color: #fff;
     margin-bottom: .9rem;
   }
-  .payment-method-card__title,
-  .payment-summary-row strong,
-  .mini-order-item strong,
-  .checkout-countdown strong,
-  .checkout-badge,
-  .transfer-hero__title,
-  .transfer-detail__value {
-    color: var(--text);
+  .payment-method-card__title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: .35rem;
   }
-  .payment-method-card__meta,
-  .payment-summary-row,
-  .checkout-countdown,
-  .transfer-hero__copy,
-  .transfer-detail__label,
-  .transfer-note,
-  .mini-order-item .text-white-50,
-  .mini-order-item .small {
-    color: var(--muted) !important;
+  .payment-method-card__meta {
+    color: rgba(255,255,255,.58);
+    font-size: .9rem;
+    line-height: 1.6;
   }
-  .payment-summary-list,
-  .mini-order-list,
-  .transfer-detail-list {
-    display: grid;
+  .payment-summary-list {
+    display: flex;
+    flex-direction: column;
     gap: .85rem;
   }
   .payment-summary-row {
     display: flex;
     justify-content: space-between;
     gap: 1rem;
+    color: rgba(255,255,255,.72);
   }
-  .payment-summary-row--total,
-  .checkout-action-bar {
+  .payment-summary-row strong {
+    color: #fff;
+  }
+  .payment-summary-row--total {
     padding-top: 1rem;
     margin-top: .15rem;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid rgba(255,255,255,.08);
+    font-size: 1.02rem;
   }
   .payment-summary-row--total strong {
     font-size: 1.35rem;
@@ -87,12 +94,23 @@
     gap: .45rem;
     padding: .55rem .85rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--primary) 14%, var(--panel-light));
-    border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--line));
+    background: rgba(255, 122, 24, .14);
+    border: 1px solid rgba(255, 122, 24, .3);
+    color: #ffd1b0;
     font-weight: 700;
   }
+  .mini-order-list {
+    display: grid;
+    gap: .75rem;
+  }
   .mini-order-item {
+    border-radius: 18px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.06);
     padding: .85rem .95rem;
+  }
+  .mini-order-item strong {
+    color: #fff;
   }
   .checkout-action-bar {
     display: flex;
@@ -100,85 +118,61 @@
     gap: .85rem;
     align-items: center;
     justify-content: space-between;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,.08);
   }
   .checkout-countdown {
+    color: rgba(255,255,255,.62);
     font-size: .92rem;
   }
-  .transfer-shell {
-    display: grid;
-    grid-template-columns: minmax(280px, .9fr) minmax(0, 1.1fr);
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-  .transfer-card {
-    text-align: center;
-  }
-  .transfer-qr {
-    width: 100%;
-    max-width: 290px;
-    margin: 0 auto 1rem;
-    padding: .85rem;
-    border-radius: 24px;
-    background: #fff;
-    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .06);
-  }
-  .transfer-qr img {
-    width: 100%;
-    display: block;
-  }
-  .transfer-detail-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .transfer-detail-item {
-    border-radius: 18px;
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    padding: .9rem 1rem;
-  }
-  .transfer-detail__label {
-    display: block;
-    margin-bottom: .35rem;
-    font-size: .82rem;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-  }
-  .transfer-detail__value {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    font-weight: 700;
-    word-break: break-word;
-  }
-  .transfer-copy-btn {
-    border: 0;
-    border-radius: 999px;
-    padding: .4rem .75rem;
-    background: color-mix(in srgb, var(--primary) 14%, var(--surface-2));
-    color: var(--text);
-    font-size: .82rem;
-    white-space: nowrap;
-  }
-  .transfer-note {
-    border-radius: 18px;
-    background: color-mix(in srgb, var(--primary) 8%, var(--panel-light));
-    border: 1px dashed color-mix(in srgb, var(--primary) 28%, var(--line));
-    padding: .95rem 1rem;
-    line-height: 1.7;
-  }
-  .payment-success-hint {
-    margin-top: .8rem;
-    color: var(--text);
-    font-weight: 600;
+  .checkout-countdown strong {
+    color: #fff;
   }
   @media (max-width: 991.98px) {
-    .checkout-shell,
-    .transfer-shell {
+    .checkout-shell {
       grid-template-columns: 1fr;
     }
   }
+
+
+  .checkout-card,
+  .payment-summary-card,
+  .payment-method-card,
+  .mini-order-item {
+    border-color: var(--line) !important;
+    background: var(--panel-light) !important;
+  }
+  .payment-method-card__icon {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+  }
+  .payment-method-card__title,
+  .payment-summary-row strong,
+  .mini-order-item strong,
+  .checkout-countdown strong,
+  .checkout-badge {
+    color: var(--text) !important;
+  }
+  .payment-method-card__meta,
+  .payment-summary-row,
+  .checkout-countdown {
+    color: var(--muted) !important;
+  }
+  .payment-method-card.is-active {
+    border-color: color-mix(in srgb, var(--primary) 40%, var(--line)) !important;
+    background: color-mix(in srgb, var(--primary) 12%, var(--panel-light)) !important;
+    box-shadow: 0 16px 34px color-mix(in srgb, var(--primary) 14%, transparent) !important;
+  }
+  .payment-summary-row--total,
+  .checkout-action-bar {
+    border-top-color: var(--line) !important;
+  }
+  .checkout-badge {
+    background: color-mix(in srgb, var(--primary) 14%, var(--panel-light)) !important;
+    border-color: color-mix(in srgb, var(--primary) 30%, var(--line)) !important;
+  }
+
 </style>
 @endpush
 
@@ -187,13 +181,12 @@
     $amountDue = $amountDue ?? max(0, $booking->total_amount - $booking->paid_amount);
     $isTerminal = in_array($booking->status, ['CANCELLED', 'EXPIRED'], true);
     $isPaid = $amountDue <= 0 && in_array($booking->status, ['PAID', 'CONFIRMED', 'COMPLETED'], true);
-    $transferData = $transferData ?? [];
-    $providerLabel = $bankProviderLabel ?? ($transferData['provider_label'] ?? 'MB Bank');
-    $transferQrUrl = $transferData['qr_image_url'] ?? null;
-    $transferAccountNo = $transferData['account_no'] ?? null;
-    $transferAccountName = $transferData['account_name'] ?? null;
-    $transferContent = $transferData['transfer_content'] ?? null;
-    $transferAmount = $transferData['amount'] ?? $amountDue;
+    $paymentIcons = [
+      'MOMO' => 'bi-wallet2',
+      'ZALOPAY' => 'bi-phone',
+      'VNPAY' => 'bi-bank',
+      'CARD' => 'bi-credit-card-2-front',
+    ];
   @endphp
 
   <section class="section-space pt-4 pt-lg-5">
@@ -203,7 +196,7 @@
           <div>
             <span class="section-eyebrow">Thanh toán booking</span>
             <h1 class="section-title mb-2">{{ $booking->booking_code }}</h1>
-            <p class="section-copy mb-0">Quét QR bằng app ngân hàng, chuyển đúng số tiền và đúng nội dung để hệ thống đối soát booking.</p>
+            <p class="section-copy mb-0">Hoàn tất thanh toán để phát hành vé điện tử và giữ chỗ của bạn.</p>
           </div>
           <div class="checkout-badge"><i class="bi bi-ticket-detailed"></i>{{ $booking->status }}</div>
         </div>
@@ -283,89 +276,24 @@
               <div class="product-selection-shell">
                 <div class="product-selection-shell__header">
                   <div>
-                    <h3 class="mb-1">Phương thức thanh toán đang áp dụng</h3>
-                    <p>Luồng thanh toán hiện tại dùng chuyển khoản {{ $providerLabel }} qua QR. Sau khi chuyển khoản xong, khách bấm xác nhận để admin đối soát và phát hành vé.</p>
-                  </div>
-                </div>
-
-                <div class="payment-method-grid">
-                  <div class="payment-method-card is-active">
-                    <div class="payment-method-card__icon"><i class="bi bi-qr-code-scan"></i></div>
-                    <div class="payment-method-card__title">{{ $providerLabel }} QR</div>
-                    <div class="text-white-50 small mb-2">MBBANK · BANK_TRANSFER</div>
-                    <div class="payment-method-card__meta">Quét mã bằng app ngân hàng, chuyển đúng số tiền, đúng nội dung, sau đó bấm “Tôi đã chuyển khoản”.</div>
-                  </div>
-                </div>
-
-                <div class="transfer-shell">
-                  <div class="transfer-card">
-                    <div class="transfer-hero__title mb-2">Quét mã QR để thanh toán</div>
-                    <div class="transfer-hero__copy mb-3">App ngân hàng sẽ tự điền sẵn số tài khoản, số tiền và nội dung chuyển khoản.</div>
-                    <div class="transfer-qr">
-                      @if($transferQrUrl)
-                        <img src="{{ $transferQrUrl }}" alt="QR thanh toán {{ $booking->booking_code }}">
-                      @else
-                        <div class="py-5 text-center text-muted">QR thanh toán đang được cập nhật.</div>
-                      @endif
-                    </div>
-                    <div class="payment-success-hint">Số tiền cần chuyển: {{ number_format($transferAmount) }}đ</div>
-                  </div>
-
-                  <div class="transfer-detail-card">
-                    <div class="transfer-detail-list">
-                      <div class="transfer-detail-item">
-                        <span class="transfer-detail__label">Ngân hàng</span>
-                        <div class="transfer-detail__value">
-                          <span>{{ $providerLabel }}</span>
-                        </div>
-                      </div>
-                      <div class="transfer-detail-item">
-                        <span class="transfer-detail__label">Số tài khoản</span>
-                        <div class="transfer-detail__value">
-                          <span>{{ $transferAccountNo ?: 'Đang cập nhật' }}</span>
-                          @if($transferAccountNo)
-                            <button type="button" class="transfer-copy-btn" data-copy-value="{{ $transferAccountNo }}">Sao chép</button>
-                          @endif
-                        </div>
-                      </div>
-                      <div class="transfer-detail-item">
-                        <span class="transfer-detail__label">Tên tài khoản</span>
-                        <div class="transfer-detail__value">
-                          <span>{{ $transferAccountName ?: 'Đang cập nhật' }}</span>
-                          @if($transferAccountName)
-                            <button type="button" class="transfer-copy-btn" data-copy-value="{{ $transferAccountName }}">Sao chép</button>
-                          @endif
-                        </div>
-                      </div>
-                      <div class="transfer-detail-item">
-                        <span class="transfer-detail__label">Nội dung chuyển khoản</span>
-                        <div class="transfer-detail__value">
-                          <span>{{ $transferContent ?: $booking->booking_code }}</span>
-                          <button type="button" class="transfer-copy-btn" data-copy-value="{{ $transferContent ?: $booking->booking_code }}">Sao chép</button>
-                        </div>
-                      </div>
-                      <div class="transfer-detail-item">
-                        <span class="transfer-detail__label">Số tiền</span>
-                        <div class="transfer-detail__value">
-                          <span>{{ number_format($transferAmount) }}đ</span>
-                          <button type="button" class="transfer-copy-btn" data-copy-value="{{ $transferAmount }}">Sao chép</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="transfer-note">
-                      <strong class="d-block mb-2" style="color:var(--text)">Lưu ý đối soát</strong>
-                      1. Chỉ chuyển đúng số tiền booking này.<br>
-                      2. Không sửa nội dung chuyển khoản.<br>
-                      3. Sau khi chuyển khoản, bấm xác nhận bên dưới để hệ thống ghi nhận chờ đối soát.<br>
-                      4. Nếu quá thời gian giữ chỗ mà chưa được thanh toán, booking sẽ tự hết hạn.
-                    </div>
+                    <h3 class="mb-1">Chọn phương thức thanh toán</h3>
+                    <p>Luồng thanh toán đã được tối ưu để người dùng chỉ cần chọn phương thức, xác nhận và hệ thống sẽ đồng bộ trạng thái booking, vé và điểm thành viên.</p>
                   </div>
                 </div>
 
                 <form method="post" action="{{ route('booking.payment.pay', $booking->booking_code) }}" id="payment-form">
                   @csrf
-                  <input type="hidden" name="action" value="mark_transferred">
+                  <div class="payment-method-grid">
+                    @foreach($providerOptions as $providerCode => $provider)
+                      <label class="payment-method-card {{ old('provider', 'MOMO') === $providerCode ? 'is-active' : '' }}" data-payment-option>
+                        <input type="radio" name="provider" value="{{ $providerCode }}" {{ old('provider', 'MOMO') === $providerCode ? 'checked' : '' }}>
+                        <div class="payment-method-card__icon"><i class="bi {{ $paymentIcons[$providerCode] ?? 'bi-wallet2' }}"></i></div>
+                        <div class="payment-method-card__title">{{ $provider['label'] }}</div>
+                        <div class="text-white-50 small mb-2">{{ $providerCode }} · {{ $provider['method'] }}</div>
+                        <div class="payment-method-card__meta">{{ $provider['description'] }}</div>
+                      </label>
+                    @endforeach
+                  </div>
 
                   <div class="checkout-action-bar">
                     <div class="checkout-countdown">
@@ -375,14 +303,12 @@
                         Booking chưa có thời điểm hết hạn.
                       @endif
                     </div>
-                    <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center justify-content-end">
-                      <a class="section-link section-link--compact" href="{{ route('booking.success', $booking->booking_code) }}">Xem chi tiết booking <i class="bi bi-arrow-right"></i></a>
-                      <button type="submit" class="btn btn-cinema-primary"><i class="bi bi-check2-circle me-2"></i>Tôi đã chuyển khoản</button>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                      <a class="btn btn-cinema-secondary" href="{{ route('booking.success', $booking->booking_code) }}">Xem chi tiết booking</a>
+                      <button type="submit" class="btn btn-cinema-primary"><i class="bi bi-credit-card me-2"></i>Thanh toán {{ number_format($amountDue) }}đ</button>
                     </div>
                   </div>
                 </form>
-                <a class="btn btn-cinema-primary" href="{{ route('booking.success', $booking->booking_code) }}">Xem vé</a>
-
               </div>
             @endif
           </div>
@@ -401,7 +327,7 @@
               @auth
                 <div class="content-tag mb-2">Điểm thành viên</div>
                 <h3>{{ number_format((int) ($authCustomer?->loyaltyAccount?->points_balance ?? 0)) }} điểm hiện có</h3>
-                <p class="mb-0">{{ $estimatedPoints > 0 ? 'Nếu booking được xác nhận thanh toán thành công, hệ thống sẽ cộng thêm khoảng ' . number_format($estimatedPoints) . ' điểm.' : 'Booking hiện không phát sinh thêm điểm thưởng.' }}</p>
+                <p class="mb-0">{{ $estimatedPoints > 0 ? 'Nếu thanh toán thành công, booking này sẽ cộng thêm khoảng ' . number_format($estimatedPoints) . ' điểm.' : 'Booking hiện không phát sinh thêm điểm thưởng.' }}</p>
               @else
                 <div class="content-tag mb-2">Tích điểm cùng tài khoản</div>
                 <h3>{{ $estimatedPoints > 0 ? 'Dự kiến +' . number_format($estimatedPoints) . ' điểm' : 'Đăng nhập để lưu booking' }}</h3>
@@ -441,18 +367,13 @@
 
 @push('scripts')
 <script>
-  document.querySelectorAll('[data-copy-value]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const value = button.getAttribute('data-copy-value') || '';
-      if (!value) return;
-      try {
-        await navigator.clipboard.writeText(value);
-        const original = button.textContent;
-        button.textContent = 'Đã chép';
-        setTimeout(() => button.textContent = original, 1400);
-      } catch (error) {
-        console.error(error);
-      }
+  document.querySelectorAll('[data-payment-option]').forEach((card) => {
+    const input = card.querySelector('input[type="radio"]');
+    if (!input) return;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('[data-payment-option]').forEach((item) => item.classList.remove('is-active'));
+      input.checked = true;
+      card.classList.add('is-active');
     });
   });
 </script>

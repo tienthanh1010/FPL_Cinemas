@@ -4,11 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin') · FPL Cinemas</title>
-    <title>@yield('title', 'Admin') · FPL Cinemas</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
@@ -226,7 +223,8 @@
             flex-wrap: wrap;
         }
 
-        .admin-user-chip {
+        .admin-user-chip,
+        .admin-cinema-chip {
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -237,7 +235,8 @@
             box-shadow: var(--admin-shadow-soft);
         }
 
-        .admin-user-chip .avatar {
+        .admin-user-chip .avatar,
+        .admin-cinema-chip .avatar {
             width: 38px;
             height: 38px;
             border-radius: 14px;
@@ -247,6 +246,10 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
+        }
+
+        .admin-cinema-chip .avatar {
+            background: linear-gradient(135deg, #0f766e, #14b8a6);
         }
 
         .page-body {
@@ -645,10 +648,7 @@
         }
     </style>
     @stack('styles')
-    @stack('styles')
 </head>
-<body class="admin-body">
-<div class="admin-shell">
 <body class="admin-body">
 <div class="admin-shell">
     @include('admin.partials.sidebar')
@@ -658,15 +658,7 @@
             <div class="d-flex align-items-start gap-3">
                 <button class="btn btn-light-soft d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar">
                     <i class="bi bi-list"></i>
-    <div class="admin-content">
-        <header class="topbar">
-            <div class="d-flex align-items-start gap-3">
-                <button class="btn btn-light-soft d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar">
-                    <i class="bi bi-list"></i>
                 </button>
-                <div>
-                    <p class="topbar-subtitle">Bảng điều khiển quản trị rạp phim</p>
-                    <h1 class="topbar-title">@yield('title', 'Admin')</h1>
                 <div>
                     <p class="topbar-subtitle">Bảng điều khiển quản trị rạp phim</p>
                     <h1 class="topbar-title">@yield('title', 'Admin')</h1>
@@ -674,11 +666,20 @@
             </div>
 
             <div class="topbar-meta">
+                @if(($singleCinemaMode ?? false) === true)
+                    <div class="admin-cinema-chip">
+                        <span class="avatar"><i class="bi bi-buildings-fill"></i></span>
+                        <div>
+                            <div class="fw-semibold">{{ $primaryCinema?->name ?? 'Rạp mặc định' }}</div>
+                            <div class="small text-secondary">Mô hình 1 rạp đang bật</div>
+                        </div>
+                    </div>
+                @endif
                 <div class="admin-user-chip">
                     <span class="avatar">{{ strtoupper(mb_substr($adminUser->name ?? 'A', 0, 1, 'UTF-8')) }}</span>
                     <div>
                         <div class="fw-semibold">{{ $adminUser->name ?? 'Admin' }}</div>
-                        <div class="small text-secondary">{{ now()->format('d/m/Y H:i') }}</div>
+                        <div class="small text-secondary">{{ $adminUser->roles->pluck('name')->implode(', ') ?: now()->format('d/m/Y H:i') }}</div>
                     </div>
                 </div>
                 <form method="POST" action="{{ route('admin.logout') }}">
@@ -698,7 +699,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-@stack('scripts')
 @stack('scripts')
 </body>
 </html>

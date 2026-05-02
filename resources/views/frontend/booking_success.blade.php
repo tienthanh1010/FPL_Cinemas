@@ -3,7 +3,6 @@
 @section('title', 'Chi tiết booking ' . $booking->booking_code)
 
 @section('content')
-<<<<<<< HEAD
   @php
     $amountDue = max(0, (int) $booking->total_amount - (int) $booking->paid_amount);
     $isTerminal = in_array((string) $booking->status, ['CANCELLED', 'EXPIRED'], true);
@@ -26,16 +25,7 @@
           @endif
         </p>
 
-=======
-  <section class="section-space pt-4 pt-lg-5">
-    <div class="container-fluid app-container">
-      <div class="success-shell glass-panel">
-        <div class="success-icon"><i class="bi bi-check2-circle"></i></div>
-        <span class="section-eyebrow">Booking đã được tạo</span>
-        <h1>{{ $booking->booking_code }}</h1>
-        <p>Thiết kế trang kết quả cũng được làm đồng bộ với giao diện mới: card nổi, nền tối và cách trình bày rõ ràng, gọn mắt.</p>
 
->>>>>>> origin/main
         <div class="success-grid">
           <div class="success-card">
             <span>Trạng thái</span>
@@ -46,21 +36,17 @@
             <strong>{{ number_format($booking->total_amount) }}đ</strong>
           </div>
           <div class="success-card">
-<<<<<<< HEAD
             <span>Đã thanh toán</span>
             <strong>{{ number_format($booking->paid_amount) }}đ</strong>
-=======
-            <span>Khách hàng</span>
-            <strong>{{ $booking->contact_name }}</strong>
->>>>>>> origin/main
-          </div>
+            <span>Đã thanh toán</span>
+            <strong>{{ number_format($booking->paid_amount) }}đ</strong>
+         </div>
           <div class="success-card">
             <span>Hết hạn</span>
             <strong>{{ optional($booking->expires_at)->format('d/m/Y H:i') }}</strong>
           </div>
         </div>
 
-<<<<<<< HEAD
         <div class="success-grid mt-3">
           <div class="success-card">
             <span>Phim</span>
@@ -98,9 +84,7 @@
         </div>
 
         <div class="tickets-panel mt-4">
-=======
-        <div class="tickets-panel">
->>>>>>> origin/main
+
           <h2>Danh sách vé</h2>
           <div class="table-responsive">
             <table class="table app-table align-middle mb-0">
@@ -108,17 +92,17 @@
                 <tr>
                   <th>#</th>
                   <th>Ghế</th>
-<<<<<<< HEAD
                   <th>Loại vé</th>
                   <th>Mã vé điện tử</th>
-=======
->>>>>>> origin/main
+                  <th>Loại vé</th>
+                  <th>Mã vé điện tử</th>
+
                   <th>Giá</th>
                   <th>Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
-<<<<<<< HEAD
+                @forelse($booking->tickets as $ticket)
                 @forelse($booking->tickets as $ticket)
                   <tr>
                     <td>{{ $loop->iteration }}</td>
@@ -133,22 +117,95 @@
                     <td colspan="6" class="text-center text-muted">Chưa có vé nào trong booking này.</td>
                   </tr>
                 @endforelse
-=======
-                @foreach($booking->tickets as $ticket)
                   <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>#{{ $ticket->seat_id }}</td>
+                    <td>{{ $ticket->seat?->seat_code ?: ('#'.$ticket->seat_id) }}</td>
+                    <td>{{ $ticket->ticketType?->name ?: ('#'.$ticket->ticket_type_id) }}</td>
+                    <td>{{ $ticket->ticket?->ticket_code ?: 'Chưa phát hành' }}</td>
                     <td>{{ number_format($ticket->final_price_amount) }}đ</td>
-                    <td><span class="status-badge">{{ $ticket->status }}</span></td>
+                    <td><span class="status-badge">{{ $ticket->ticket?->status ?: $ticket->status }}</span></td>
                   </tr>
-                @endforeach
->>>>>>> origin/main
+                @empty
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Chưa có vé nào trong booking này.</td>
+                  </tr>
+                @endforelse
               </tbody>
             </table>
           </div>
         </div>
 
-<<<<<<< HEAD
+        <div class="tickets-panel mt-4">
+          <h2>Lịch sử thanh toán</h2>
+          <div class="table-responsive">
+            <table class="table app-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Provider</th>
+                  <th>Method</th>
+                  <th>Mã giao dịch</th>
+                  <th>Số tiền</th>
+                  <th>Trạng thái</th>
+                  <th>Thời gian</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse($booking->payments->sortByDesc('created_at') as $payment)
+                  <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $payment->provider }}</td>
+                    <td>{{ $payment->method }}</td>
+                    <td>{{ $payment->external_txn_ref ?: 'Mô phỏng' }}</td>
+                    <td>{{ number_format($payment->amount) }}đ</td>
+                    <td><span class="status-badge">{{ $payment->status }}</span></td>
+                    <td>{{ optional($payment->paid_at ?: $payment->created_at)->format('d/m/Y H:i') }}</td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="7" class="text-center text-muted">Chưa phát sinh giao dịch thanh toán nào.</td>
+                  </tr>
+                @endforelse
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tickets-panel mt-4">
+          <h2>Combo &amp; đồ ăn kèm</h2>
+          <div class="table-responsive">
+            <table class="table app-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Sản phẩm</th>
+                  <th>Phân loại</th>
+                  <th>SL</th>
+                  <th>Đơn giá</th>
+                  <th>Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse($booking->bookingProducts as $item)
+                  <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $item->product?->name ?: ('#'.$item->product_id) }}</td>
+                    <td>{{ $item->product?->category?->name ?: ($item->product?->is_combo ? 'Combo' : 'F&B') }}</td>
+                    <td>{{ $item->qty }}</td>
+                    <td>{{ number_format($item->unit_price_amount) }}đ</td>
+                    <td>{{ number_format($item->final_amount) }}đ</td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Bạn chưa chọn combo hoặc đồ ăn kèm.</td>
+                  </tr>
+                @endforelse
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         @if($booking->tickets->isNotEmpty())
           <div class="tickets-panel mt-4">
             <h2>QR code / barcode check-in</h2>
@@ -310,58 +367,16 @@
           </div>
         </div>
 
-        @if($isPaid)
-          <div class="tickets-panel mt-4">
-            <h2>Đánh giá trải nghiệm của bạn</h2>
-            <form method="POST" action="{{ route('booking.feedback.store', $booking->booking_code) }}" class="row g-3">
-              @csrf
-              @php($feedback = $booking->feedback)
-              @foreach([
-                ['movie_rating', 'movie_comment', 'Đánh giá phim'],
-                ['food_rating', 'food_comment', 'Đồ ăn / combo'],
-                ['facility_rating', 'facility_comment', 'Cơ sở vật chất'],
-                ['staff_rating', 'staff_comment', 'Nhân viên phục vụ'],
-              ] as [$ratingField, $commentField, $label])
-                <div class="col-lg-6">
-                  <div class="glass-panel h-100">
-                    <label class="form-label">{{ $label }}</label>
-                    <select class="form-select mb-2" name="{{ $ratingField }}">
-                      <option value="">Chọn số sao</option>
-                      @for($star = 5; $star >= 1; $star--)
-                        <option value="{{ $star }}" @selected(old($ratingField, $feedback?->{$ratingField}) == $star)>{{ $star }} sao</option>
-                      @endfor
-                    </select>
-                    <textarea class="form-control" rows="3" name="{{ $commentField }}" placeholder="Nhận xét ngắn về {{ \Illuminate\Support\Str::lower($label) }}">{{ old($commentField, $feedback?->{$commentField}) }}</textarea>
-                  </div>
-                </div>
-              @endforeach
-              <div class="col-12">
-                <label class="form-label">Nhận xét chung</label>
-                <textarea class="form-control" rows="4" name="overall_comment" placeholder="Điều bạn hài lòng hoặc muốn rạp cải thiện thêm">{{ old('overall_comment', $feedback?->overall_comment) }}</textarea>
-              </div>
-              <div class="col-12 d-flex justify-content-end">
-                <button class="btn btn-cinema-primary" type="submit"><i class="bi bi-send-check me-2"></i>Gửi đánh giá</button>
-              </div>
-            </form>
-          </div>
-        @endif
-
         <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
           @if(! $isTerminal && ! $isPaid)
             <a class="btn btn-cinema-primary" href="{{ route('booking.payment', $booking->booking_code) }}"><i class="bi bi-credit-card me-2"></i>Thanh toán ngay {{ number_format($amountDue) }}đ</a>
           @endif
           <a class="btn btn-cinema-secondary" href="{{ route('home') }}"><i class="bi bi-house-door me-2"></i>Về trang chủ</a>
-=======
-        <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
-          <a class="btn btn-cinema-primary" href="{{ route('home') }}"><i class="bi bi-house-door me-2"></i>Về trang chủ</a>
->>>>>>> origin/main
+
           <a class="btn btn-cinema-secondary" href="javascript:history.back()"><i class="bi bi-arrow-counterclockwise me-2"></i>Quay lại</a>
         </div>
       </div>
     </div>
   </section>
-<<<<<<< HEAD
-=======
-  </section>
->>>>>>> origin/main
+
 @endsection
