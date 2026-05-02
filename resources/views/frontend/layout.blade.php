@@ -48,9 +48,8 @@
           <span><i class="bi bi-stars me-1"></i>Tích điểm sau mỗi đơn thanh toán thành công</span>
         </div>
         <div class="d-flex align-items-center gap-3 small topbar-links flex-wrap">
-          <a href="{{ route('booking.lookup') }}">Tra cứu booking</a>
-          <a href="{{ route('cinema.info') }}">FPL Cinema</a>
-          <a href="{{ route('support.index') }}">Hỗ trợ</a>
+          <a href="{{ route('news.index') }}">Tin tức</a>
+          <a href="{{ route('offers.index') }}">Ưu đãi</a>
           <a href="{{ route('admin.login') }}">Quản trị</a>
         </div>
       </div>
@@ -77,14 +76,6 @@
               <li class="nav-item"><a class="nav-link {{ request()->routeIs('home', 'movies.showtimes', 'shows.book') ? 'active' : '' }}" href="{{ request()->routeIs('home') ? '#movie-sections' : route('home') . '#movie-sections' }}">Phim &amp; lịch chiếu</a></li>
               <li class="nav-item"><a class="nav-link {{ request()->routeIs('news.*') ? 'active' : '' }}" href="{{ route('news.index') }}">Tin tức</a></li>
               <li class="nav-item"><a class="nav-link {{ request()->routeIs('offers.*') ? 'active' : '' }}" href="{{ route('offers.index') }}">Ưu đãi</a></li>
-              <li class="nav-item"><a class="nav-link {{ request()->routeIs('booking.lookup') ? 'active' : '' }}" href="{{ route('booking.lookup') }}">Tra cứu vé</a></li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle {{ request()->routeIs('cinema.info', 'support.index') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Thông tin rạp</a>
-                <ul class="dropdown-menu glass-dropdown border-0 shadow-lg mt-2">
-                  <li><a class="dropdown-item" href="{{ route('cinema.info') }}">FPL Cinema</a></li>
-                  <li><a class="dropdown-item" href="{{ route('support.index') }}">Hỗ trợ & FAQ</a></li>
-                </ul>
-              </li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle {{ request()->routeIs('category.show') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Thể loại</a>
                 <ul class="dropdown-menu glass-dropdown border-0 shadow-lg mt-2">
@@ -177,8 +168,7 @@
               <li><a href="{{ route('home') }}#movie-sections">Lịch chiếu nổi bật</a></li>
               <li><a href="{{ route('news.index') }}">Tin tức điện ảnh</a></li>
               <li><a href="{{ route('offers.index') }}">Ưu đãi thành viên</a></li>
-              <li><a href="{{ route('booking.lookup') }}">Tra cứu booking</a></li>
-              <li><a href="{{ route('cinema.info') }}">Thông tin FPL Cinema</a></li>
+              <li><a href="{{ route('member.account') }}">Tài khoản của tôi</a></li>
             </ul>
           </div>
           <div>
@@ -187,7 +177,6 @@
               <li>Tích điểm tự động sau khi thanh toán</li>
               <li>Cứ {{ number_format((int) config('loyalty.amount_per_point', 10000)) }}đ = 1 điểm</li>
               <li>Theo dõi lịch sử booking trong tài khoản</li>
-              <li>Tra cứu booking ngay cả khi chưa đăng nhập</li>
               <li>Ưu đãi và tin tức được cập nhật tại một nơi</li>
             </ul>
           </div>
@@ -198,7 +187,6 @@
               <li><i class="bi bi-telephone me-2"></i>{{ $cinemaHotline }}</li>
               <li><i class="bi bi-envelope me-2"></i>{{ $cinemaEmail }}</li>
               <li><i class="bi bi-clock me-2"></i>07:00 - 23:00 mỗi ngày</li>
-              <li><a href="{{ route('support.index') }}">Xem FAQ & chính sách hỗ trợ</a></li>
             </ul>
           </div>
         </div>

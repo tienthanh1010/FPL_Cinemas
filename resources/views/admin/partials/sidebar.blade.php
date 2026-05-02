@@ -58,12 +58,27 @@
         [
             'title' => 'Vận hành rạp',
             'items' => [
-                ['route' => 'admin.cinemas.index', 'pattern' => 'admin.cinemas.*', 'label' => (($singleCinemaMode ?? false) ? 'Thông tin rạp' : 'Rạp'), 'icon' => 'bi-buildings', 'permission' => 'showtimes.manage'],
+                ['route' => 'admin.cinemas.index', 'pattern' => 'admin.cinemas.*', 'label' => 'Rạp', 'icon' => 'bi-buildings', 'permission' => 'showtimes.manage'],
                 ['route' => 'admin.equipment.index', 'pattern' => 'admin.equipment.*', 'label' => 'Thiết bị', 'icon' => 'bi-tools', 'permission' => 'operations.manage'],
                 ['route' => 'admin.maintenance_requests.index', 'pattern' => 'admin.maintenance_requests.*', 'label' => 'Bảo trì', 'icon' => 'bi-wrench-adjustable-circle', 'permission' => 'operations.manage'],
             ],
         ],
     ];
+
+    if (($singleCinemaMode ?? false) === true) {
+        $navGroups = collect($navGroups)->map(function (array $group) {
+            if (($group['title'] ?? null) !== 'Vận hành rạp') {
+                return $group;
+            }
+
+            $group['items'] = collect($group['items'])
+                ->reject(fn (array $item) => ($item['route'] ?? null) === 'admin.cinemas.index')
+                ->values()
+                ->all();
+
+            return $group;
+        })->values()->all();
+    }
 @endphp
 
 <aside class="admin-sidebar d-none d-xl-flex flex-column">

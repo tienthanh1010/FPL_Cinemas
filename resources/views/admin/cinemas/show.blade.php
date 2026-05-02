@@ -1,17 +1,17 @@
 @extends('admin.layout')
 
-@section('title', 'Thông tin rạp')
+@section('title', 'Chi tiết rạp')
 
 @section('content')
 <section class="page-header">
     <div>
-        <p class="eyebrow">Single cinema settings</p>
+        <p class="eyebrow">Cinema detail</p>
         <h2>{{ $cinema->name }}</h2>
-        <p>Website hiện được khóa theo mô hình một rạp tuyệt đối. Mọi lịch chiếu, booking, thanh toán và vận hành đều quy về {{ $cinema->name }}.</p>
+        <p>{{ $cinema->cinema_code }} · {{ $cinema->timezone }}</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ route('admin.cinemas.edit', $cinema) }}" class="btn btn-primary">Cập nhật thông tin rạp</a>
-        <a href="{{ route('admin.dashboard') }}" class="btn btn-light-soft">Về tổng quan</a>
+        <a href="{{ route('admin.cinemas.edit', $cinema) }}" class="btn btn-primary">Sửa</a>
+        <a href="{{ route('admin.cinemas.index') }}" class="btn btn-light-soft">Quay lại</a>
     </div>
 </section>
 <div class="row g-3 mb-4">
@@ -26,7 +26,6 @@
         <div class="fw-semibold mb-2">Tổng quan</div>
         <div>Trạng thái: {{ $cinema->status }}</div>
         <div>Số phòng chiếu: {{ $cinema->auditoriums->count() }}</div>
-        <div>Timezone: {{ $cinema->timezone }}</div>
         <div>Mã quốc gia: {{ $cinema->country_code }}</div>
     </div></div></div>
 </div>
@@ -38,7 +37,7 @@
         @forelse($cinema->auditoriums as $auditorium)
             <tr>
                 <td>{{ $auditorium->name }} ({{ $auditorium->auditorium_code }})</td>
-                <td>{{ strtoupper($auditorium->screen_type) }}</td>
+                <td>{{ $auditorium->screen_type }}</td>
                 <td>{{ $auditorium->is_active ? 'Có' : 'Không' }}</td>
                 <td class="text-end"><a href="{{ route('admin.auditoriums.show', $auditorium) }}" class="btn btn-sm btn-outline-primary">Xem</a></td>
             </tr>
