@@ -3,9 +3,16 @@
 @section('title', 'Thêm phim')
 
 @section('content')
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h2 class="h4 mb-0">Thêm phim</h2>
-    </div>
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Create Movie</p>
+            <h2>Tạo phim mới</h2>
+            <p>Điền thông tin cốt lõi và gắn các dữ liệu liên kết ngay trong cùng một form.</p>
+        </div>
+        <div>
+            <a href="{{ route('admin.movies.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+        </div>
+    </section>
 
     <div class="card">
         <div class="card-body">

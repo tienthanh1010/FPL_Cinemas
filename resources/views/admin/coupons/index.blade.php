@@ -1,0 +1,7 @@
+@extends('admin.layout')
+@section('title', 'Voucher')
+@section('content')
+<section class="page-header"><div><p class="eyebrow">Voucher</p><h2>Danh sách voucher</h2></div><div class="d-flex gap-2"><a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">Tạo voucher</a></div></section>
+<div class="card toolbar-card mb-3"><div class="card-body"><form class="row g-3"><div class="col-md-8"><select class="form-select" name="promotion_id"><option value="">Tất cả khuyến mãi</option>@foreach($promotions as $promotion)<option value="{{ $promotion->id }}" @selected($promotionId==$promotion->id)>{{ $promotion->name }}</option>@endforeach</select></div><div class="col-md-4"><button class="btn btn-primary w-100">Lọc</button></div></form></div></div>
+<div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Mã</th><th>Khuyến mãi</th><th>Trạng thái</th><th>Phát hành</th><th>Hết hạn</th></tr></thead><tbody>@forelse($coupons as $coupon)<tr><td>{{ $coupon->code }}</td><td>{{ $coupon->promotion?->name }}</td><td>{{ $coupon->status }}</td><td>{{ optional($coupon->issued_at)->format('d/m/Y H:i') }}</td><td>{{ optional($coupon->expires_at)->format('d/m/Y H:i') ?: '—' }}</td></tr>@empty <tr><td colspan="5" class="empty-state">Chưa có voucher.</td></tr>@endforelse</tbody></table></div><div class="card-body border-top">{{ $coupons->links() }}</div></div>
+@endsection

@@ -1,0 +1,104 @@
+ body {
+        background: #0f172a;
+        color: white;
+        font-family: Arial;
+        text-align: center;
+    }
+
+    h2 { margin: 20px; }
+
+    .screen {
+        background: #e5e7eb;
+        color: black;
+        padding: 10px;
+        margin: 20px auto;
+        width: 300px;
+        border-radius: 10px;
+    }
+
+    .seats {
+        display: grid;
+        grid-template-columns: repeat(10, 35px);
+        gap: 8px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .seat {
+        width: 35px;
+        height: 35px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 35px;
+    }
+
+    .normal { background: #1e293b; }
+    .vip { background: #9333ea; }
+    .booked {
+        background: #6b7280;
+        cursor: not-allowed;
+    }
+    .selected {
+        background: #22c55e !important;
+    }
+
+    .legend {
+        margin-top: 20px;
+    }
+
+    .legend span {
+        margin: 0 10px;
+    }
+
+    .summary {
+        margin-top: 20px;
+    }
+
+    button {
+        padding: 10px 20px;
+        background: red;
+        border: none;
+        color: white;
+        margin-top: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+       body {
+        background: #111;
+        color: white;
+        font-family: Arial;
+        text-align: center;
+    }
+
+    .box {
+        margin: 30px auto;
+        width: 350px;
+        background: #1f2937;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    input {
+        width: 70%;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        margin-right: 5px;
+    }
+
+    button {
+        padding: 10px;
+        background: red;
+        border: none;
+        color: white;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .success { color: #22c55e; }
+    .error { color: #ef4444; }
+
+    .summary {
+        margin-top: 20px;
+    }
