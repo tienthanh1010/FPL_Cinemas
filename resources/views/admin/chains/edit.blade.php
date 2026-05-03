@@ -3,7 +3,16 @@
 @section('title', 'Sửa chuỗi rạp')
 
 @section('content')
-    <h2 class="h4 mb-3">Sửa chuỗi rạp #{{ $chain->id }}</h2>
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Edit Chain</p>
+            <h2>Chỉnh sửa chuỗi #{{ $chain->id }}</h2>
+            <p>Cập nhật thông tin thương hiệu, liên hệ và website của chuỗi rạp.</p>
+        </div>
+        <div>
+            <a href="{{ route('admin.chains.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
+        </div>
+    </section>
 
     <div class="card">
         <div class="card-body">
