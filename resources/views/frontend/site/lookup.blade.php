@@ -8,10 +8,6 @@
       <div class="glass-panel content-hero mb-4">
         <span class="section-eyebrow">Tra cứu booking</span>
         <h1>Kiểm tra đơn vé đã đặt</h1>
-<<<<<<< HEAD
-=======
-        <p class="mb-0">Tính năng này đặc biệt cần thiết cho website rạp chiếu phim: khách chưa đăng nhập vẫn có thể tra cứu đơn bằng mã booking và thông tin liên hệ đã dùng khi đặt.</p>
->>>>>>> origin/main
       </div>
 
       <div class="row g-4">
