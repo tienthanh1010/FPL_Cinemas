@@ -7,9 +7,9 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminAuth
+class AdminCan
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
         $adminId = (int) $request->session()->get('admin_user_id', 0);
 
@@ -24,8 +24,16 @@ class AdminAuth
             return redirect()->route('admin.login');
         }
 
-        view()->share('adminUser', $adminUser);
+        if ($permissions === []) {
+            return $next($request);
+        }
 
-        return $next($request);
+        foreach ($permissions as $permission) {
+            if ($adminUser->hasPermission($permission)) {
+                return $next($request);
+            }
+        }
+
+        abort(403, 'Bạn không có quyền truy cập chức năng này.');
     }
 }
