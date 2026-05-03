@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Movie extends Model
@@ -26,10 +28,14 @@ class Movie extends Model
         'trailer_url',
         'censorship_license_no',
         'status',
+        'is_hot',
+        'is_on_slider',
     ];
 
     protected $casts = [
         'release_date' => 'date',
+        'is_hot' => 'boolean',
+        'is_on_slider' => 'boolean',
     ];
 
     public function contentRating(): BelongsTo
@@ -39,6 +45,55 @@ class Movie extends Model
 
     public function versions(): HasMany
     {
-        return $this->hasMany(MovieVersion::class, 'movie_id');
+        return $this->hasMany(MovieVersion::class, 'movie_id')->orderBy('id');
+    }
+
+    public function genres(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'movie_genres', 'movie_id', 'genre_id')
+            ->orderBy('genres.name');
+    }
+
+    public function credits(): BelongsToMany
+    {
+        return $this->belongsToMany(Person::class, 'movie_people', 'movie_id', 'person_id')
+            ->withPivot(['role_type', 'character_name', 'sort_order'])
+            ->orderBy('movie_people.sort_order');
+    }
+
+    public function directorCredits(): BelongsToMany
+    {
+        return $this->credits()->wherePivot('role_type', 'DIRECTOR');
+    }
+
+    public function writerCredits(): BelongsToMany
+    {
+        return $this->credits()->wherePivot('role_type', 'WRITER');
+    }
+
+    public function castCredits(): BelongsToMany
+    {
+        return $this->credits()->wherePivotIn('role_type', ['ACTOR', 'CAST']);
+    }
+
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(CustomerFeedback::class, 'movie_id');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 'ACTIVE');
+    }
+
+    public function scopeHot(Builder $query): Builder
+    {
+        return $query->where('is_hot', true);
+    }
+
+    public function scopeOnSlider(Builder $query): Builder
+    {
+        return $query->where('is_on_slider', true);
     }
 }
+
