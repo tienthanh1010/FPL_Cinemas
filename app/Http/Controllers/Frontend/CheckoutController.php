@@ -114,6 +114,7 @@ class CheckoutController extends Controller
         $booking = $this->bookingLifecycleService->expirePendingBooking($booking);
 
         if (! in_array((string) $payment->status, self::GATEWAY_PAYMENT_STATUSES, true)) {
+<<<<<<< HEAD
             if ((string) $payment->status === 'CAPTURED') {
                 return redirect()->route('booking.success', ['booking_code' => $booking->booking_code])
                     ->with('success', 'Booking đã được thanh toán thành công.');
@@ -121,6 +122,10 @@ class CheckoutController extends Controller
 
             return redirect()->route('booking.lookup', ['booking_code' => $booking->booking_code])
                 ->with('error', 'Giao dịch này không còn ở trạng thái chờ thanh toán. Nếu thanh toán thất bại hoặc bị huỷ, ghế đã được nhả.');
+=======
+            return redirect()->route('booking.payment', $booking_code)
+                ->with('error', 'Giao dịch này không còn ở trạng thái chờ thanh toán.');
+>>>>>>> 19e5bc83fca8bd5ee3fc2623868f2c32ac80f112
         }
 
         $provider = self::PROVIDER_OPTIONS[(string) $payment->provider] ?? null;
@@ -159,6 +164,7 @@ class CheckoutController extends Controller
                     $payment->refresh();
                 }
             } catch (\Throwable $e) {
+<<<<<<< HEAD
                 report($e);
                 $payment->update([
                     'response_payload' => array_merge((array) $payment->response_payload, [
@@ -176,6 +182,9 @@ class CheckoutController extends Controller
                     'recipientEmail' => $this->resolveRecipient($booking),
                     'gatewayError' => $e->getMessage(),
                 ]);
+=======
+                return redirect()->route('booking.payment', $booking_code)->with('error', $e->getMessage());
+>>>>>>> 19e5bc83fca8bd5ee3fc2623868f2c32ac80f112
             }
         } elseif ((string) $payment->status === 'INITIATED') {
             $payment->update([
