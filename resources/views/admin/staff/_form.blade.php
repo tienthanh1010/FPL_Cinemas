@@ -1,0 +1,10 @@
+<div class="card"><div class="card-body row g-3">
+<div class="col-md-4"><label class="form-label">Rạp</label><select class="form-select" name="cinema_id" required>@foreach($cinemas as $cinema)<option value="{{ $cinema->id }}" @selected(old('cinema_id',$staff->cinema_id)==$cinema->id)>{{ $cinema->name }}</option>@endforeach</select></div>
+<div class="col-md-4"><label class="form-label">Mã nhân sự</label><input class="form-control" name="staff_code" value="{{ old('staff_code',$staff->staff_code) }}" required></div>
+<div class="col-md-4"><label class="form-label">Họ tên</label><input class="form-control" name="full_name" value="{{ old('full_name',$staff->full_name) }}" required></div>
+<div class="col-md-4"><label class="form-label">SĐT</label><input class="form-control" name="phone" value="{{ old('phone',$staff->phone) }}"></div>
+<div class="col-md-4"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email',$staff->email) }}"></div>
+<div class="col-md-2"><label class="form-label">Ngày vào làm</label><input class="form-control" type="date" name="hired_at" value="{{ old('hired_at',optional($staff->hired_at)->format('Y-m-d')) }}"></div>
+<div class="col-md-2"><label class="form-label">Trạng thái</label><select class="form-select" name="status">@foreach(['ACTIVE','INACTIVE','ON_LEAVE'] as $status)<option value="{{ $status }}" @selected(old('status',$staff->status ?: 'ACTIVE')===$status)>{{ $status }}</option>@endforeach</select></div>
+<div class="col-12"><label class="form-label">Vai trò</label><div class="row g-2">@foreach($roles as $role)<div class="col-md-4"><label class="border rounded-4 p-3 w-100"><input class="form-check-input me-2" type="checkbox" name="role_ids[]" value="{{ $role->id }}" @checked(collect(old('role_ids', $staff->roles->pluck('id') ?? []))->contains($role->id))>{{ $role->name }} <span class="list-secondary">({{ $role->code }})</span></label></div>@endforeach</div></div>
+</div></div><div class="d-flex gap-2 mt-3"><button class="btn btn-primary">Lưu nhân sự</button><a href="{{ route('admin.staff.index') }}" class="btn btn-light-soft">Quay lại</a></div>
