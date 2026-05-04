@@ -56,8 +56,6 @@ class ShowController extends Controller
                     });
                 });
             })
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
             ->orderByDesc('start_time')
             ->paginate(15)
             ->withQueryString();
