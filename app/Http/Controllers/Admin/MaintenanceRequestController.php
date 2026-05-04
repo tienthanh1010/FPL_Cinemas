@@ -38,7 +38,10 @@ class MaintenanceRequestController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $maintenanceRequest = MaintenanceRequest::create($this->validateRequestData($request));
+        $data = $this->validateRequestData($request);
+        $maintenanceRequest = MaintenanceRequest::create($data);
+        $this->syncEquipmentStatus($maintenanceRequest);
+
         return redirect()->route('admin.maintenance_requests.show', $maintenanceRequest)->with('success', 'Đã tạo yêu cầu bảo trì.');
     }
 
@@ -60,12 +63,19 @@ class MaintenanceRequestController extends Controller
             $data['closed_at'] = now();
         }
         $maintenanceRequest->update($data);
+        $this->syncEquipmentStatus($maintenanceRequest->fresh());
+
         return redirect()->route('admin.maintenance_requests.show', $maintenanceRequest)->with('success', 'Đã cập nhật yêu cầu bảo trì.');
     }
 
     public function destroy(MaintenanceRequest $maintenanceRequest): RedirectResponse
     {
+        $equipment = $maintenanceRequest->equipment;
         $maintenanceRequest->delete();
+        if ($equipment) {
+            $this->syncEquipmentStatusForEquipment($equipment);
+        }
+
         return redirect()->route('admin.maintenance_requests.index')->with('success', 'Đã xoá yêu cầu bảo trì.');
     }
 
@@ -82,7 +92,7 @@ class MaintenanceRequestController extends Controller
 
     private function validateRequestData(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'cinema_id' => ['required', 'integer', 'exists:cinemas,id'],
             'auditorium_id' => ['nullable', 'integer', 'exists:auditoriums,id'],
             'equipment_id' => ['nullable', 'integer', 'exists:equipment,id'],
@@ -96,5 +106,50 @@ class MaintenanceRequestController extends Controller
         ]) + [
             'opened_at' => $request->input('opened_at') ?: now(),
         ];
+
+        if (! empty($data['equipment_id'])) {
+            $equipment = Equipment::query()->find($data['equipment_id']);
+            if ($equipment) {
+                if ((int) $equipment->cinema_id !== (int) $data['cinema_id']) {
+                    abort(422, 'Thiết bị không thuộc rạp đã chọn.');
+                }
+                if (! empty($data['auditorium_id']) && $equipment->auditorium_id && (int) $equipment->auditorium_id !== (int) $data['auditorium_id']) {
+                    abort(422, 'Thiết bị không thuộc phòng chiếu đã chọn.');
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    private function syncEquipmentStatus(?MaintenanceRequest $maintenanceRequest): void
+    {
+        if (! $maintenanceRequest?->equipment) {
+            return;
+        }
+
+        $this->syncEquipmentStatusForEquipment($maintenanceRequest->equipment);
+    }
+
+    private function syncEquipmentStatusForEquipment(Equipment $equipment): void
+    {
+        if ($equipment->status === 'RETIRED') {
+            return;
+        }
+
+        $hasActiveMaintenance = MaintenanceRequest::query()
+            ->where('equipment_id', $equipment->id)
+            ->whereIn('status', ['OPEN', 'IN_PROGRESS'])
+            ->exists();
+
+        if ($hasActiveMaintenance && $equipment->status !== 'BROKEN') {
+            $equipment->update(['status' => 'MAINTENANCE']);
+            return;
+        }
+
+        if (! $hasActiveMaintenance && $equipment->status === 'MAINTENANCE') {
+            $equipment->update(['status' => 'ACTIVE']);
+        }
     }
 }
+

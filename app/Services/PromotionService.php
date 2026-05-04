@@ -127,7 +127,10 @@ class PromotionService
             return false;
         }
         if ($promotion->usage_limit_total) {
-            $used = BookingDiscount::query()->where('promotion_id', $promotion->id)->count();
+            $used = BookingDiscount::query()
+                ->where('promotion_id', $promotion->id)
+                ->whereHas('booking', fn ($query) => $query->whereNotIn('status', ['CANCELLED', 'EXPIRED']))
+                ->count();
             if ($used >= $promotion->usage_limit_total) {
                 return false;
             }
@@ -135,7 +138,9 @@ class PromotionService
         if ($promotion->usage_limit_per_customer && $customerId) {
             $used = BookingDiscount::query()
                 ->where('promotion_id', $promotion->id)
-                ->whereHas('booking', fn ($query) => $query->where('customer_id', $customerId))
+                ->whereHas('booking', fn ($query) => $query
+                    ->where('customer_id', $customerId)
+                    ->whereNotIn('status', ['CANCELLED', 'EXPIRED']))
                 ->count();
             if ($used >= $promotion->usage_limit_per_customer) {
                 return false;
