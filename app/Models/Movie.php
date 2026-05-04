@@ -28,10 +28,14 @@ class Movie extends Model
         'trailer_url',
         'censorship_license_no',
         'status',
+        'is_hot',
+        'is_on_slider',
     ];
 
     protected $casts = [
         'release_date' => 'date',
+        'is_hot' => 'boolean',
+        'is_on_slider' => 'boolean',
     ];
 
     public function contentRating(): BelongsTo
@@ -72,10 +76,24 @@ class Movie extends Model
         return $this->credits()->wherePivotIn('role_type', ['ACTOR', 'CAST']);
     }
 
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(CustomerFeedback::class, 'movie_id');
+    }
 
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'ACTIVE');
     }
 
+    public function scopeHot(Builder $query): Builder
+    {
+        return $query->where('is_hot', true);
+    }
+
+    public function scopeOnSlider(Builder $query): Builder
+    {
+        return $query->where('is_on_slider', true);
+    }
 }
+

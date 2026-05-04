@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\BookingTicket;
 use App\Models\Category;
+use App\Models\CustomerFeedback;
+
 use App\Models\InventoryBalance;
 use App\Models\Movie;
 use App\Models\Product;
@@ -17,7 +19,7 @@ use App\Models\TicketType;
 use App\Services\ProductPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+
 
 class HomeController extends Controller
 {
@@ -36,30 +38,103 @@ class HomeController extends Controller
         $movies = Movie::query()
             ->active()
             ->with(['genres', 'contentRating', 'versions'])
+            ->orderByDesc('is_hot')
+
             ->orderByDesc('release_date')
-            ->limit(18)
+            ->orderByDesc('id')
+            ->limit(24)
             ->get();
 
-        $today = now()->startOfDay();
+        $currentCinemaId = current_cinema_id();
 
-        $heroMovies = $movies->take(3)->values();
-        $comingSoon = $movies
-            ->filter(fn (Movie $movie) => $movie->release_date && $movie->release_date->greaterThan($today))
-            ->take(8)
+        $upcomingShows = Show::query()
+            ->frontendVisible()
+            ->when($currentCinemaId, fn ($query) => $query->whereHas('auditorium', fn ($auditoriumQuery) => $auditoriumQuery->where('cinema_id', $currentCinemaId)))
+            ->whereHas('movieVersion', fn ($query) => $query->whereIn('movie_id', $movies->pluck('id')))
+            ->whereHas('movieVersion.movie', fn ($query) => $query->where('status', 'ACTIVE'))
+            ->whereHas('auditorium', fn ($query) => $query->where('is_active', 1)->whereHas('cinema', fn ($cinemaQuery) => $cinemaQuery->where('status', 'ACTIVE')))
+            ->orderBy('start_time')
+            ->with(['auditorium.cinema', 'movieVersion'])
+            ->get();
+
+        $showtimesByMovie = [];
+        foreach ($upcomingShows as $show) {
+            $movieId = $show->movieVersion?->movie_id;
+            if (! $movieId) {
+                continue;
+            }
+
+            $dateKey = $show->start_time->format('Y-m-d');
+            $showtimesByMovie[$movieId] ??= [
+                'count' => 0,
+                'groups' => [],
+                'first_show_at' => null,
+                'has_on_sale' => false,
+            ];
+
+            if (count($showtimesByMovie[$movieId]['groups']) >= 3 && ! isset($showtimesByMovie[$movieId]['groups'][$dateKey])) {
+                continue;
+            }
+
+            $showtimesByMovie[$movieId]['groups'][$dateKey] ??= [
+                'date_key' => $dateKey,
+                'date_label' => $show->start_time->translatedFormat('D, d/m'),
+                'full_date' => $show->start_time->translatedFormat('l, d/m/Y'),
+                'day_number' => $show->start_time->format('d'),
+                'month_label' => $show->start_time->format('m'),
+                'weekday_short' => mb_strtoupper($show->start_time->translatedFormat('D')),
+                'shows' => [],
+            ];
+
+            if (count($showtimesByMovie[$movieId]['groups'][$dateKey]['shows']) >= 5) {
+                continue;
+            }
+
+            $isOnSale = $show->isOnSaleNow();
+            $showtimesByMovie[$movieId]['groups'][$dateKey]['shows'][] = [
+                'id' => (int) $show->id,
+                'time' => $show->start_time->format('H:i'),
+                'end_time' => $show->end_time?->format('H:i'),
+                'status' => $show->status,
+                'status_label' => $show->frontendStatusLabel(),
+                'format' => $show->movieVersion?->format ?: '2D',
+                'auditorium' => $show->auditorium?->name ?: 'Phòng chiếu',
+                'cinema' => $show->auditorium?->cinema?->name ?: config('app.name', 'FPL Cinemas'),
+                'is_on_sale' => $isOnSale,
+            ];
+
+            $showtimesByMovie[$movieId]['count']++;
+            $showtimesByMovie[$movieId]['has_on_sale'] = $showtimesByMovie[$movieId]['has_on_sale'] || $isOnSale;
+            $showtimesByMovie[$movieId]['first_show_at'] ??= $show->start_time?->format('d/m H:i');
+        }
+
+        foreach ($showtimesByMovie as &$payload) {
+            $payload['groups'] = array_values($payload['groups']);
+        }
+        unset($payload);
+
+        $sliderMovies = $movies
+            ->filter(fn (Movie $movie) => (bool) $movie->is_on_slider)
+            ->take(3)
+            ->values();
+
+        if ($sliderMovies->isEmpty()) {
+            $sliderMovies = $movies->take(3)->values();
+        }
+
+        $hotMovies = $movies
+            ->filter(fn (Movie $movie) => (bool) $movie->is_hot)
+            ->take(6)
             ->values();
 
         $nowShowing = $movies
-            ->filter(fn (Movie $movie) => ! $movie->release_date || $movie->release_date->lessThanOrEqualTo($today))
-            ->take(8)
+            ->filter(fn (Movie $movie) => (bool) data_get($showtimesByMovie, $movie->id . '.has_on_sale', false))
+            ->take(9)
             ->values();
 
-        if ($nowShowing->isEmpty()) {
-            $nowShowing = $movies->take(8)->values();
-        }
-
-        $specialMovies = $movies
-            ->sortByDesc(fn (Movie $movie) => ($movie->genres->count() * 10) + $movie->duration_minutes)
-            ->take(8)
+        $comingSoon = $movies
+            ->filter(fn (Movie $movie) => ! isset($showtimesByMovie[$movie->id]))
+            ->take(9)
             ->values();
 
         $featuredMovieIds = $heroMovies
@@ -147,7 +222,8 @@ class HomeController extends Controller
         return view('frontend.home', compact(
             'categories',
             'movies',
-            'heroMovies',
+            'sliderMovies',
+            'hotMovies',
             'comingSoon',
             'nowShowing',
             'specialMovies',
@@ -175,12 +251,19 @@ class HomeController extends Controller
 
         $currentCinemaId = current_cinema_id();
 
+        $movie->loadMissing(['genres', 'contentRating']);
+
+        $currentCinemaId = current_cinema_id();
+
         $shows = Show::query()
             ->frontendVisible()
             ->when($currentCinemaId, fn ($query) => $query->whereHas('auditorium', fn ($auditoriumQuery) => $auditoriumQuery->where('cinema_id', $currentCinemaId)))
             ->whereHas('movieVersion', fn ($query) => $query->where('movie_id', $movie->id))
             ->whereHas('movieVersion.movie', fn ($query) => $query->where('status', 'ACTIVE'))
             ->whereHas('auditorium', fn ($query) => $query->where('is_active', 1)->whereHas('cinema', fn ($cinemaQuery) => $cinemaQuery->where('status', 'ACTIVE')))
+            ->whereHas('movieVersion.movie', fn ($query) => $query->where('status', 'ACTIVE'))
+            ->whereHas('auditorium', fn ($query) => $query->where('is_active', 1)->whereHas('cinema', fn ($cinemaQuery) => $cinemaQuery->where('status', 'ACTIVE')))
+
             ->orderBy('start_time')
             ->with(['auditorium.cinema', 'movieVersion'])
             ->get();
@@ -348,5 +431,6 @@ class HomeController extends Controller
             'bookingConfigs',
             'preselectedShowId'
         ));
+
     }
 }
