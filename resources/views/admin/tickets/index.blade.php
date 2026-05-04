@@ -115,6 +115,7 @@
                     $show = $booking?->show;
                     $badgeClass = match($ticket->status) {
                         'USED' => 'badge-soft-success',
+                        'PRINTED' => 'badge-soft-primary',
                         'ISSUED' => 'badge-soft-warning',
                         'VOID', 'REFUNDED' => 'badge-soft-danger',
                         default => 'badge-soft-secondary',
@@ -125,6 +126,7 @@
                         <div class="list-primary">{{ $ticket->ticket_code }}</div>
                         <div class="list-secondary">Phát hành: {{ optional($ticket->issued_at)->format('d/m/Y H:i') ?: '—' }}</div>
                         <div class="list-secondary">Check-in: {{ optional($ticket->used_at)->format('d/m/Y H:i') ?: 'Chưa check-in' }}</div>
+                        <div class="list-secondary">In vé: {{ optional($ticket->printed_at)->format('d/m/Y H:i') ?: 'Chưa in vé' }}</div>
                     </td>
                     <td>
                         <div class="list-primary">{{ $booking?->contact_name ?: ($booking?->customer?->full_name ?? 'Khách lẻ') }}</div>
@@ -134,7 +136,7 @@
                     <td>
                         <div class="list-primary">{{ $show?->movieVersion?->movie?->title ?? 'Suất chiếu' }}</div>
                         <div>{{ optional($show?->start_time)->format('d/m/Y H:i') ?: 'Chưa có lịch' }} · {{ $show?->auditorium?->name ?: 'Chưa có phòng' }}</div>
-                        <div class="list-secondary">Ghế {{ $seat?->seat_code ?: ('#'.($bookingTicket?->seat_id ?? 'N/A')) }} · {{ $bookingTicket?->ticketType?->name ?: 'Loại vé' }}</div>
+                        <div class="list-secondary">Ghế {{ $seat?->seat_code ?: ('#'.($bookingTicket?->seat_id ?? 'N/A')) }} · {{ $bookingTicket?->seatType?->name ?: 'Loại ghế' }}</div>
                     </td>
                     <td>
                         <div><span class="badge {{ $badgeClass }}">{{ $statusOptions[$ticket->status] ?? $ticket->status }}</span></div>
@@ -149,9 +151,18 @@
                                     <button class="btn btn-sm btn-success">Check-in</button>
                                 </form>
                             @elseif($ticket->status === 'USED')
+                                <form method="POST" action="{{ route('admin.tickets.print', $ticket) }}" target="_blank" onsubmit="return confirm('Xác nhận in vé cứng? Sau khi in, trạng thái vé sẽ chuyển sang Đã in vé.')">
+                                    @csrf
+                                    <button class="btn btn-sm btn-primary">In vé</button>
+                                </form>
                                 <form method="POST" action="{{ route('admin.tickets.reopen', $ticket) }}" onsubmit="return confirm('Mở lại vé này để kiểm vé lại?')">
                                     @csrf
                                     <button class="btn btn-sm btn-outline-warning">Mở lại</button>
+                                </form>
+                            @elseif($ticket->status === 'PRINTED')
+                                <form method="POST" action="{{ route('admin.tickets.print', $ticket) }}" target="_blank">
+                                    @csrf
+                                    <button class="btn btn-sm btn-outline-primary">In lại</button>
                                 </form>
                             @endif
                         </div>

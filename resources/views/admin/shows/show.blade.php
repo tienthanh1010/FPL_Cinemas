@@ -253,7 +253,7 @@
         <div class="col-lg-4"><strong>Ngày chiếu:</strong> {{ optional($show->start_time)->format('d/m/Y') }}</div>
         <div class="col-lg-4"><strong>Giờ bắt đầu:</strong> {{ optional($show->start_time)->format('H:i') }}</div>
         <div class="col-lg-4"><strong>Giờ kết thúc:</strong> {{ optional($show->end_time)->format('H:i') }}</div>
-        <div class="col-lg-6"><strong>Hồ sơ giá:</strong> {{ $show->pricingProfile?->name ?: '—' }}</div>
+        <div class="col-lg-6"><strong>Giá Vé:</strong> {{ $show->pricingProfile?->name ?: '—' }}</div>
         <div class="col-lg-6"><strong>Màn hình:</strong> {{ $show->auditorium?->screen_type ?: 'STANDARD' }}</div>
     </div>
 </div></div>
@@ -264,18 +264,15 @@
         <thead>
             <tr>
                 <th>Loại ghế</th>
-                @foreach($ticketTypeNames as $ticketType)
-                    <th>{{ $ticketType }}</th>
-                @endforeach
+                <th>Giá vé</th>
             </tr>
         </thead>
         <tbody>
         @foreach($seatTypeNames as $seatTypeId => $seatType)
             <tr>
                 <td>{{ $seatType }}</td>
-                @foreach($ticketTypeNames as $ticketTypeId => $ticketType)
-                    <td>{{ number_format($priceMatrix[$seatTypeId][$ticketTypeId] ?? 0) }} VND</td>
-                @endforeach
+                @php $firstTicketTypeId = $ticketTypeNames->keys()->first(); @endphp
+                <td>{{ number_format($priceMatrix[$seatTypeId][$firstTicketTypeId] ?? 0) }} VND</td>
             </tr>
         @endforeach
         </tbody>

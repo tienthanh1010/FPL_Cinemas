@@ -379,7 +379,11 @@ class RefundController extends Controller
         } elseif ($nextBookingStatus === 'EXPIRED') {
             $booking->tickets()
                 ->whereIn('status', ['RESERVED', 'ISSUED'])
+<<<<<<< HEAD
+                ->update(['status' => 'CANCELLED']);
+=======
                 ->update(['status' => 'EXPIRED']);
+>>>>>>> 19e5bc83fca8bd5ee3fc2623868f2c32ac80f112
         } else {
             $booking->tickets()
                 ->whereIn('status', ['RESERVED', 'ISSUED'])

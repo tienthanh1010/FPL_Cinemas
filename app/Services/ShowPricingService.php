@@ -21,7 +21,7 @@ class ShowPricingService
         }
 
         $seatTypes = SeatType::query()->orderBy('id')->get();
-        $ticketTypes = TicketType::query()->orderBy('id')->get();
+        $ticketTypes = TicketType::query()->orderBy('id')->limit(1)->get();
 
         foreach ($seatTypes as $seatType) {
             foreach ($ticketTypes as $ticketType) {
@@ -48,7 +48,7 @@ class ShowPricingService
         $profile = $show->pricingProfile;
         if (! $profile) {
             throw ValidationException::withMessages([
-                'pricing_profile_id' => 'Suất chiếu chưa gắn hồ sơ giá.',
+                'pricing_profile_id' => 'Suất chiếu chưa gắn giá vé.',
             ]);
         }
 
@@ -62,14 +62,14 @@ class ShowPricingService
             ->orderBy('priority')
             ->orderBy('id')
             ->get()
-            ->filter(fn (PricingRule $rule) => $this->matchesShow($rule, $start))
+            ->filter(fn (PricingRule $rule) => $this->matchesShow($rule, $start, $show))
             ->values();
 
         $base = $rules->first(fn (PricingRule $rule) => strtoupper((string) ($rule->rule_type ?? 'BASE')) === 'BASE');
 
         if (! $base) {
             throw ValidationException::withMessages([
-                'pricing_profile_id' => 'Hồ sơ giá chưa có giá gốc BASE cho một số loại ghế/vé.',
+                'pricing_profile_id' => 'Giá vé chưa có giá gốc BASE cho một số loại ghế/vé.',
             ]);
         }
 
@@ -80,31 +80,95 @@ class ShowPricingService
                 continue;
             }
 
-            $mode = strtoupper((string) ($rule->price_mode ?? 'FIXED'));
-            $ruleType = strtoupper((string) ($rule->rule_type ?? 'SURCHARGE'));
-            $value = (int) ($rule->adjustment_value ?? $rule->price_amount ?? 0);
+            $price = $this->applyAdjustment(
+                $price,
+                strtoupper((string) ($rule->price_mode ?? 'FIXED')),
+                strtoupper((string) ($rule->rule_type ?? 'SURCHARGE')),
+                (int) ($rule->adjustment_value ?? $rule->price_amount ?? 0),
+                (int) ($rule->price_amount ?? $price)
+            );
+        }
 
-            if ($mode === 'FIXED') {
-                $price = (int) ($rule->price_amount ?? $price);
+        $price = $this->applyAutoAdjustments($price, $start);
+
+        return max(0, $price);
+    }
+
+    private function applyAutoAdjustments(int $price, Carbon $start): int
+    {
+        foreach ((array) config('cinema_pricing.time_windows', []) as $window) {
+            $days = array_map('intval', (array) ($window['days'] ?? []));
+            if ($days !== [] && ! in_array((int) $start->dayOfWeekIso, $days, true)) {
                 continue;
             }
 
-            if ($mode === 'AMOUNT_DELTA') {
-                $price += $ruleType === 'DISCOUNT' ? -abs($value) : $value;
+            $time = $start->format('H:i:s');
+            $startTime = (string) ($window['start'] ?? '00:00:00');
+            $endTime = (string) ($window['end'] ?? '23:59:59');
+            if ($time < $startTime || $time > $endTime) {
                 continue;
             }
 
-            if ($mode === 'PERCENT_DELTA') {
-                $delta = (int) round($price * (abs($value) / 100));
-                $price += $ruleType === 'DISCOUNT' ? -$delta : $delta;
+            $price = $this->applyAdjustment(
+                $price,
+                strtoupper((string) ($window['mode'] ?? 'AMOUNT_DELTA')),
+                'SURCHARGE',
+                (int) ($window['value'] ?? 0),
+                (int) ($window['price_amount'] ?? $price)
+            );
+        }
+
+        foreach ((array) config('cinema_pricing.holidays', []) as $holiday) {
+            $from = Carbon::parse((string) ($holiday['from'] ?? $start->toDateString()))->toDateString();
+            $to = Carbon::parse((string) ($holiday['to'] ?? $from))->toDateString();
+            $date = $start->toDateString();
+            if ($date < $from || $date > $to) {
+                continue;
             }
+
+            $price = $this->applyAdjustment(
+                $price,
+                strtoupper((string) ($holiday['mode'] ?? 'AMOUNT_DELTA')),
+                'SURCHARGE',
+                (int) ($holiday['value'] ?? 0),
+                (int) ($holiday['price_amount'] ?? $price)
+            );
+        }
+
+        return $price;
+    }
+
+    private function applyAdjustment(int $price, string $mode, string $ruleType, int $value, int $fixedPrice): int
+    {
+        if ($mode === 'FIXED') {
+            return max(0, $fixedPrice);
+        }
+
+        if ($mode === 'AMOUNT_DELTA') {
+            return max(0, $price + ($ruleType === 'DISCOUNT' ? -abs($value) : $value));
+        }
+
+        if ($mode === 'PERCENT_DELTA') {
+            $delta = (int) round($price * (abs($value) / 100));
+            return max(0, $price + ($ruleType === 'DISCOUNT' ? -$delta : $delta));
         }
 
         return max(0, $price);
     }
 
-    private function matchesShow(PricingRule $rule, Carbon $start): bool
+    private function matchesShow(PricingRule $rule, Carbon $start, Show $show): bool
     {
+        $ruleName = (string) ($rule->rule_name ?? '');
+        $roomPrefix = 'Điều chỉnh phòng:';
+        if (str_starts_with($ruleName, $roomPrefix)) {
+            $expectedScreenType = strtoupper(trim(str_replace($roomPrefix, '', $ruleName)));
+            $actualScreenType = strtoupper((string) ($show->auditorium?->screen_type ?: 'STANDARD'));
+
+            if ($expectedScreenType !== $actualScreenType) {
+                return false;
+            }
+        }
+
         if ($rule->valid_from && $start->toDateString() < $rule->valid_from->toDateString()) {
             return false;
         }

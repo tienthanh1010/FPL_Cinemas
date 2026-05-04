@@ -9,10 +9,16 @@
     $show = $booking?->show;
     $badgeClass = match($ticket->status) {
         'USED' => 'badge-soft-success',
+        'PRINTED' => 'badge-soft-primary',
         'ISSUED' => 'badge-soft-warning',
         'VOID', 'REFUNDED' => 'badge-soft-danger',
         default => 'badge-soft-secondary',
     };
+    $canTicketCredit = $ticket->status === 'ISSUED'
+        && empty($compensationMeta)
+        && $booking
+        && in_array((string) $booking->status, ['PAID', 'CONFIRMED', 'COMPLETED'], true)
+        && (int) ($booking->paid_amount ?? 0) > 0;
 @endphp
 
 <section class="page-header">
@@ -31,7 +37,17 @@
                 @csrf
                 <button class="btn btn-success">Check-in vé</button>
             </form>
-        @elseif($ticket->status === 'USED')
+            @if($canTicketCredit)
+                <form method="POST" action="{{ route('admin.tickets.compensate', $ticket) }}" onsubmit="return confirm('Tạo hoàn ticket cho vé này và vô hiệu vé hiện tại?')">
+                    @csrf
+                    <button class="btn btn-outline-danger">Hoàn ticket</button>
+                </form>
+            @endif
+        @elseif(in_array($ticket->status, ['USED', 'PRINTED']))
+            <form method="POST" action="{{ route('admin.tickets.print', $ticket) }}" target="_blank" @if($ticket->status === 'USED') onsubmit="return confirm('Xác nhận in vé cứng cho vé này? Sau khi in, trạng thái vé sẽ chuyển sang Đã in vé.')" @endif>
+                @csrf
+                <button class="btn btn-primary">{{ $ticket->status === 'PRINTED' ? 'In lại vé cứng' : 'In vé cứng' }}</button>
+            </form>
             <form method="POST" action="{{ route('admin.tickets.reopen', $ticket) }}" onsubmit="return confirm('Mở lại vé để kiểm vé lại?')">
                 @csrf
                 <button class="btn btn-outline-warning">Mở lại vé</button>
@@ -54,18 +70,60 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6"><strong>Mã vé:</strong> {{ $ticket->ticket_code }}</div>
-                    <div class="col-md-6"><strong>QR payload:</strong> {{ $ticket->qr_payload ?: 'Chưa có' }}</div>
+                    <div class="col-md-6"><strong>Mã scan:</strong> {{ ticket_scan_payload($ticket) ?: 'Chưa có' }}</div>
                     <div class="col-md-6"><strong>Phát hành lúc:</strong> {{ optional($ticket->issued_at)->format('d/m/Y H:i') ?: '—' }}</div>
                     <div class="col-md-6"><strong>Check-in lúc:</strong> {{ optional($ticket->used_at)->format('d/m/Y H:i') ?: 'Chưa check-in' }}</div>
+                    <div class="col-md-6"><strong>In vé lúc:</strong> {{ optional($ticket->printed_at)->format('d/m/Y H:i') ?: 'Chưa in vé' }}</div>
                     <div class="col-md-6"><strong>Ghế:</strong> {{ $seat?->seat_code ?: ('#'.($bookingTicket?->seat_id ?? 'N/A')) }}</div>
                     <div class="col-md-6"><strong>Loại ghế:</strong> {{ $bookingTicket?->seatType?->name ?: ('#'.($bookingTicket?->seat_type_id ?? 'N/A')) }}</div>
-                    <div class="col-md-6"><strong>Loại vé:</strong> {{ $bookingTicket?->ticketType?->name ?: ('#'.($bookingTicket?->ticket_type_id ?? 'N/A')) }}</div>
                     <div class="col-md-6"><strong>Giá vé:</strong> {{ number_format($bookingTicket?->final_price_amount ?? 0) }}đ</div>
                     <div class="col-md-8"><strong>Phim:</strong> {{ $show?->movieVersion?->movie?->title ?? 'Chưa có' }}</div>
                     <div class="col-md-4"><strong>Suất chiếu:</strong> {{ optional($show?->start_time)->format('d/m/Y H:i') ?: '—' }}</div>
                     <div class="col-md-6"><strong>Phòng:</strong> {{ $show?->auditorium?->name ?: 'Chưa có' }}</div>
                     <div class="col-md-6"><strong>Rạp:</strong> {{ $show?->auditorium?->cinema?->name ?: 'Chưa có' }}</div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">Hoàn ticket ghế hỏng</div>
+            <div class="card-body">
+                @if(!empty($compensationMeta))
+                    <div class="alert alert-success mb-3">Vé này đã được hoàn ticket, không hoàn tiền mặt.</div>
+                    <div><strong>Mã hoàn ticket:</strong> {{ $compensationMeta['coupon_code'] ?? '—' }}</div>
+                    <div><strong>Giá trị:</strong> {{ number_format((int) ($compensationMeta['amount'] ?? 0)) }}đ</div>
+                    <div><strong>Lý do:</strong> Ghế gặp sự cố kỹ thuật / không thể phục vụ.</div>
+                    <div><strong>Tạo lúc:</strong> {{ !empty($compensationLog?->created_at) ? \Carbon\Carbon::parse($compensationLog->created_at)->format('d/m/Y H:i') : '—' }}</div>
+                    <div class="small text-secondary mt-2">Khách có thể dùng ticket credit này cho booking mới thay cho hoàn tiền trực tiếp.</div>
+                @else
+                    <div class="small text-secondary mb-3">Dùng khi ghế bị hỏng, không thể phục vụ và không còn ghế thay thế. Hệ thống sẽ tạo ticket credit đúng bằng giá vé khách đã mua.</div>
+                    @if($canTicketCredit)
+                        <form method="POST" action="{{ route('admin.tickets.compensate', $ticket) }}" onsubmit="return confirm('Xác nhận hoàn ticket cho vé này?')">
+                            @csrf
+                            <button class="btn btn-danger">Tạo hoàn ticket</button>
+                        </form>
+                    @else
+                        <div class="text-muted">Chỉ booking đã thanh toán và vé đang phát hành mới có thể hoàn ticket.</div>
+                    @endif
+                @endif
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">Mã quét vé</div>
+            <div class="card-body text-center">
+                @php($scanPayload = ticket_scan_payload($ticket))
+                @if($scanPayload)
+                    <div class="mb-3">
+                        <img src="{{ ticket_barcode_image_url($scanPayload, 76) }}" alt="Barcode {{ $ticket->ticket_code }}" class="img-fluid rounded-3 border bg-white p-2">
+                    </div>
+                    <div class="small text-secondary mb-2">Scan mã vạch từ vé cứng hoặc màn hình điện thoại để check-in.</div>
+                    <div class="fw-semibold text-break">{{ $scanPayload }}</div>
+                @else
+                    <div class="text-muted">Vé này chưa có dữ liệu mã vạch.</div>
+                @endif
             </div>
         </div>
     </div>

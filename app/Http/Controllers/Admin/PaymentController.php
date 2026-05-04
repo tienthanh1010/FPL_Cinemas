@@ -96,6 +96,10 @@ class PaymentController extends Controller
                 ->where('status', 'SUCCESS')
                 ->whereIn('payment_id', (clone $summaryQuery)->select('payments.id'))
                 ->sum('amount'),
+<<<<<<< HEAD
+            'initiated_count' => (clone $summaryQuery)->whereIn('status', ['INITIATED', 'AUTHORIZED'])->count(),
+=======
+>>>>>>> 19e5bc83fca8bd5ee3fc2623868f2c32ac80f112
             'failed_count' => (clone $summaryQuery)->where('status', 'FAILED')->count(),
         ];
 
@@ -263,7 +267,11 @@ class PaymentController extends Controller
         } elseif ($nextBookingStatus === 'EXPIRED') {
             $booking->tickets()
                 ->whereIn('status', ['RESERVED', 'ISSUED'])
+<<<<<<< HEAD
+                ->update(['status' => 'CANCELLED']);
+=======
                 ->update(['status' => 'EXPIRED']);
+>>>>>>> 19e5bc83fca8bd5ee3fc2623868f2c32ac80f112
         } else {
             $booking->tickets()
                 ->whereIn('status', ['RESERVED', 'ISSUED'])

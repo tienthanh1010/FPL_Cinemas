@@ -120,7 +120,7 @@ class ShowController extends Controller
             ->get();
 
         $seatTypeNames = SeatType::query()->pluck('name', 'id');
-        $ticketTypeNames = TicketType::query()->pluck('name', 'id');
+        $ticketTypeNames = TicketType::query()->orderBy('id')->limit(1)->pluck('name', 'id');
 
         $heldSeatIds = DB::table('seat_holds')
             ->where('show_id', $show->id)
@@ -209,7 +209,7 @@ class ShowController extends Controller
 
         if ($priceRelatedChanges && $hasLockedTickets) {
             throw ValidationException::withMessages([
-                'show_date' => 'Suất chiếu này đã có vé giữ chỗ/đã bán. Bạn không thể đổi phim, hồ sơ giá, phòng hoặc giờ chiếu vì sẽ làm sai snapshot giá của khách đã mua.',
+                'show_date' => 'Suất chiếu này đã có vé giữ chỗ/đã bán. Bạn không thể đổi phim, giá vé, phòng hoặc giờ chiếu vì sẽ làm sai snapshot giá của khách đã mua.',
             ]);
         }
 
@@ -311,6 +311,26 @@ class ShowController extends Controller
     {
         $show->loadMissing(['movieVersion.movie', 'pricingProfile']);
 
+        $existingShows = Show::query()
+            ->with(['movieVersion.movie', 'auditorium'])
+            ->where('status', '!=', 'CANCELLED')
+            ->when($show->exists, fn ($query) => $query->where('id', '!=', $show->id))
+            ->orderBy('start_time')
+            ->get()
+            ->map(fn (Show $item) => [
+                'id' => (int) $item->id,
+                'auditorium_id' => (int) $item->auditorium_id,
+                'movie_title' => $item->movieVersion?->movie?->title ?: 'Phim chưa rõ',
+                'format' => $item->movieVersion?->format ?: '2D',
+                'start_time' => optional($item->start_time)->format('Y-m-d H:i'),
+                'end_time' => optional($item->end_time)->format('Y-m-d H:i'),
+                'date' => optional($item->start_time)->format('Y-m-d'),
+                'start_clock' => optional($item->start_time)->format('H:i'),
+                'end_clock' => optional($item->end_time)->format('H:i'),
+                'status' => $item->status,
+            ])
+            ->values();
+
         return [
             'show' => $show,
             'auditoriums' => Auditorium::with('cinema')->orderBy('name')->get(),
@@ -318,6 +338,8 @@ class ShowController extends Controller
             'profiles' => PricingProfile::query()->where('is_active', 1)->orderBy('name')->get(),
             'statusOptions' => self::STATUSES,
             'selectedMovieId' => old('movie_id', $show->movieVersion?->movie_id),
+            'selectedMovieVersionId' => old('movie_version_id', $show->movie_version_id),
+            'existingShows' => $existingShows,
         ];
     }
 
@@ -326,6 +348,7 @@ class ShowController extends Controller
         $data = $request->validate([
             'auditorium_id' => ['required', 'integer', 'exists:auditoriums,id'],
             'movie_id' => ['required', 'integer', 'exists:movies,id'],
+            'movie_version_id' => ['required', 'integer', 'exists:movie_versions,id'],
             'pricing_profile_id' => ['required', 'integer', 'exists:pricing_profiles,id'],
             'show_date' => ['required', 'date'],
             'start_clock' => ['required', 'date_format:H:i'],
@@ -335,22 +358,26 @@ class ShowController extends Controller
         ]);
 
         $auditorium = Auditorium::query()->with('cinema')->findOrFail($data['auditorium_id']);
-        $movieVersion = MovieVersion::query()->where('movie_id', $data['movie_id'])->orderBy('id')->first();
+        $movieVersion = MovieVersion::query()
+            ->with('movie')
+            ->where('movie_id', $data['movie_id'])
+            ->find($data['movie_version_id']);
+
         if (! $movieVersion) {
             throw ValidationException::withMessages([
-                'movie_id' => 'Phim này chưa có phiên bản chiếu. Hãy vào phần Phim để thêm ít nhất 1 phiên bản.',
+                'movie_version_id' => 'Phiên bản phim không thuộc phim đã chọn. Hãy chọn lại đúng phiên bản 2D/3D của phim này.',
             ]);
         }
 
         $pricingProfile = PricingProfile::query()->findOrFail($data['pricing_profile_id']);
         if ((int) $pricingProfile->is_active !== 1) {
             throw ValidationException::withMessages([
-                'pricing_profile_id' => 'Hồ sơ giá đang tạm ngưng hoạt động.',
+                'pricing_profile_id' => 'Giá Vé đang tạm ngưng hoạt động.',
             ]);
         }
         if ($pricingProfile->cinema_id && (int) $pricingProfile->cinema_id !== (int) $auditorium->cinema_id) {
             throw ValidationException::withMessages([
-                'pricing_profile_id' => 'Hồ sơ giá này thuộc rạp khác, không thể áp cho phòng đã chọn.',
+                'pricing_profile_id' => 'Giá Vé này thuộc rạp khác, không thể áp cho phòng đã chọn.',
             ]);
         }
 

@@ -82,8 +82,7 @@
 
                 <div class="small text-secondary mb-2">Thông tin thanh toán hiện có</div>
                 <div><strong>Số giao dịch:</strong> {{ $booking->payments->count() }}</div>
-                <div><strong>Refund thành công:</strong> {{ number_format($totals['refund_amount']) }}đ</div>
-                <div><strong>Refund chờ xử lý:</strong> {{ number_format($totals['refund_pending_amount'] ?? 0) }}đ</div>
+                <div><strong>Đã ghi nhận thanh toán:</strong> {{ number_format((int) $booking->paid_amount) }}đ</div>
                 <div><strong>Khách hàng liên kết:</strong>
                     @if($booking->customer)
                         <a href="{{ route('admin.customers.show', $booking->customer) }}">{{ $booking->customer->full_name }}</a>
@@ -111,7 +110,6 @@
                 <tr>
                     <th>Ghế</th>
                     <th>Loại ghế</th>
-                    <th>Loại vé</th>
                     <th>Vé điện tử</th>
                     <th>Đơn giá</th>
                     <th>Giảm giá</th>
@@ -124,7 +122,6 @@
                 <tr>
                     <td class="fw-semibold">{{ $ticket->seat?->seat_code ?: ('#'.$ticket->seat_id) }}</td>
                     <td>{{ $ticket->seatType?->name ?: ('#'.$ticket->seat_type_id) }}</td>
-                    <td>{{ $ticket->ticketType?->name ?: ('#'.$ticket->ticket_type_id) }}</td>
                     <td>
                         @if($ticket->ticket)
                             <a href="{{ route('admin.tickets.show', $ticket->ticket) }}" class="text-decoration-none">{{ $ticket->ticket->ticket_code }}</a>
@@ -214,7 +211,7 @@
 </div>
 
 <div class="card">
-    <div class="card-header fw-semibold">Lịch sử thanh toán / hoàn tiền</div>
+    <div class="card-header fw-semibold">Lịch sử thanh toán</div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead>
@@ -223,7 +220,7 @@
                     <th>Trạng thái</th>
                     <th>Số tiền</th>
                     <th>Đã thanh toán</th>
-                    <th>Refund</th>
+                    <th>Ghi chú</th>
                 </tr>
             </thead>
             <tbody>
@@ -237,11 +234,8 @@
                     <td>{{ number_format($payment->amount) }} {{ $payment->currency }}</td>
                     <td>{{ optional($payment->paid_at)->format('d/m/Y H:i') ?: 'Chưa thanh toán' }}</td>
                     <td>
-                        <div>{{ number_format((int) $payment->refunds->where('status', 'SUCCESS')->sum('amount')) }}đ</div>
-                        @if($payment->refunds->where('status', 'PENDING')->sum('amount') > 0)
-                            <div class="list-secondary">Chờ xử lý: {{ number_format((int) $payment->refunds->where('status', 'PENDING')->sum('amount')) }}đ</div>
-                        @endif
-                        <div class="list-secondary d-flex gap-2"><a href="{{ route('admin.payments.show', $payment) }}">Xem giao dịch</a><span>·</span><a href="{{ route('admin.refunds.index') }}?q={{ urlencode($payment->external_txn_ref ?: ('PAY-'.$payment->id)) }}">Xem refund</a></div>
+                        <div class="list-secondary">{{ $payment->status === 'CAPTURED' ? 'Đã thu tiền thành công' : 'Theo dõi chi tiết trong màn giao dịch' }}</div>
+                        <div class="list-secondary"><a href="{{ route('admin.payments.show', $payment) }}">Xem giao dịch</a></div>
                     </td>
                 </tr>
             @empty
