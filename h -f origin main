@@ -1,0 +1,10 @@
+[33m4b1a572[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfixbug[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/fixbug[m[33m)[m HEAD@{0}: commit: fixbug
+[33m6f3ad70[m[33m ([m[1;31morigin/thanh-toan[m[33m, [m[1;31morigin/fontend[m[33m, [m[1;32mthanh-toan[m[33m, [m[1;32mfontend[m[33m)[m HEAD@{1}: checkout: moving from thanh-toan to fixbug
+[33m6f3ad70[m[33m ([m[1;31morigin/thanh-toan[m[33m, [m[1;31morigin/fontend[m[33m, [m[1;32mthanh-toan[m[33m, [m[1;32mfontend[m[33m)[m HEAD@{2}: checkout: moving from fontend to thanh-toan
+[33m6f3ad70[m[33m ([m[1;31morigin/thanh-toan[m[33m, [m[1;31morigin/fontend[m[33m, [m[1;32mthanh-toan[m[33m, [m[1;32mfontend[m[33m)[m HEAD@{3}: commit: fontend
+[33m5024b26[m[33m ([m[1;31morigin/feature-thanh[m[33m, [m[1;32mmain[m[33m, [m[1;32mfeature-xyz[m[33m, [m[1;32mfeature-thanh[m[33m)[m HEAD@{4}: checkout: moving from main to fontend
+[33m5024b26[m[33m ([m[1;31morigin/feature-thanh[m[33m, [m[1;32mmain[m[33m, [m[1;32mfeature-xyz[m[33m, [m[1;32mfeature-thanh[m[33m)[m HEAD@{5}: checkout: moving from feature-thanh to main
+[33m5024b26[m[33m ([m[1;31morigin/feature-thanh[m[33m, [m[1;32mmain[m[33m, [m[1;32mfeature-xyz[m[33m, [m[1;32mfeature-thanh[m[33m)[m HEAD@{6}: checkout: moving from feature-xyz to feature-thanh
+[33m5024b26[m[33m ([m[1;31morigin/feature-thanh[m[33m, [m[1;32mmain[m[33m, [m[1;32mfeature-xyz[m[33m, [m[1;32mfeature-thanh[m[33m)[m HEAD@{7}: checkout: moving from main to feature-xyz
+[33m5024b26[m[33m ([m[1;31morigin/feature-thanh[m[33m, [m[1;32mmain[m[33m, [m[1;32mfeature-xyz[m[33m, [m[1;32mfeature-thanh[m[33m)[m HEAD@{8}: Branch: renamed refs/heads/main to refs/heads/main
+[33m5024b26[m[33m ([m[1;31morigin/feature-thanh[m[33m, [m[1;32mmain[m[33m, [m[1;32mfeature-xyz[m[33m, [m[1;32mfeature-thanh[m[33m)[m HEAD@{10}: commit (initial): fix\
