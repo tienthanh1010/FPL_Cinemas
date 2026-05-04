@@ -22,18 +22,22 @@ class CheckoutController extends Controller
 {
     private const PROVIDER_OPTIONS = [
         'MOMO' => [
-            'label' => 'Thẻ ATM qua MoMo',
+            'label' => 'MoMo',
             'method' => 'CARD',
-            'description' => 'Chuyển sang cổng MoMo để nhập thẻ ATM test.',
+            'description' => 'Đang trong quá trình xử lý. Khi chọn, hệ thống sẽ chuyển thẳng sang trang thanh toán MoMo.',
             'accent' => '#ae2070',
             'short' => 'MoMo',
+            'enabled' => true,
+            'badge' => 'Đang xử lý',
         ],
         'VNPAY' => [
             'label' => 'VNPay',
             'method' => 'BANK_TRANSFER',
-            'description' => 'Thanh toán online qua cổng VNPay.',
+            'description' => 'Tạm thời khoá, chưa thể thanh toán bằng VNPay.',
             'accent' => '#0066b3',
             'short' => 'VNP',
+            'enabled' => false,
+            'badge' => 'Tạm khoá',
         ],
     ];
 
@@ -73,30 +77,31 @@ class CheckoutController extends Controller
 
         session(['editable_booking_code' => $booking->booking_code]);
 
-        try {
-            [$paymentId, $bookingCode] = $this->createOrReuseGatewayPayment($booking_code, 'MOMO');
-        } catch (\Throwable $e) {
-            return view('frontend.payment', [
-                'booking' => $booking,
-                'amountDue' => max(0, (int) $booking->total_amount - (int) $booking->paid_amount),
-                'estimatedPoints' => $this->loyaltyPointService->previewPoints(max(0, (int) $booking->total_amount - (int) $booking->paid_amount)),
-                'providerOptions' => ['MOMO' => self::PROVIDER_OPTIONS['MOMO']],
-                'pendingPayments' => collect(),
-                'emailRecipient' => $this->resolveRecipient($booking),
-            ])->with('error', $e->getMessage());
-        }
-
-        return redirect()->route('booking.payment.gateway', ['booking_code' => $bookingCode, 'payment' => $paymentId]);
+        return view('frontend.payment', [
+            'booking' => $booking,
+            'amountDue' => max(0, (int) $booking->total_amount - (int) $booking->paid_amount),
+            'estimatedPoints' => $this->loyaltyPointService->previewPoints(max(0, (int) $booking->total_amount - (int) $booking->paid_amount)),
+            'providerOptions' => self::PROVIDER_OPTIONS,
+            'pendingPayments' => $booking->payments
+                ->whereIn('status', array_merge(self::GATEWAY_PAYMENT_STATUSES, ['CAPTURED', 'FAILED', 'CANCELLED']))
+                ->sortByDesc('created_at'),
+            'emailRecipient' => $this->resolveRecipient($booking),
+        ]);
     }
 
     public function pay(Request $request, string $booking_code): RedirectResponse
     {
         $data = $request->validate([
-            'provider' => ['nullable', Rule::in(array_keys(self::PROVIDER_OPTIONS))],
+            'provider' => ['required', Rule::in(array_keys(self::PROVIDER_OPTIONS))],
         ]);
 
+        $provider = (string) $data['provider'];
+        if ($provider === 'VNPAY') {
+            return back()->with('error', 'VNPay hiện đang tạm thời khoá, vui lòng chọn MoMo để tiếp tục thanh toán.')->withInput();
+        }
+
         try {
-            [$paymentId, $bookingCode] = $this->createOrReuseGatewayPayment($booking_code, (string) ($data['provider'] ?? 'MOMO'));
+            [$paymentId, $bookingCode] = $this->createOrReuseGatewayPayment($booking_code, $provider);
         } catch (\Throwable $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
@@ -128,73 +133,69 @@ class CheckoutController extends Controller
             abort(404);
         }
 
-        if ((string) $payment->provider === 'MOMO') {
-            try {
-                if ((string) $payment->status === 'INITIATED' || blank(data_get($payment->response_payload, 'momo.pay_url'))) {
-                    $momo = $this->momoPaymentService->createPayment($payment, $booking);
-                    $payment->update([
-                        'status' => 'AUTHORIZED',
-                        'external_txn_ref' => $momo['order_id'],
-                        'request_payload' => array_merge((array) $payment->request_payload, [
-                            'flow' => 'MOMO_ATM_SANDBOX',
-                            'provider_label' => 'MoMo',
-                            'order_id' => $momo['order_id'],
-                            'request_id' => $momo['request_id'],
-                            'order_info' => $momo['order_info'],
-                            'amount' => (int) $payment->amount,
-                            'transfer_content' => $momo['order_info'],
-                            'momo_request' => $momo['request'],
-                        ]),
-                        'response_payload' => array_merge((array) $payment->response_payload, [
-                            'status' => 'AUTHORIZED',
-                            'message' => 'Đã tạo trang thanh toán thẻ ATM MoMo, đang chờ khách thanh toán.',
-                            'momo' => [
-                                'pay_url' => $momo['pay_url'],
-                                'deeplink' => $momo['deeplink'],
-                                'qr_code_url' => $momo['qr_code_url'],
-                                'raw' => $momo['response'],
-                            ],
-                        ]),
-                    ]);
-                    $payment->refresh();
-                }
-            } catch (\Throwable $e) {
-                report($e);
+        if ((string) $payment->provider !== 'MOMO') {
+            $payment->update([
+                'status' => 'CANCELLED',
+                'response_payload' => array_merge((array) $payment->response_payload, [
+                    'status' => 'CANCELLED',
+                    'message' => 'VNPay đang tạm thời khoá, giao dịch đã được huỷ.',
+                    'cancelled_at' => now()->toIso8601String(),
+                ]),
+            ]);
+
+            return redirect()->route('booking.payment', ['booking_code' => $booking->booking_code])
+                ->with('error', 'VNPay hiện đang tạm thời khoá, vui lòng chọn MoMo để tiếp tục thanh toán.');
+        }
+
+        try {
+            if ((string) $payment->status === 'INITIATED' || blank(data_get($payment->response_payload, 'momo.pay_url'))) {
+                $momo = $this->momoPaymentService->createPayment($payment, $booking);
                 $payment->update([
+                    'status' => 'AUTHORIZED',
+                    'external_txn_ref' => $momo['order_id'],
+                    'request_payload' => array_merge((array) $payment->request_payload, [
+                        'flow' => 'MOMO_ATM_SANDBOX',
+                        'provider_label' => 'MoMo',
+                        'order_id' => $momo['order_id'],
+                        'request_id' => $momo['request_id'],
+                        'order_info' => $momo['order_info'],
+                        'amount' => (int) $payment->amount,
+                        'transfer_content' => $momo['order_info'],
+                        'momo_request' => $momo['request'],
+                    ]),
                     'response_payload' => array_merge((array) $payment->response_payload, [
-                        'status' => 'MOMO_CREATE_ERROR',
-                        'message' => $e->getMessage(),
-                        'failed_at' => now()->toIso8601String(),
+                        'status' => 'AUTHORIZED',
+                        'message' => 'Đã tạo trang thanh toán MoMo, đang chuyển khách sang MoMo.',
+                        'momo' => [
+                            'pay_url' => $momo['pay_url'],
+                            'deeplink' => $momo['deeplink'],
+                            'qr_code_url' => $momo['qr_code_url'],
+                            'raw' => $momo['response'],
+                        ],
                     ]),
                 ]);
                 $payment->refresh();
-
-                return view('frontend.payment_gateway', [
-                    'booking' => $booking,
-                    'payment' => $payment,
-                    'provider' => $provider,
-                    'recipientEmail' => $this->resolveRecipient($booking),
-                    'gatewayError' => $e->getMessage(),
-                ]);
             }
-        } elseif ((string) $payment->status === 'INITIATED') {
+
+            $payUrl = data_get($payment->response_payload, 'momo.pay_url');
+            if (blank($payUrl)) {
+                throw new \RuntimeException('MoMo chưa trả về payUrl để chuyển sang trang thanh toán.');
+            }
+
+            return redirect()->away((string) $payUrl);
+        } catch (\Throwable $e) {
+            report($e);
             $payment->update([
-                'status' => 'AUTHORIZED',
-                'request_payload' => array_merge((array) $payment->request_payload, ['gateway_viewed_at' => now()->toIso8601String()]),
                 'response_payload' => array_merge((array) $payment->response_payload, [
-                    'status' => 'AUTHORIZED',
-                    'message' => 'Giao dịch VNPay đang chờ xác nhận.',
+                    'status' => 'MOMO_CREATE_ERROR',
+                    'message' => $e->getMessage(),
+                    'failed_at' => now()->toIso8601String(),
                 ]),
             ]);
-            $payment->refresh();
-        }
 
-        return view('frontend.payment_gateway', [
-            'booking' => $booking,
-            'payment' => $payment,
-            'provider' => $provider,
-            'recipientEmail' => $this->resolveRecipient($booking),
-        ]);
+            return redirect()->route('booking.payment', ['booking_code' => $booking->booking_code])
+                ->with('error', 'Không tạo được trang thanh toán MoMo: ' . $e->getMessage());
+        }
     }
 
     public function callback(Request $request, string $booking_code, Payment $payment): RedirectResponse
@@ -203,55 +204,24 @@ class CheckoutController extends Controller
             return redirect()->route('booking.payment.gateway', ['booking_code' => $booking_code, 'payment' => $payment]);
         }
 
-        $data = $request->validate([
-            'result' => ['required', Rule::in(['success', 'failed', 'cancel'])],
-        ]);
+        if ((string) $payment->provider === 'VNPAY') {
+            if (in_array((string) $payment->status, self::GATEWAY_PAYMENT_STATUSES, true)) {
+                $payment->update([
+                    'status' => 'CANCELLED',
+                    'response_payload' => array_merge((array) $payment->response_payload, [
+                        'status' => 'CANCELLED',
+                        'message' => 'VNPay đang tạm thời khoá, giao dịch đã được huỷ.',
+                        'cancelled_at' => now()->toIso8601String(),
+                    ]),
+                ]);
+            }
 
-        try {
-            $result = DB::transaction(function () use ($booking_code, $payment, $data) {
-                $booking = Booking::query()
-                    ->where('booking_code', $booking_code)
-                    ->with(['customer', 'show.movieVersion.movie.contentRating', 'show.auditorium.cinema', 'tickets.seat', 'tickets.ticketType', 'tickets.seatType', 'tickets.ticket', 'discounts.promotion', 'discounts.coupon', 'payments.refunds'])
-                    ->lockForUpdate()
-                    ->firstOrFail();
-
-                if ((int) $payment->booking_id !== (int) $booking->id) {
-                    abort(404);
-                }
-
-                $this->assertBookingPayable($booking, true);
-                $payment->refresh();
-
-                if (! in_array((string) $payment->status, self::GATEWAY_PAYMENT_STATUSES, true)) {
-                    return ['redirect' => redirect()->route('booking.success', ['booking_code' => $booking->booking_code])->with('success', 'Giao dịch đã được xử lý trước đó.'), 'send_mail' => false, 'booking_code' => $booking->booking_code];
-                }
-
-                if ((string) $data['result'] === 'success') {
-                    $this->capturePayment($booking, $payment, ['source' => 'VNPAY_SIMULATION']);
-                    session()->forget('editable_booking_code');
-
-                    return ['redirect' => redirect()->route('booking.success', ['booking_code' => $booking->booking_code]), 'send_mail' => true, 'booking_code' => $booking->booking_code, 'payment_id' => $payment->id, 'provider_label' => 'VNPay'];
-                }
-
-                $status = (string) $data['result'] === 'cancel' ? 'CANCELLED' : 'FAILED';
-                $this->failPaymentAndReleaseSeats($booking, $payment, $status, ['source' => 'VNPAY_SIMULATION']);
-
-                return ['redirect' => redirect()->route('booking.lookup', ['booking_code' => $booking->booking_code])->with('error', 'Thanh toán không thành công. Booking đã được huỷ và ghế đã được nhả.'), 'send_mail' => false, 'booking_code' => $booking->booking_code];
-            }, 3);
-        } catch (\Throwable $e) {
-            return redirect()->route('booking.payment', ['booking_code' => $booking_code])->with('error', $e->getMessage());
+            return redirect()->route('booking.payment', ['booking_code' => $booking_code])
+                ->with('error', 'VNPay hiện đang tạm thời khoá, không thể xác nhận thanh toán.');
         }
 
-        if (($result['send_mail'] ?? false) === true) {
-            $booking = $this->findBooking((string) $result['booking_code']);
-            $sendState = $this->sendSoftTicketMail($booking, (int) $result['payment_id']);
-            $message = 'Thanh toán thành công qua ' . ($result['provider_label'] ?? 'cổng thanh toán') . '.';
-            $message .= $sendState['sent'] ? ' Vé bản mềm đã được gửi tới email của bạn.' : ' Không gửi được email lúc này, bạn có thể bấm gửi lại vé trong trang chi tiết booking.';
-
-            return $result['redirect']->with('success', $message);
-        }
-
-        return $result['redirect'];
+        return redirect()->route('booking.payment', ['booking_code' => $booking_code])
+            ->with('error', 'Cổng thanh toán không hợp lệ.');
     }
 
     public function momoReturn(Request $request): RedirectResponse

@@ -53,11 +53,15 @@ class BookingLifecycleService
 
             $lockedBooking->tickets()
                 ->whereIn('status', ['RESERVED', 'ISSUED'])
-<<<<<<< HEAD
                 ->update(['status' => 'CANCELLED']);
-=======
-                ->update(['status' => 'EXPIRED']);
->>>>>>> 19e5bc83fca8bd5ee3fc2623868f2c32ac80f112
+
+            $lockedBooking->payments()
+                ->whereIn('status', ['INITIATED', 'AUTHORIZED'])
+                ->update([
+                    'status' => 'CANCELLED',
+                    'response_payload' => DB::raw("JSON_SET(COALESCE(response_payload, JSON_OBJECT()), '$.status', 'CANCELLED', '$.message', 'Booking hết hạn, giao dịch thanh toán bị huỷ và ghế đã được nhả.')"),
+                    'updated_at' => now(),
+                ]);
 
             foreach ($lockedBooking->bookingProducts as $item) {
                 $this->restoreInventory($lockedBooking, $item);
@@ -128,11 +132,7 @@ class BookingLifecycleService
         if ($nextStatus === 'CANCELLED') {
             $booking->tickets()->whereIn('status', ['RESERVED', 'ISSUED'])->update(['status' => 'CANCELLED']);
         } elseif ($nextStatus === 'EXPIRED') {
-<<<<<<< HEAD
             $booking->tickets()->whereIn('status', ['RESERVED', 'ISSUED'])->update(['status' => 'CANCELLED']);
-=======
-            $booking->tickets()->whereIn('status', ['RESERVED', 'ISSUED'])->update(['status' => 'EXPIRED']);
->>>>>>> 19e5bc83fca8bd5ee3fc2623868f2c32ac80f112
         } else {
             $booking->tickets()
                 ->whereIn('status', ['RESERVED', 'ISSUED'])
