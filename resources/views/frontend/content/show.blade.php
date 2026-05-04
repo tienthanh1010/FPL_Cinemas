@@ -23,7 +23,32 @@
               </div>
             @endif
             <div class="post-body">
-              {!! nl2br(e($post->content ?: $post->excerpt ?: 'Nội dung đang được cập nhật.')) !!}
+              @php
+                $rawContent = trim((string) ($post->content ?: $post->excerpt ?: 'Nội dung đang được cập nhật.'));
+                $paragraphBuffer = [];
+                $flushParagraph = function () use (&$paragraphBuffer) {
+                    if ($paragraphBuffer === []) {
+                        return '';
+                    }
+                    $html = '<p>' . nl2br(e(trim(implode("\n", $paragraphBuffer)))) . '</p>';
+                    $paragraphBuffer = [];
+                    return $html;
+                };
+                $bodyHtml = '';
+                foreach (preg_split('/\r?\n/', $rawContent) as $line) {
+                    $trimmed = trim($line);
+                    if (preg_match('/^!\[[^\]]*\]\((https?:\/\/[^)]+)\)$/i', $trimmed, $matches)) {
+                        $bodyHtml .= $flushParagraph();
+                        $bodyHtml .= '<figure class="content-detail-cover my-4"><img src="' . e($matches[1]) . '" alt="' . e($post->title) . '"></figure>';
+                    } elseif ($trimmed === '') {
+                        $bodyHtml .= $flushParagraph();
+                    } else {
+                        $paragraphBuffer[] = $line;
+                    }
+                }
+                $bodyHtml .= $flushParagraph();
+              @endphp
+              {!! $bodyHtml !!}
             </div>
           </article>
         </div>

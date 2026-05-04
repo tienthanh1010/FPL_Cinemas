@@ -59,7 +59,21 @@
 
         <div class="col-12">
             <label class="form-label">Nội dung chi tiết</label>
-            <textarea name="content" rows="12" class="form-control" placeholder="Nhập nội dung chi tiết, thể lệ ưu đãi hoặc thông báo cần hiển thị ngoài website">{{ old('content', $contentPost->content) }}</textarea>
+            <p class="section-description mb-3">Dùng các khối dưới đây để đăng bài nhanh: văn bản → ảnh → văn bản. Hệ thống sẽ tự ghép nội dung và hiển thị ảnh đúng thứ tự ngoài website.</p>
+
+            <input type="hidden" name="content" id="contentPayload" value="{{ old('content', $contentPost->content) }}">
+
+            <div id="contentBuilder" class="d-grid gap-3"></div>
+
+            <div class="d-flex gap-2 flex-wrap mt-3">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="addTextBlock"><i class="bi bi-text-paragraph me-1"></i>Thêm đoạn text</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="addImageBlock"><i class="bi bi-image me-1"></i>Thêm ảnh</button>
+            </div>
+
+            <details class="mt-3">
+                <summary class="small text-secondary">Xem/sửa nội dung thô</summary>
+                <textarea id="rawContentEditor" rows="8" class="form-control mt-2" placeholder="Nội dung thô sẽ được tự đồng bộ từ các khối phía trên">{{ old('content', $contentPost->content) }}</textarea>
+            </details>
         </div>
     </div>
 </div>
@@ -88,3 +102,116 @@
     <button class="btn btn-primary" type="submit"><i class="bi bi-check2-circle me-1"></i> {{ $isEdit ? 'Lưu thay đổi' : 'Tạo nội dung' }}</button>
     <a href="{{ route('admin.content_posts.index') }}" class="btn btn-light-soft"><i class="bi bi-arrow-left me-1"></i> Quay lại danh sách</a>
 </div>
+
+
+<script>
+(function () {
+    const payload = document.getElementById('contentPayload');
+    const rawEditor = document.getElementById('rawContentEditor');
+    const builder = document.getElementById('contentBuilder');
+    const addText = document.getElementById('addTextBlock');
+    const addImage = document.getElementById('addImageBlock');
+
+    function blockTemplate(type, value = '') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'content-builder-block rounded-4 p-3';
+        wrapper.style.border = '1px solid rgba(148,163,184,.28)';
+        wrapper.style.background = 'rgba(15,23,42,.025)';
+        wrapper.dataset.type = type;
+
+        if (type === 'image') {
+            wrapper.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong><i class="bi bi-image me-1"></i>Khối ảnh</strong>
+                    <button type="button" class="btn btn-sm btn-light-soft remove-block">Xóa</button>
+                </div>
+                <input type="url" class="form-control block-value" value="${escapeHtml(value)}" placeholder="https://example.com/image.jpg">
+                <div class="form-text">Dán URL ảnh. Khi hiển thị ngoài website, ảnh sẽ nằm giữa các đoạn text.</div>
+            `;
+        } else {
+            wrapper.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong><i class="bi bi-text-paragraph me-1"></i>Khối văn bản</strong>
+                    <button type="button" class="btn btn-sm btn-light-soft remove-block">Xóa</button>
+                </div>
+                <textarea class="form-control block-value" rows="5" placeholder="Nhập đoạn nội dung...">${escapeHtml(value)}</textarea>
+            `;
+        }
+
+        wrapper.querySelector('.remove-block').addEventListener('click', function () {
+            wrapper.remove();
+            syncRawFromBlocks();
+        });
+        wrapper.querySelector('.block-value').addEventListener('input', syncRawFromBlocks);
+
+        return wrapper;
+    }
+
+    function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"]/g, function (char) {
+            return ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[char]);
+        });
+    }
+
+    function parseRaw(raw) {
+        const lines = String(raw || '').split(/\r?\n/);
+        const blocks = [];
+        let textBuffer = [];
+
+        function flushText() {
+            const text = textBuffer.join('\n').trim();
+            if (text) blocks.push({ type: 'text', value: text });
+            textBuffer = [];
+        }
+
+        lines.forEach(line => {
+            const match = line.trim().match(/^!\[[^\]]*\]\((https?:\/\/[^)]+)\)$/i);
+            if (match) {
+                flushText();
+                blocks.push({ type: 'image', value: match[1] });
+            } else {
+                textBuffer.push(line);
+            }
+        });
+        flushText();
+
+        return blocks.length ? blocks : [{ type: 'text', value: '' }, { type: 'image', value: '' }, { type: 'text', value: '' }];
+    }
+
+    function syncRawFromBlocks() {
+        const chunks = Array.from(builder.querySelectorAll('.content-builder-block')).map(block => {
+            const value = block.querySelector('.block-value').value.trim();
+            if (!value) return '';
+            return block.dataset.type === 'image' ? `![Ảnh minh họa](${value})` : value;
+        }).filter(Boolean);
+
+        const raw = chunks.join('\n\n');
+        payload.value = raw;
+        rawEditor.value = raw;
+    }
+
+    function renderBlocks(raw) {
+        builder.innerHTML = '';
+        parseRaw(raw).forEach(block => builder.appendChild(blockTemplate(block.type, block.value)));
+        syncRawFromBlocks();
+    }
+
+    addText.addEventListener('click', function () {
+        builder.appendChild(blockTemplate('text'));
+        syncRawFromBlocks();
+    });
+    addImage.addEventListener('click', function () {
+        builder.appendChild(blockTemplate('image'));
+        syncRawFromBlocks();
+    });
+    rawEditor.addEventListener('input', function () {
+        payload.value = rawEditor.value;
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        renderBlocks(payload.value);
+    });
+    const form = payload.closest('form');
+    if (form) form.addEventListener('submit', syncRawFromBlocks);
+})();
+</script>
