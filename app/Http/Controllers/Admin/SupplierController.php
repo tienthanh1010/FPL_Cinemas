@@ -25,7 +25,8 @@ class SupplierController extends Controller
                         ->orWhere('tax_code', 'like', "%{$q}%");
                 });
             })
-            ->orderBy('name')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
 

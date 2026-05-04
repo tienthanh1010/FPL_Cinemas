@@ -2,7 +2,6 @@
   $showtimeData = $showtimesByMovie[$movie->id] ?? ['count' => 0, 'groups' => []];
   $groups = collect($showtimeData['groups'] ?? [])->values();
   $firstCinema = collect($groups)->pluck('shows')->flatten(1)->pluck('cinema')->filter()->first();
-<<<<<<< HEAD
   $hasLateShow = $groups->pluck('shows')->flatten(1)->contains(fn ($show) => (int) \Carbon\Carbon::createFromFormat('H:i', $show['time'] ?? '00:00')->format('H') >= 22);
 @endphp
 
@@ -169,6 +168,74 @@
         background: #dbe9fb;
         border: 1px solid rgba(11, 97, 176, .16);
       }
+
+
+      /* Đồng bộ màu chữ/nền của popup đặt vé theo chế độ sáng/tối */
+      html[data-theme='dark'] .movie-showtime-modal .movie-showtime-modal__content,
+      html[data-theme='dark'] .movie-showtime-modal .schedule-modal__body {
+        background: #0d1b31;
+        color: #edf3ff;
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-modal__header {
+        background: #101d35;
+        border-color: rgba(255,255,255,.1) !important;
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-modal__header .modal-title,
+      html[data-theme='dark'] .movie-showtime-modal .schedule-modal__cinema,
+      html[data-theme='dark'] .movie-showtime-modal .schedule-format-block__title,
+      html[data-theme='dark'] .movie-showtime-modal .schedule-show-chip__time {
+        color: #edf3ff;
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-date-tabs {
+        border-color: rgba(255,255,255,.12);
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-date-tabs .nav-link {
+        color: rgba(237,243,255,.62);
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-date-tabs .nav-link.active {
+        color: #57d1ff;
+        border-color: #57d1ff;
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-show-chip {
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.1);
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-show-chip.is-on-sale {
+        background: rgba(87,209,255,.13);
+        border-color: rgba(87,209,255,.24);
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-show-chip__date,
+      html[data-theme='dark'] .movie-showtime-modal .schedule-show-chip__meta,
+      html[data-theme='dark'] .movie-showtime-modal .schedule-modal__legend {
+        color: #9fb0ca;
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-show-chip__action {
+        background: linear-gradient(135deg, #ff8759, #ffb46d);
+        color: #120d09;
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-show-chip__action:hover {
+        background: linear-gradient(135deg, #ff7a4b, #ffc46d);
+        color: #120d09;
+      }
+      html[data-theme='dark'] .movie-showtime-modal .schedule-show-chip__action.is-secondary {
+        background: rgba(255,255,255,.08);
+        color: #edf3ff;
+      }
+      html[data-theme='dark'] .movie-showtime-modal .btn-close {
+        filter: invert(1) grayscale(100%);
+        opacity: .85;
+      }
+      html[data-theme='light'] .movie-showtime-modal .schedule-date-tabs .nav-link {
+        color: #475569;
+      }
+      html[data-theme='light'] .movie-showtime-modal .schedule-date-tabs .nav-link.active,
+      html[data-theme='light'] .movie-showtime-modal .schedule-date-tabs .nav-link:hover {
+        color: #0b61b0;
+      }
+      html[data-theme='light'] .movie-showtime-modal .schedule-show-chip__action {
+        color: #fff;
+      }
+
       @media (max-width: 767.98px) {
         .schedule-modal__cinema {
           font-size: 1.7rem;
@@ -184,9 +251,6 @@
   @endpush
 @endonce
 
-=======
-@endphp
->>>>>>> origin/main
 <div class="modal fade movie-showtime-modal" id="movieShowtimesModal-{{ $movie->id }}" tabindex="-1" aria-labelledby="movieShowtimesModalLabel-{{ $movie->id }}" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
     <div class="modal-content movie-showtime-modal__content schedule-modal__content">
@@ -222,32 +286,20 @@
               @php
                 $showsByFormat = collect($group['shows'] ?? [])->groupBy(fn ($show) => $show['format'] ?: '2D');
               @endphp
-<<<<<<< HEAD
               <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="movie-showtime-pane-{{ $movie->id }}-{{ $index }}" role="tabpanel">
-=======
-              <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}"
-                   id="movie-showtime-pane-{{ $movie->id }}-{{ $index }}"
-                   role="tabpanel">
->>>>>>> origin/main
                 @foreach($showsByFormat as $format => $formatShows)
                   <section class="schedule-format-block">
                     <h6 class="schedule-format-block__title">{{ $format }}</h6>
                     <div class="schedule-show-grid">
                       @foreach($formatShows as $show)
-<<<<<<< HEAD
                         @php($showHour = (int) \Carbon\Carbon::createFromFormat('H:i', $show['time'] ?? '00:00')->format('H'))
-=======
->>>>>>> origin/main
                         <div class="schedule-show-chip {{ !empty($show['is_on_sale']) ? 'is-on-sale' : 'is-muted' }}">
                           <div class="schedule-show-chip__time">{{ $show['time'] }}</div>
                           <div class="schedule-show-chip__date">{{ $group['day_number'] ?? '' }}/{{ $group['month_label'] ?? '' }}</div>
                           <div class="schedule-show-chip__meta">{{ $show['auditorium'] }}</div>
-<<<<<<< HEAD
                           @if($showHour >= 22)
                             <div class="schedule-show-chip__late-note">Suất chiếu muộn từ 22h00</div>
                           @endif
-=======
->>>>>>> origin/main
                           @if(!empty($show['is_on_sale']))
                             <a href="{{ route('shows.book', $show['id']) }}" class="schedule-show-chip__action">Đặt vé</a>
                           @else
@@ -261,7 +313,6 @@
               </div>
             @endforeach
           </div>
-<<<<<<< HEAD
 
           @if($hasLateShow)
             <div class="schedule-modal__legend">
@@ -269,8 +320,6 @@
               <span>Suất chiếu muộn từ 22h00</span>
             </div>
           @endif
-=======
->>>>>>> origin/main
         @else
           <div class="empty-panel mt-4">Phim này hiện chưa có suất chiếu khả dụng để đặt vé.</div>
         @endif

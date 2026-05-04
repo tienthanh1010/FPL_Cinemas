@@ -17,8 +17,8 @@ class StaffShiftController extends Controller
         $shifts = StaffShift::query()
             ->with(['cinema', 'staff.roles'])
             ->when($date, fn ($q) => $q->whereDate('shift_date', $date))
-            ->orderByDesc('shift_date')
-            ->orderBy('start_time')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
         $report = [

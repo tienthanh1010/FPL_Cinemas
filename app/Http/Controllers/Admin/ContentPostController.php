@@ -40,9 +40,7 @@ class ContentPostController extends Controller
         ];
 
         $posts = $query
-            ->orderByDesc('is_featured')
-            ->orderBy('sort_order')
-            ->orderByDesc('published_at')
+            ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();

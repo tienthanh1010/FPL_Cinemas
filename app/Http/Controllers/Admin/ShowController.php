@@ -56,6 +56,8 @@ class ShowController extends Controller
                     });
                 });
             })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->orderByDesc('start_time')
             ->paginate(15)
             ->withQueryString();
@@ -350,11 +352,16 @@ class ShowController extends Controller
             'movie_id' => ['required', 'integer', 'exists:movies,id'],
             'movie_version_id' => ['required', 'integer', 'exists:movie_versions,id'],
             'pricing_profile_id' => ['required', 'integer', 'exists:pricing_profiles,id'],
-            'show_date' => ['required', 'date'],
+            'show_date' => [$show ? 'required' : 'nullable', 'date'],
+            'show_date_from' => [$show ? 'nullable' : 'required', 'date'],
+            'show_date_to' => ['nullable', 'date', 'after_or_equal:show_date_from'],
             'start_clock' => ['required', 'date_format:H:i'],
             'status' => ['required', Rule::in(array_keys(self::STATUSES))],
             'show_count' => [$show ? 'nullable' : 'required', 'integer', 'min:1', 'max:12'],
             'break_minutes' => ['nullable', 'integer', 'min:0', 'max:180'],
+        ], [
+            'show_date_from.required' => 'Vui lòng chọn ngày bắt đầu.',
+            'show_date_to.after_or_equal' => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',
         ]);
 
         $auditorium = Auditorium::query()->with('cinema')->findOrFail($data['auditorium_id']);
@@ -382,12 +389,33 @@ class ShowController extends Controller
         }
 
         $timezone = $this->resolveCinemaTimezone($auditorium->cinema->timezone ?? null);
-        $startAt = Carbon::parse($data['show_date'] . ' ' . $data['start_clock'], $timezone);
+        $dateFromValue = $show ? $data['show_date'] : ($data['show_date_from'] ?? $data['show_date'] ?? null);
+        $dateToValue = $show ? $dateFromValue : (($data['show_date_to'] ?? null) ?: $dateFromValue);
+
+        $dateFrom = Carbon::parse($dateFromValue, $timezone)->startOfDay();
+        $dateTo = Carbon::parse($dateToValue, $timezone)->startOfDay();
+
+        if ($dateTo->lt($dateFrom)) {
+            throw ValidationException::withMessages([
+                'show_date_to' => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',
+            ]);
+        }
+
+        if (! $show && $dateFrom->diffInDays($dateTo) > 31) {
+            throw ValidationException::withMessages([
+                'show_date_to' => 'Chỉ nên tạo suất chiếu tối đa trong 32 ngày/lần để dễ kiểm soát lịch phòng.',
+            ]);
+        }
+
+        $startAt = Carbon::parse($dateFrom->toDateString() . ' ' . $data['start_clock'], $timezone);
         $durationMinutes = (int) $movieVersion->movie->duration_minutes;
         $endAt = $startAt->copy()->addMinutes($durationMinutes);
 
         $this->assertEndWithinBusinessHours($startAt, $endAt);
-        $this->ensureNoOverlap($data['auditorium_id'], $startAt, $endAt, $data['status'], $show?->id);
+
+        if ($show) {
+            $this->ensureNoOverlap($data['auditorium_id'], $startAt, $endAt, $data['status'], $show->id);
+        }
 
         $onSaleFrom = $data['status'] === 'ON_SALE'
             ? now($timezone)->startOfMinute()
@@ -401,6 +429,9 @@ class ShowController extends Controller
             'pricing_profile_id' => (int) $pricingProfile->id,
             'start_time' => $startAt,
             'end_time' => $endAt,
+            'start_date' => $dateFrom,
+            'end_date' => $dateTo,
+            'start_clock' => $data['start_clock'],
             'on_sale_from' => $onSaleFrom,
             'on_sale_until' => $onSaleUntil,
             'status' => $data['status'],
@@ -417,44 +448,51 @@ class ShowController extends Controller
         $breakMinutes = max(0, (int) ($validated['break_minutes'] ?? 20));
 
         $plan = [];
-        $cursor = $validated['start_time']->copy();
-        $latestAllowedEnd = $cursor->copy()->setTimeFromTimeString(self::MAX_END_CLOCK);
+        $dateCursor = $validated['start_date']->copy();
+        $dateEnd = $validated['end_date']->copy();
 
-        for ($index = 0; $index < $showCount; $index++) {
-            $slotStart = $cursor->copy();
-            $slotEnd = $slotStart->copy()->addMinutes((int) $validated['duration_minutes']);
+        while ($dateCursor->lte($dateEnd)) {
+            $cursor = Carbon::parse($dateCursor->toDateString() . ' ' . $validated['start_clock'], $validated['timezone']);
+            $latestAllowedEnd = $cursor->copy()->setTimeFromTimeString(self::MAX_END_CLOCK);
 
-            if ($slotEnd->gt($latestAllowedEnd)) {
-                if ($index === 0) {
+            for ($index = 0; $index < $showCount; $index++) {
+                $slotStart = $cursor->copy();
+                $slotEnd = $slotStart->copy()->addMinutes((int) $validated['duration_minutes']);
+
+                if ($slotEnd->gt($latestAllowedEnd)) {
+                    if ($index === 0) {
+                        throw ValidationException::withMessages([
+                            'start_clock' => 'Suất chiếu ngày ' . $slotStart->format('d/m/Y') . ' vượt quá 23:00. Hãy chọn giờ sớm hơn hoặc phim ngắn hơn.',
+                        ]);
+                    }
+
                     throw ValidationException::withMessages([
-                        'start_clock' => 'Suất chiếu vượt quá 23:00. Hãy chọn giờ sớm hơn hoặc phim ngắn hơn.',
+                        'show_count' => 'Ngày ' . $slotStart->format('d/m/Y') . " chỉ có thể xếp được {$index} suất chiếu trước 23:00 với thời lượng phim và thời gian nghỉ hiện tại.",
                     ]);
                 }
 
-                throw ValidationException::withMessages([
-                    'show_count' => "Chỉ có thể xếp được {$index} suất chiếu trước 23:00 với thời lượng phim và thời gian nghỉ hiện tại.",
-                ]);
+                $this->ensureNoOverlap(
+                    $validated['auditorium_id'],
+                    $slotStart,
+                    $slotEnd,
+                    $validated['status'],
+                    null,
+                    $plan
+                );
+
+                $plan[] = [
+                    'start_time' => $slotStart,
+                    'end_time' => $slotEnd,
+                    'on_sale_from' => $validated['status'] === 'ON_SALE'
+                        ? now($validated['timezone'])->startOfMinute()
+                        : $slotStart->copy()->subDays(7),
+                    'on_sale_until' => $slotStart->copy(),
+                ];
+
+                $cursor = $slotEnd->copy()->addMinutes($breakMinutes);
             }
 
-            $this->ensureNoOverlap(
-                $validated['auditorium_id'],
-                $slotStart,
-                $slotEnd,
-                $validated['status'],
-                null,
-                $plan
-            );
-
-            $plan[] = [
-                'start_time' => $slotStart,
-                'end_time' => $slotEnd,
-                'on_sale_from' => $validated['status'] === 'ON_SALE'
-                    ? now($validated['timezone'])->startOfMinute()
-                    : $slotStart->copy()->subDays(7),
-                'on_sale_until' => $slotStart->copy(),
-            ];
-
-            $cursor = $slotEnd->copy()->addMinutes($breakMinutes);
+            $dateCursor->addDay();
         }
 
         return $plan;
@@ -472,24 +510,43 @@ class ShowController extends Controller
             return;
         }
 
-        $hasOverlap = Show::query()
+        $overlapShow = Show::query()
+            ->with(['movieVersion.movie', 'auditorium'])
             ->where('auditorium_id', $auditoriumId)
             ->where('status', '!=', 'CANCELLED')
             ->when($ignoreShowId, fn ($query) => $query->where('id', '!=', $ignoreShowId))
             ->where('start_time', '<', $endAt)
             ->where('end_time', '>', $startAt)
-            ->exists();
+            ->orderBy('start_time')
+            ->first();
 
-        if ($hasOverlap) {
+        if ($overlapShow) {
+            $roomName = $overlapShow->auditorium?->name ?: 'phòng đã chọn';
+            $movieTitle = $overlapShow->movieVersion?->movie?->title ?: 'suất chiếu khác';
+
             throw ValidationException::withMessages([
-                'start_clock' => 'Không được để 2 phim chiếu cùng 1 phòng cùng giờ.',
+                'start_clock' => sprintf(
+                    'Bị trùng lịch tại %s ngày %s: lịch mới %s - %s trùng với "%s" %s - %s.',
+                    $roomName,
+                    $startAt->format('d/m/Y'),
+                    $startAt->format('H:i'),
+                    $endAt->format('H:i'),
+                    $movieTitle,
+                    $overlapShow->start_time?->format('H:i'),
+                    $overlapShow->end_time?->format('H:i')
+                ),
             ]);
         }
 
         foreach ($plannedSlots as $slot) {
             if ($slot['start_time']->lt($endAt) && $slot['end_time']->gt($startAt)) {
                 throw ValidationException::withMessages([
-                    'show_count' => 'Chuỗi suất chiếu liên tiếp đang bị chồng thời gian. Hãy tăng thời gian nghỉ giữa các suất.',
+                    'show_count' => sprintf(
+                        'Lịch sinh tự động bị trùng trong ngày %s, khung %s - %s. Hãy giảm số suất hoặc tăng thời gian nghỉ giữa các suất.',
+                        $startAt->format('d/m/Y'),
+                        $startAt->format('H:i'),
+                        $endAt->format('H:i')
+                    ),
                 ]);
             }
         }

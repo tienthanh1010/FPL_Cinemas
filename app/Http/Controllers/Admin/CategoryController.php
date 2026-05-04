@@ -21,7 +21,8 @@ class CategoryController extends Controller
                     ->orWhere('name', 'like', "%{$q}%");
             })
             ->withCount('movies')
-            ->orderBy('name')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();
 
